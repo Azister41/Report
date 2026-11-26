@@ -578,7 +578,7 @@ body.locked .topbar, body.locked .main, body.locked #toast, body.locked #amodal,
       </div>
       <div class="set-grid">
         <div class="panel"><div class="ph"><h2>Data & Storage</h2><span class="an-sub">Database Connection</span></div><div style="padding:4px 18px 16px">
-          <label for="set_dbMode">Mode Penyimpanan</label><select id="set_dbMode"><option value="local">Local Storage Browser (default)</option><option value="firebase">Firebase (Firestore - texlab-ba76c)</option></select>
+          <label>Mode Penyimpanan</label><div style="display:flex;align-items:center;gap:8px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px 12px"><span style="width:10px;height:10px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 4px #dcfce7"></span><div><div style="font-weight:700;font-size:13px;color:#1e40af">Firebase (Firestore - texlab-ba76c) — Full Firebase</div><div style="font-size:11.5px;color:#475569">Wajib. Local Storage cuma jadi cache offline, bukan penyimpanan utama. Biar Fahim, Riski, dan bos lihat data yang sama, real-time.</div></div></div><select id="set_dbMode" style="display:none"><option value="firebase" selected>Firebase (Firestore - texlab-ba76c)</option></select>
           <div id="set_firebaseFields" hidden>
             <div class="fb-field"><label for="set_fbApiKey">Firebase API Key</label><input id="set_fbApiKey" placeholder="AIza..."></div>
             <div class="fb-field"><label for="set_fbAuthDomain">Auth Domain</label><input id="set_fbAuthDomain" placeholder="texlab-ba76c.firebaseapp.com"></div>
@@ -1689,7 +1689,7 @@ $("go").addEventListener("click", async () => {
   function fbConfig(){ return {apiKey:SETTINGS.fbApiKey||"", authDomain:SETTINGS.fbAuthDomain||"", projectId:SETTINGS.fbProjectId||"", storageBucket:SETTINGS.fbStorage||"", messagingSenderId:SETTINGS.fbSender||"", appId:SETTINGS.fbAppId||""}; }
   function fbSetStatus(msg, cls){ const el=$("fbStatus"); if(el){ el.textContent=msg; el.className="fb-status "+(cls||""); } }
   function fbSetAuthStatus(msg, cls){ const el=$("fbAuthStatus"); if(el){ el.textContent=msg; el.className="fb-status "+(cls||""); } }
-  function fbUpdateStatus(){ if(SETTINGS.dbMode!=="firebase"){ fbSetStatus("Mode Local. Data cuma di browser ini."); return; } if(!fbDb){ fbSetStatus("Belum terhubung. Klik Hubungkan & Sinkron Sekarang.", "warn"); return; } fbSetStatus("Terhubung ke Firebase project "+(SETTINGS.fbProjectId||"")+" — terakhir sinkron: "+(fbLastSync?new Date(fbLastSync).toLocaleString("id-ID"):"belum pernah"), "ok"); }
+  function fbUpdateStatus(){ if(SETTINGS.dbMode!=="firebase"){ fbSetStatus("Mode Local. Data cuma di browser ini."); return; } if(!fbDb){ fbSetStatus("Belum terhubung. Klik Hubungkan & Sinkron Sekarang.", "warn"); return; } fbSetStatus("FULL FIREBASE — Terhubung ke "+(SETTINGS.fbProjectId||"")+" • Real-time ON • Local cuma cache offline • Terakhir sinkron: "+(fbLastSync?new Date(fbLastSync).toLocaleString("id-ID"):"belum pernah"), "ok"); }
   let fbInitDone=false;
   function fbInit(){
     if(fbInitDone && fbDb && fbAuth) return true;
@@ -1700,7 +1700,7 @@ $("go").addEventListener("click", async () => {
       fbDb=firebase.firestore(); fbAuth=firebase.auth();
       if(!fbInitDone){
         fbInitDone=true;
-        fbAuth.onAuthStateChanged(u=>{ if(u){ fbSetAuthStatus("Login sebagai: "+u.email, "ok"); gateUpdate(false); } else { fbSetAuthStatus("Belum login. Login dulu biar bisa baca/tulis Firestore kalau rules-nya butuh login.", "warn"); if(SETTINGS.dbMode==="firebase") gateUpdate(true); } if(typeof fbUpdateAdminUI==="function") fbUpdateAdminUI(); });
+        fbAuth.onAuthStateChanged(u=>{ if(u){ fbSetAuthStatus("Login sebagai: "+u.email, "ok"); gateUpdate(false); if(typeof fbListen==="function") fbListen(); } else { fbSetAuthStatus("Belum login. Login dulu biar bisa baca/tulis Firestore kalau rules-nya butuh login.", "warn"); if(SETTINGS.dbMode==="firebase") gateUpdate(true); } if(typeof fbUpdateAdminUI==="function") fbUpdateAdminUI(); });
       }
       fbUpdateStatus(); return true;
     }catch(e){ fbSetStatus("Gagal init Firebase: "+e.message, "err"); return false; }
@@ -1786,6 +1786,45 @@ $("go").addEventListener("click", async () => {
       fbSetStatus("Belum ada data di Firebase. Klik Kirim Data Lokal ke Firebase dulu.", "warn"); if(showToast) toast("Belum ada data di Firebase");
     }catch(e){ fbSetStatus("Gagal muat dari Firebase: "+e.message, "err"); }
   }
+  // FULL FIREBASE: listener real-time, biar kalau Fahim edit, layar Riski langsung update tanpa refresh
+  let fbUnsubReports=null, fbUnsubMeta=null, fbUnsubBuyers=null;
+  function fbListen(){
+    try{
+      if(!fbDb || !fbAuth || !fbAuth.currentUser) return;
+      if(fbUnsubReports) return;
+      fbUnsubReports = fbDb.collection("reports").onSnapshot(snap=>{
+        let changed=false;
+        snap.docChanges().forEach(ch=>{
+          const data=ch.doc.data()||{}; if(!data.id) data.id=ch.doc.id;
+          if(ch.type==="added"||ch.type==="modified"){
+            const i=R.findIndex(r=>String(r.id)===String(data.id));
+            if(i>=0){ if(JSON.stringify(R[i])!==JSON.stringify(data)){ R[i]=data; changed=true; } }
+            else { R.push(data); changed=true; }
+          } else if(ch.type==="removed"){
+            const i=R.findIndex(r=>String(r.id)===String(ch.doc.id));
+            if(i>=0){ R.splice(i,1); changed=true; }
+          }
+        });
+        if(changed){ R.sort((a,b)=>(b.updated||b.created||0)-(a.updated||a.created||0)); try{ localStorage.setItem(KEY, JSON.stringify(R)); }catch(e){} renderAll(); }
+      }, ()=>{});
+      fbUnsubMeta = fbDb.collection("meta").doc("main").onSnapshot(doc=>{
+        if(!doc.exists) return; const md=doc.data()||{};
+        let ch2=false;
+        if(Array.isArray(md.plants)&&md.plants.length && JSON.stringify(PLANTS)!==JSON.stringify(md.plants)){ PLANTS=md.plants; ch2=true; }
+        if(Array.isArray(md.testTypes)&&md.testTypes.length && JSON.stringify(TEST_TYPES)!==JSON.stringify(md.testTypes)){ TEST_TYPES=md.testTypes; ch2=true; }
+        if(md.profile){ PROFILE={...PROFILE, ...md.profile}; }
+        if(md.settings){ SETTINGS={...SETTINGS, ...md.settings, dbMode:"firebase"}; }
+        if(ch2) renderAll();
+      }, ()=>{});
+      fbUnsubBuyers = fbDb.collection("buyers").onSnapshot(snap=>{
+        let ch3=false; const nb={}; snap.forEach(d=>{ const dd=d.data()||{}; const nm=dd.name||decodeURIComponent(d.id); if(nm) nb[nm]=dd.profile||{}; });
+        if(JSON.stringify(BDIR)!==JSON.stringify(nb)){ BDIR=nb; ch3=true; try{ localStorage.setItem(DIR_KEY, JSON.stringify(BDIR)); }catch(e){} }
+        if(ch3) renderAll();
+      }, ()=>{});
+    }catch(e){}
+  }
+  function fbUnlisten(){ try{ if(fbUnsubReports) fbUnsubReports(); }catch(e){} try{ if(fbUnsubMeta) fbUnsubMeta(); }catch(e){} try{ if(fbUnsubBuyers) fbUnsubBuyers(); }catch(e){} fbUnsubReports=null; fbUnsubMeta=null; fbUnsubBuyers=null; }
+
   // Debounce save ke Firebase tiap kali data lokal berubah
   let fbTimer=null;
   function fbAutoSave(){ if(SETTINGS.dbMode!=="firebase"||!fbDb) return; clearTimeout(fbTimer); fbTimer=setTimeout(()=>{ fbPush(false); }, 1200); }
@@ -1797,7 +1836,7 @@ $("go").addEventListener("click", async () => {
     const li=$("set_fbLogin"); if(li && !li.dataset.wired){ li.dataset.wired="1"; li.onclick=async()=>{ if(!fbDb && !fbInit()) return; const em=fbNormEmail($("set_fbEmail").value), pw=$("set_fbPass").value; if(!em||!pw){ toast("Isi username + password dulu"); return; } try{ await fbAuth.signInWithEmailAndPassword(em,pw); toast("Login berhasil"); logActivity("Login", "Login sebagai "+em, "", ""); }catch(e){ fbSetAuthStatus("Login gagal: "+e.message, "err"); } }; }
     const rg=$("set_fbRegister"); if(rg && !rg.dataset.wired){ rg.dataset.wired="1"; rg.onclick=async()=>{ if(!fbDb && !fbInit()) return; const adm=(SETTINGS.adminEmail||"").toLowerCase(); const cur=fbAuth.currentUser?fbAuth.currentUser.email.toLowerCase():""; if(adm && cur!==adm){ toast("Cuma admin ("+adm+") yang bisa bikin akun. Minta admin yang bikinin."); fbSetAuthStatus("Ditolak: cuma admin yang bisa bikin akun.", "err"); return; } const em=fbNormEmail($("set_fbEmail").value), pw=$("set_fbPass").value; if(!em||!pw){ toast("Isi username + password dulu"); return; } if(pw.length<6){ toast("Password minimal 6 karakter"); return; } try{ const cred=await fbAuth.createUserWithEmailAndPassword(em,pw); if(!adm){ SETTINGS.adminEmail=em; saveSettings(); toast("Akun pertama jadi ADMIN: "+em); } else { toast("Akun dibuat: "+em+" — oleh admin"); } if(typeof fbUpdateAdminUI==="function") fbUpdateAdminUI(); }catch(e){ fbSetAuthStatus("Daftar gagal: "+e.message, "err"); } }; }
     const cp=$("set_fbCopyRules"); if(cp && !cp.dataset.wired){ cp.dataset.wired="1"; cp.onclick=async()=>{ const txt=$("fbRulesTxt").value; try{ await navigator.clipboard.writeText(txt); toast("Rules tercopy, tinggal paste di Firebase"); }catch(e){ $("fbRulesTxt").select(); document.execCommand("copy"); toast("Rules tercopy"); } }; }
-    const lo=$("set_fbLogout"); if(lo && !lo.dataset.wired){ lo.dataset.wired="1"; lo.onclick=async()=>{ if(!fbAuth) return; await fbAuth.signOut(); try{ localStorage.removeItem("trp_session_v1"); }catch(e){} gateUpdate(true); toast("Logout"); logActivity("Logout", "Logout", "", ""); }; }
+    const lo=$("set_fbLogout"); if(lo && !lo.dataset.wired){ lo.dataset.wired="1"; lo.onclick=async()=>{ if(!fbAuth) return; await fbAuth.signOut(); try{ localStorage.removeItem("trp_session_v1"); }catch(e){} fbUnlisten(); gateUpdate(true); toast("Logout"); logActivity("Logout", "Logout", "", ""); }; }
     const svA=$("set_saveAdmin"); if(svA && !svA.dataset.wired){ svA.dataset.wired="1"; svA.onclick=()=>{ const v=fbNormEmail($("set_adminEmail").value); if(!v){ toast("Isi email admin dulu, contoh azis@texlab.com"); return; } SETTINGS.adminEmail=v; saveSettings(); fbUpdateAdminUI(); toast("Admin disimpan: "+v); logActivity("Admin", "Set admin jadi "+v, "", ""); }; }
     const clA=$("set_claimAdmin"); if(clA && !clA.dataset.wired){ clA.dataset.wired="1"; clA.onclick=()=>{ if(SETTINGS.adminEmail){ toast("Admin sudah ada: "+SETTINGS.adminEmail); return; } const cur=fbAuth&&fbAuth.currentUser?fbAuth.currentUser.email:""; if(!cur){ toast("Login dulu baru bisa jadi admin"); return; } SETTINGS.adminEmail=cur.toLowerCase(); saveSettings(); fbUpdateAdminUI(); toast("Kamu sekarang ADMIN: "+cur); logActivity("Admin", "Klaim admin: "+cur, "", ""); }; }
   }
@@ -2205,8 +2244,10 @@ $("go").addEventListener("click", async () => {
   const SET_KEY="trp_settings_v1";
   const TEST_TYPES_KEY="trp_test_types_v1";
   const PLANTS_KEY="trp_plants_v1";
-  let SETTINGS={labName:"",labAddr:"",labPhone:"",labEmail:"",pic:"",target:7,plantName:"",plantAddr:"",plantContact:"",plantPhone:"",wfMasuk:1,wfProses:3,wfPending:2,dbMode:"local",fbApiKey:"AIzaSyDNhtxw21z2zkQ5v1LolTmUE2rv3rEjqbA",fbAuthDomain:"texlab-ba76c.firebaseapp.com",fbProjectId:"texlab-ba76c",fbStorage:"texlab-ba76c.firebasestorage.app",fbSender:"1014354282478",fbAppId:"1:1014354282478:web:2ac4d1c96e10d5e77670ff",adminEmail:""};
+  let SETTINGS={labName:"",labAddr:"",labPhone:"",labEmail:"",pic:"",target:7,plantName:"",plantAddr:"",plantContact:"",plantPhone:"",wfMasuk:1,wfProses:3,wfPending:2,dbMode:"firebase",fbApiKey:"AIzaSyDNhtxw21z2zkQ5v1LolTmUE2rv3rEjqbA",fbAuthDomain:"texlab-ba76c.firebaseapp.com",fbProjectId:"texlab-ba76c",fbStorage:"texlab-ba76c.firebasestorage.app",fbSender:"1014354282478",fbAppId:"1:1014354282478:web:2ac4d1c96e10d5e77670ff",adminEmail:""};
   try{ const s=JSON.parse(localStorage.getItem(SET_KEY)||"{}"); if(s&&typeof s==="object") SETTINGS={...SETTINGS, ...s}; }catch(e){}
+  // FULL FIREBASE: paksa ke Firebase, jangan pernah balik ke Local lagi. Local cuma cache.
+  SETTINGS.dbMode="firebase"; try{ localStorage.setItem(SET_KEY, JSON.stringify(SETTINGS)); }catch(e){}
   function saveSettings(){ try{ localStorage.setItem(SET_KEY, JSON.stringify(SETTINGS)); }catch(e){} if(typeof fbAutoSave==="function") fbAutoSave(); if(typeof fbWireButtons==="function") fbWireButtons(); if(typeof histWire==="function") histWire(); if(typeof gateWire==="function") gateWire(); }
   let TEST_TYPES=["Full Package Test","Seam Strength","Dimensional Change","Wash and Wear","Appearance After Laundering","Attachment Strength","Colorfastness","Fabric Shrinkage","Shrinkage","Pilling"];
   let PLANTS=["PT. Ungaran Sari Garments Ungaran","PT. Ungaran Sari Garments Pringapus","PT. Ungaran Sari Garments Congol","PT. Citra Abadi Sejati","PT. Eratex Djaja"];
@@ -2249,7 +2290,7 @@ $("go").addEventListener("click", async () => {
     $("set_wfMasuk").value=SETTINGS.wfMasuk??1;
     $("set_wfProses").value=SETTINGS.wfProses??3;
     $("set_wfPending").value=SETTINGS.wfPending??2;
-    $("set_dbMode").value=SETTINGS.dbMode||"local";
+    if($("set_dbMode")) $("set_dbMode").value="firebase"; SETTINGS.dbMode="firebase";
     $("set_fbApiKey").value=SETTINGS.fbApiKey||"";
     $("set_fbAuthDomain").value=SETTINGS.fbAuthDomain||"";
     $("set_fbProjectId").value=SETTINGS.fbProjectId||"";
@@ -2266,7 +2307,7 @@ $("go").addEventListener("click", async () => {
     renderMasterBuyers(); renderMasterTests(); renderMasterPlants(); refreshPlantSelect();
   }
   function collectSettings(){
-    SETTINGS={...SETTINGS, labName:$("set_labName").value.trim(), labAddr:$("set_labAddr").value.trim(), labPhone:$("set_labPhone").value.trim(), labEmail:$("set_labEmail").value.trim(), pic:$("set_pic").value.trim(), target:+$("set_target").value||7, plantName:$("set_plantName").value.trim(), plantAddr:$("set_plantAddr").value.trim(), plantContact:$("set_plantContact").value.trim(), plantPhone:$("set_plantPhone").value.trim(), wfMasuk:+$("set_wfMasuk").value||0, wfProses:+$("set_wfProses").value||0, wfPending:+$("set_wfPending").value||0, dbMode:$("set_dbMode").value, fbApiKey:$("set_fbApiKey").value.trim(), fbAuthDomain:$("set_fbAuthDomain").value.trim(), fbProjectId:$("set_fbProjectId").value.trim(), fbStorage:$("set_fbStorage").value.trim(), fbSender:$("set_fbSender").value.trim(), fbAppId:$("set_fbAppId").value.trim()};
+    SETTINGS={...SETTINGS, labName:$("set_labName").value.trim(), labAddr:$("set_labAddr").value.trim(), labPhone:$("set_labPhone").value.trim(), labEmail:$("set_labEmail").value.trim(), pic:$("set_pic").value.trim(), target:+$("set_target").value||7, plantName:$("set_plantName").value.trim(), plantAddr:$("set_plantAddr").value.trim(), plantContact:$("set_plantContact").value.trim(), plantPhone:$("set_plantPhone").value.trim(), wfMasuk:+$("set_wfMasuk").value||0, wfProses:+$("set_wfProses").value||0, wfPending:+$("set_wfPending").value||0, dbMode:"firebase", fbApiKey:$("set_fbApiKey").value.trim(), fbAuthDomain:$("set_fbAuthDomain").value.trim(), fbProjectId:$("set_fbProjectId").value.trim(), fbStorage:$("set_fbStorage").value.trim(), fbSender:$("set_fbSender").value.trim(), fbAppId:$("set_fbAppId").value.trim()};
     saveSettings(); renderSettings(); $("setSaved").style.display="block"; setTimeout(()=>{ $("setSaved").style.display="none"; },2000);
   }
   $("setSave").onclick=collectSettings;
@@ -2289,7 +2330,7 @@ $("go").addEventListener("click", async () => {
     if(et){ const i=+et.dataset.editPlant; const nv=prompt("Edit plant:", PLANTS[i]); if(!nv) return; const nn=nv.trim(); if(!nn) return; const old=PLANTS[i]; PLANTS[i]=nn; R.forEach(r=>{ if((r.plant||"PT. Ungaran Sari Garments Ungaran")===old) r.plant=nn; }); save(); savePlants(); renderMasterPlants(); renderSettings(); renderAll(); return; }
     if(dt){ const i=+dt.dataset.delPlant; if(!confirm("Hapus plant "+PLANTS[i]+"?")) return; PLANTS.splice(i,1); if(!PLANTS.length) PLANTS=["PT. Ungaran Sari Garments Ungaran"]; savePlants(); renderMasterPlants(); renderSettings(); renderAll(); return; }
   });
-  $("set_dbMode").onchange=()=>{ $("set_firebaseFields").hidden=$("set_dbMode").value!=="firebase"; if($("set_dbMode").value==="firebase" && typeof fbInit==="function") fbInit(); };
+  if($("set_dbMode")){ $("set_dbMode").onchange=()=>{ $("set_dbMode").value="firebase"; if($("set_firebaseFields")) $("set_firebaseFields").hidden=false; if(typeof fbInit==="function") fbInit(); }; if($("set_firebaseFields")) $("set_firebaseFields").hidden=false; }
   $("set_export").onclick=()=>{
     let csv="No,Buyer,Plant,Style,Test Type,Status,Target,Updated\n";
     R.forEach(r=>{ csv+='"'+r.no+'","' +r.buyer+'","' +(r.plant||"PT. Ungaran Sari Garments Ungaran")+'","' +(r.style||"")+'","' +(r.type||"")+'","' +r.status+'","' +(r.due?new Date(r.due).toLocaleDateString("id-ID"):"")+'","' +new Date(r.updated).toLocaleDateString("id-ID")+'"\n'; });
