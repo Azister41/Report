@@ -1,27 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
-<head><style>
-@font-face {
-  font-family: "Optimistic";
-  font-style: normal;
-  font-weight: 400 600;
-  font-display: swap;
-  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Optimistic Mono";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
-}
-:where(html) {
-  font-family: "Optimistic", system-ui, sans-serif;
-}
-:where(code, pre, kbd, samp) {
-  font-family: "Optimistic Mono", ui-monospace, monospace;
-}
-</style>
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Test Report Portal - Rapi 2</title>
@@ -535,16 +514,39 @@ th:first-child,td:first-child{padding-left:18px}
               <textarea id="fbRulesTxt" readonly style="width:100%;height:110px;font-family:monospace;font-size:12px;padding:8px;border:1px solid var(--bd);border-radius:8px;box-sizing:border-box">rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
+    // Semua user @texlab.com boleh baca/tulis report, buyer, meta
+    // Tapi bikin akun baru cuma dari Console / Admin (lihat portal)
+    match /reports/{docId} {
       allow read, write: if request.auth != null
         && request.auth.token.email.matches('.*@texlab\\.com$');
+    }
+    match /buyers/{docId} {
+      allow read, write: if request.auth != null
+        && request.auth.token.email.matches('.*@texlab\\.com$');
+    }
+    match /meta/{docId} {
+      allow read, write: if request.auth != null
+        && request.auth.token.email.matches('.*@texlab\\.com$');
+    }
+    // Dokumen lama portal/main jangan dipake lagi, matikan tulisnya
+    match /portal/{docId} {
+      allow read: if request.auth != null
+        && request.auth.token.email.matches('.*@texlab\\.com$');
+      allow write: if false;
     }
   }
 }</textarea>
               <button type="button" class="sbtn" id="set_fbCopyRules" style="margin-top:8px">Copy Rules</button>
               <p class="set-note" style="margin:8px 0 0">Abis copy, paste di Firestore > Rules, klik Publish. Jangan lupa bikin user-nya di Authentication, bukan di Rules.</p>
             </div>
-            <div style="margin-top:10px"><label for="set_fbEmail">Username / Email Akun Pabrik (untuk Login)</label><input id="set_fbEmail" placeholder="ketik fahim aja — otomatis jadi fahim@texlab.com" autocomplete="username"><div style="font-size:12px;color:var(--mut);margin-top:4px">Bisa ketik <b>fahim</b> aja, atau lengkap <b>fahim@texlab.com</b>. Keduanya jadi sama.</div><label for="set_fbPass">Password</label><input id="set_fbPass" type="password" placeholder="minimal 6 karakter" autocomplete="current-password"><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button type="button" class="sbtn" id="set_fbLogin">Login</button><button type="button" class="sbtn" id="set_fbRegister">Daftar Akun Pabrik</button><button type="button" class="sbtn" id="set_fbLogout">Logout</button></div><div id="fbAuthStatus" class="fb-status">Belum login.</div><p class="set-note">Contoh: ketik <b>fahim</b> + password, klik Daftar Akun Pabrik, jadi akun <b>fahim@texlab.com</b>. Besok orang pabrik tinggal ketik <b>fahim</b> + password-nya buat login. Buat riski, ketik <b>riski</b> aja.</p></div>
+            <div style="margin-top:10px"><label for="set_fbEmail">Username / Email Akun Pabrik (untuk Login)</label><input id="set_fbEmail" placeholder="ketik fahim aja — otomatis jadi fahim@texlab.com" autocomplete="username"><div style="font-size:12px;color:var(--mut);margin-top:4px">Bisa ketik <b>fahim</b> aja, atau lengkap <b>fahim@texlab.com</b>. Keduanya jadi sama.</div><label for="set_fbPass">Password</label><input id="set_fbPass" type="password" placeholder="minimal 6 karakter" autocomplete="current-password"><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button type="button" class="sbtn" id="set_fbLogin">Login</button><button type="button" class="sbtn" id="set_fbRegister">Daftar Akun Pabrik</button><button type="button" class="sbtn" id="set_fbLogout">Logout</button></div><div id="fbAuthStatus" class="fb-status">Belum login.</div><p class="set-note">Contoh: ketik <b>fahim</b> + password, klik Daftar Akun Pabrik, jadi akun <b>fahim@texlab.com</b>. Besok orang pabrik tinggal ketik <b>fahim</b> + password-nya buat login. Buat riski, ketik <b>riski</b> aja.</p>
+            <div style="margin-top:12px;border:1px solid #fecaca;border-radius:10px;padding:12px;background:#fef2f2">
+              <div style="font-weight:700;font-size:13px;color:#991b1b">Kunci Registrasi — Cuma Admin yang Bisa Bikin Akun</div>
+              <p class="set-note" style="margin:6px 0">Biar nggak sembarang orang bikin akun @texlab.com. Isi email admin di bawah, simpan, lalu tombol Daftar Akun Pabrik cuma muncul buat admin. Akun pabrik paling aman dibikin dari Firebase Console > Authentication > Add user.</p>
+              <label for="set_adminEmail">Email Admin</label><input id="set_adminEmail" placeholder="contoh: azis@texlab.com">
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button type="button" class="sbtn" id="set_saveAdmin">Simpan Admin</button><button type="button" class="sbtn" id="set_claimAdmin">Jadikan Saya Admin (kalau belum ada admin)</button></div>
+              <div id="fbAdminStatus" class="fb-status">Belum ada admin. Akun pertama yang daftar otomatis jadi admin.</div>
+            </div></div>
           </div>
           <p class="set-note" id="set_stat">0 report · 0 buyer</p>
         </div></div>
@@ -1439,7 +1441,7 @@ $("go").addEventListener("click", async () => {
     const d=new Date();
     $("dsub").textContent="Diperbarui "+String(d.getHours()).padStart(2,"0")+"."+String(d.getMinutes()).padStart(2,"0")+" · "+(canSave?"tersimpan di browser ini":"penyimpanan browser tidak aktif, data hilang saat ditutup");
   }
-  function renderAll(){ renderKpis(); renderChart(); renderAlerts(); renderTable(); renderChips(); renderLink(); renderAnalysis(); renderDirectory(); renderSettings(); if(typeof renderPlantMenu==="function") renderPlantMenu(); if(typeof renderProfileMenu==="function") renderProfileMenu(); if(typeof fbWireButtons==="function") fbWireButtons(); updSub(); }
+  function renderAll(){ renderKpis(); renderChart(); renderAlerts(); renderTable(); renderChips(); renderLink(); renderAnalysis(); renderDirectory(); renderSettings(); if(typeof renderPlantMenu==="function") renderPlantMenu(); if(typeof renderProfileMenu==="function") renderProfileMenu(); if(typeof fbWireButtons==="function") fbWireButtons(); if(typeof fbUpdateAdminUI==="function") fbUpdateAdminUI(); updSub(); }
   const ICON_FILE='<svg class="i" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>';
   const ICON_EDIT='<svg class="i" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
   const ICON_DEL='<svg class="i" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
@@ -1592,35 +1594,88 @@ $("go").addEventListener("click", async () => {
     try{
       if(!firebase.apps.length){ fbApp=firebase.initializeApp(cfg); } else { fbApp=firebase.app(); }
       fbDb=firebase.firestore(); fbAuth=firebase.auth();
-      fbAuth.onAuthStateChanged(u=>{ if(u){ fbSetAuthStatus("Login sebagai: "+u.email, "ok"); } else { fbSetAuthStatus("Belum login. Login dulu biar bisa baca/tulis Firestore kalau rules-nya butuh login.", "warn"); } });
+      fbAuth.onAuthStateChanged(u=>{ if(u){ fbSetAuthStatus("Login sebagai: "+u.email, "ok"); } else { fbSetAuthStatus("Belum login. Login dulu biar bisa baca/tulis Firestore kalau rules-nya butuh login.", "warn"); } if(typeof fbUpdateAdminUI==="function") fbUpdateAdminUI(); });
       fbUpdateStatus(); return true;
     }catch(e){ fbSetStatus("Gagal init Firebase: "+e.message, "err"); return false; }
   }
-  function fbPayload(){ return {reports:R, buyers:BDIR, plants:PLANTS, testTypes:TEST_TYPES, settings:SETTINGS, profile:PROFILE, updatedAt:Date.now()}; }
+  function fbIsAdmin(){ const cur=fbAuth&&fbAuth.currentUser?fbAuth.currentUser.email.toLowerCase():""; const adm=(SETTINGS.adminEmail||"").toLowerCase(); if(!adm) return false; return cur===adm; }
+  function fbUpdateAdminUI(){ const el=$("fbAdminStatus"); if(el){ const adm=SETTINGS.adminEmail||""; const cur=fbAuth&&fbAuth.currentUser?fbAuth.currentUser.email:""; if(!adm){ el.textContent="Belum ada admin. Akun pertama yang daftar otomatis jadi admin. Kamu lagi login sebagai: "+(cur||"belum login"); el.className="fb-status warn"; } else if(cur&&cur.toLowerCase()===adm.toLowerCase()){ el.textContent="Kamu adalah ADMIN ("+adm+"). Cuma kamu yang bisa lihat tombol Daftar Akun Pabrik."; el.className="fb-status ok"; } else { el.textContent="Admin: "+adm+". Kamu login sebagai: "+(cur||"belum login")+" — tombol Daftar disembunyikan buat non-admin. Minta admin yang bikinin akun."; el.className="fb-status"; } } const rg=$("set_fbRegister"); if(rg){ const adm=(SETTINGS.adminEmail||"").toLowerCase(); const cur=fbAuth&&fbAuth.currentUser?fbAuth.currentUser.email.toLowerCase():""; const show=!adm||(cur&&cur===adm); rg.style.display=show?"":"none"; } const ae=$("set_adminEmail"); if(ae && document.activeElement!==ae) ae.value=SETTINGS.adminEmail||""; }
+  // --- PENYIMPANAN BARU: per-dokumen, bukan 1 dokumen raksasa ---
+  // reports/{id} = 1 report, buyers/{nama} = 1 buyer, meta/main = settings+plants+profile
+  // Jadi nggak mentok 1MB lagi, dan kalau 2 orang edit report beda, nggak saling timpa.
+  function fbDocIdForBuyer(name){ return encodeURIComponent((name||"").toLowerCase().trim()).replace(/%/g,"_"); }
   async function fbPush(showToast){
     if(SETTINGS.dbMode!=="firebase"){ if(showToast) toast("Ganti Mode Penyimpanan ke Firebase dulu di Settings"); return; }
     if(!fbDb && !fbInit()) return;
-    if(fbSaving) return; fbSaving=true; fbSetStatus("Mengirim data ke Firebase...", "warn");
-    try{ await fbDb.collection("portal").doc("main").set(fbPayload()); fbLastSync=Date.now(); fbUpdateStatus(); if(showToast) toast("Data terkirim ke Firebase"); }
-    catch(e){ fbSetStatus("Gagal kirim ke Firebase: "+e.message+" — Cek Firestore Rules: kalau masih Test Mode harusnya bisa, kalau Production butuh login dulu.", "err"); if(showToast) toast("Gagal kirim ke Firebase"); }
+    if(fbSaving) return; fbSaving=true; fbSetStatus("Mengirim data ke Firebase (per-report)...", "warn");
+    try{
+      // 1. Meta dulu
+      await fbDb.collection("meta").doc("main").set({plants:PLANTS, testTypes:TEST_TYPES, settings:SETTINGS, profile:PROFILE, updatedAt:Date.now()});
+      // 2. Reports per-dokumen, pakai batch biar hemat, pecah per 400 biar nggak kena limit Firestore
+      const existing = await fbDb.collection("reports").get();
+      const existingIds = new Set(); existing.forEach(d=>existingIds.add(d.id));
+      const currentIds = new Set(R.map(r=>String(r.id)));
+      let batch = fbDb.batch(); let opCount=0; const batches=[];
+      const flush=()=>{ if(opCount>0){ batches.push(batch); batch=fbDb.batch(); opCount=0; } };
+      R.forEach(r=>{ const ref=fbDb.collection("reports").doc(String(r.id)); batch.set(ref, r); opCount++; if(opCount>=400) flush(); });
+      // Hapus report yang udah dihapus di local
+      existingIds.forEach(id=>{ if(!currentIds.has(id)){ batch.delete(fbDb.collection("reports").doc(id)); opCount++; if(opCount>=400) flush(); } });
+      flush();
+      for(const b of batches){ await b.commit(); }
+      // 3. Buyers per-dokumen
+      let bBatch = fbDb.batch(); let bOp=0; const bBatches=[];
+      const bFlush=()=>{ if(bOp>0){ bBatches.push(bBatch); bBatch=fbDb.batch(); bOp=0; } };
+      const bExisting = await fbDb.collection("buyers").get(); const bExistingIds=new Set(); bExisting.forEach(d=>bExistingIds.add(d.id));
+      const bCurrentIds=new Set(Object.keys(BDIR||{}).map(k=>fbDocIdForBuyer(k)));
+      Object.entries(BDIR||{}).forEach(([name, rec])=>{ bBatch.set(fbDb.collection("buyers").doc(fbDocIdForBuyer(name)), {name:name, profile:rec||{}, updatedAt:Date.now()}); bOp++; if(bOp>=400) bFlush(); });
+      bExistingIds.forEach(id=>{ if(!bCurrentIds.has(id)){ bBatch.delete(fbDb.collection("buyers").doc(id)); bOp++; if(bOp>=400) bFlush(); } });
+      bFlush(); for(const b of bBatches){ await b.commit(); }
+      // 4. Hapus dokumen lama portal/main kalau masih ada, biar nggak bingung (migrasi)
+      try{ await fbDb.collection("portal").doc("main").delete(); }catch(e){}
+      fbLastSync=Date.now(); fbUpdateStatus(); if(showToast) toast("Data terkirim ke Firebase ("+R.length+" report, per-dokumen)");
+    }catch(e){ fbSetStatus("Gagal kirim ke Firebase: "+e.message, "err"); if(showToast) toast("Gagal kirim ke Firebase"); }
     fbSaving=false;
   }
   async function fbPull(showToast){
     if(SETTINGS.dbMode!=="firebase"){ if(showToast) toast("Ganti Mode Penyimpanan ke Firebase dulu"); return; }
     if(!fbDb && !fbInit()) return;
-    fbSetStatus("Memuat data dari Firebase...", "warn");
+    fbSetStatus("Memuat data dari Firebase (per-report)...", "warn");
     try{
-      const doc=await fbDb.collection("portal").doc("main").get();
-      if(!doc.exists){ fbSetStatus("Belum ada data di Firebase. Klik Kirim Data Lokal ke Firebase dulu.", "warn"); if(showToast) toast("Belum ada data di Firebase"); return; }
-      const d=doc.data()||{};
-      if(Array.isArray(d.reports)) R=d.reports;
-      if(d.buyers&&typeof d.buyers==="object") BDIR=d.buyers;
-      if(Array.isArray(d.plants)&&d.plants.length) PLANTS=d.plants;
-      if(Array.isArray(d.testTypes)&&d.testTypes.length) TEST_TYPES=d.testTypes;
-      if(d.profile&&typeof d.profile==="object") PROFILE={...PROFILE, ...d.profile};
-      if(d.settings&&typeof d.settings==="object") SETTINGS={...SETTINGS, ...d.settings};
-      try{ localStorage.setItem(KEY, JSON.stringify(R)); localStorage.setItem(DIR_KEY, JSON.stringify(BDIR)); localStorage.setItem(PLANTS_KEY, JSON.stringify(PLANTS)); localStorage.setItem(TEST_TYPES_KEY, JSON.stringify(TEST_TYPES)); localStorage.setItem(SET_KEY, JSON.stringify(SETTINGS)); localStorage.setItem(PKEY, JSON.stringify(PROFILE)); }catch(e){}
-      fbLastSync=Date.now(); fbUpdateStatus(); renderAll(); if(showToast) toast("Data dimuat dari Firebase");
+      // Coba struktur baru dulu
+      const metaDoc = await fbDb.collection("meta").doc("main").get();
+      const repSnap = await fbDb.collection("reports").get();
+      const buySnap = await fbDb.collection("buyers").get();
+      if(metaDoc.exists || !repSnap.empty || !buySnap.empty){
+        const md = metaDoc.exists ? (metaDoc.data()||{}) : {};
+        if(Array.isArray(md.plants)&&md.plants.length) PLANTS=md.plants;
+        if(Array.isArray(md.testTypes)&&md.testTypes.length) TEST_TYPES=md.testTypes;
+        if(md.profile&&typeof md.profile==="object") PROFILE={...PROFILE, ...md.profile};
+        if(md.settings&&typeof md.settings==="object"){ const savedAdmin=SETTINGS.adminEmail; SETTINGS={...SETTINGS, ...md.settings}; if(!SETTINGS.adminEmail && savedAdmin) SETTINGS.adminEmail=savedAdmin; }
+        const newR=[]; repSnap.forEach(d=>{ const data=d.data()||{}; if(!data.id) data.id=d.id; newR.push(data); });
+        // Urutkan by updated desc biar sama kayak local
+        newR.sort((a,b)=>(b.updated||b.createdAt||0)-(a.updated||a.createdAt||0));
+        if(!repSnap.empty) R=newR;
+        const newB={}; buySnap.forEach(d=>{ const data=d.data()||{}; const nm=data.name||decodeURIComponent(d.id); if(nm) newB[nm]=data.profile||{}; });
+        if(!buySnap.empty) BDIR=newB;
+        try{ localStorage.setItem(KEY, JSON.stringify(R)); localStorage.setItem(DIR_KEY, JSON.stringify(BDIR)); localStorage.setItem(PLANTS_KEY, JSON.stringify(PLANTS)); localStorage.setItem(TEST_TYPES_KEY, JSON.stringify(TEST_TYPES)); localStorage.setItem(SET_KEY, JSON.stringify(SETTINGS)); localStorage.setItem(PKEY, JSON.stringify(PROFILE)); }catch(e){}
+        fbLastSync=Date.now(); fbUpdateStatus(); fbUpdateAdminUI(); renderAll(); if(showToast) toast("Data dimuat dari Firebase ("+R.length+" report)");
+        return;
+      }
+      // Fallback: masih ada dokumen lama portal/main -> migrasi sekali
+      const oldDoc = await fbDb.collection("portal").doc("main").get();
+      if(oldDoc.exists){
+        const d=oldDoc.data()||{};
+        if(Array.isArray(d.reports)) R=d.reports;
+        if(d.buyers&&typeof d.buyers==="object") BDIR=d.buyers;
+        if(Array.isArray(d.plants)&&d.plants.length) PLANTS=d.plants;
+        if(Array.isArray(d.testTypes)&&d.testTypes.length) TEST_TYPES=d.testTypes;
+        if(d.profile) PROFILE={...PROFILE, ...d.profile};
+        if(d.settings) SETTINGS={...SETTINGS, ...d.settings};
+        try{ localStorage.setItem(KEY, JSON.stringify(R)); localStorage.setItem(DIR_KEY, JSON.stringify(BDIR)); localStorage.setItem(PLANTS_KEY, JSON.stringify(PLANTS)); localStorage.setItem(TEST_TYPES_KEY, JSON.stringify(TEST_TYPES)); localStorage.setItem(SET_KEY, JSON.stringify(SETTINGS)); localStorage.setItem(PKEY, JSON.stringify(PROFILE)); }catch(e){}
+        fbSetStatus("Migrasi dari dokumen lama... mengirim ulang per-report", "warn"); renderAll(); await fbPush(false); if(showToast) toast("Migrasi dari format lama selesai ("+R.length+" report)");
+        return;
+      }
+      fbSetStatus("Belum ada data di Firebase. Klik Kirim Data Lokal ke Firebase dulu.", "warn"); if(showToast) toast("Belum ada data di Firebase");
     }catch(e){ fbSetStatus("Gagal muat dari Firebase: "+e.message, "err"); }
   }
   // Debounce save ke Firebase tiap kali data lokal berubah
@@ -1632,9 +1687,11 @@ $("go").addEventListener("click", async () => {
     const pu=$("set_fbPull"); if(pu && !pu.dataset.wired){ pu.dataset.wired="1"; pu.onclick=()=>fbPull(true); }
     const ps=$("set_fbPush"); if(ps && !ps.dataset.wired){ ps.dataset.wired="1"; ps.onclick=()=>fbPush(true); }
     const li=$("set_fbLogin"); if(li && !li.dataset.wired){ li.dataset.wired="1"; li.onclick=async()=>{ if(!fbDb && !fbInit()) return; const em=fbNormEmail($("set_fbEmail").value), pw=$("set_fbPass").value; if(!em||!pw){ toast("Isi username + password dulu"); return; } try{ await fbAuth.signInWithEmailAndPassword(em,pw); toast("Login berhasil"); }catch(e){ fbSetAuthStatus("Login gagal: "+e.message, "err"); } }; }
-    const rg=$("set_fbRegister"); if(rg && !rg.dataset.wired){ rg.dataset.wired="1"; rg.onclick=async()=>{ if(!fbDb && !fbInit()) return; const em=fbNormEmail($("set_fbEmail").value), pw=$("set_fbPass").value; if(!em||!pw){ toast("Isi username + password dulu"); return; } if(pw.length<6){ toast("Password minimal 6 karakter"); return; } try{ await fbAuth.createUserWithEmailAndPassword(em,pw); toast("Akun dibuat: "+em+" — langsung login"); }catch(e){ fbSetAuthStatus("Daftar gagal: "+e.message, "err"); } }; }
+    const rg=$("set_fbRegister"); if(rg && !rg.dataset.wired){ rg.dataset.wired="1"; rg.onclick=async()=>{ if(!fbDb && !fbInit()) return; const adm=(SETTINGS.adminEmail||"").toLowerCase(); const cur=fbAuth.currentUser?fbAuth.currentUser.email.toLowerCase():""; if(adm && cur!==adm){ toast("Cuma admin ("+adm+") yang bisa bikin akun. Minta admin yang bikinin."); fbSetAuthStatus("Ditolak: cuma admin yang bisa bikin akun.", "err"); return; } const em=fbNormEmail($("set_fbEmail").value), pw=$("set_fbPass").value; if(!em||!pw){ toast("Isi username + password dulu"); return; } if(pw.length<6){ toast("Password minimal 6 karakter"); return; } try{ const cred=await fbAuth.createUserWithEmailAndPassword(em,pw); if(!adm){ SETTINGS.adminEmail=em; saveSettings(); toast("Akun pertama jadi ADMIN: "+em); } else { toast("Akun dibuat: "+em+" — oleh admin"); } if(typeof fbUpdateAdminUI==="function") fbUpdateAdminUI(); }catch(e){ fbSetAuthStatus("Daftar gagal: "+e.message, "err"); } }; }
     const cp=$("set_fbCopyRules"); if(cp && !cp.dataset.wired){ cp.dataset.wired="1"; cp.onclick=async()=>{ const txt=$("fbRulesTxt").value; try{ await navigator.clipboard.writeText(txt); toast("Rules tercopy, tinggal paste di Firebase"); }catch(e){ $("fbRulesTxt").select(); document.execCommand("copy"); toast("Rules tercopy"); } }; }
     const lo=$("set_fbLogout"); if(lo && !lo.dataset.wired){ lo.dataset.wired="1"; lo.onclick=async()=>{ if(!fbAuth) return; await fbAuth.signOut(); toast("Logout"); }; }
+    const svA=$("set_saveAdmin"); if(svA && !svA.dataset.wired){ svA.dataset.wired="1"; svA.onclick=()=>{ const v=fbNormEmail($("set_adminEmail").value); if(!v){ toast("Isi email admin dulu, contoh azis@texlab.com"); return; } SETTINGS.adminEmail=v; saveSettings(); fbUpdateAdminUI(); toast("Admin disimpan: "+v); }; }
+    const clA=$("set_claimAdmin"); if(clA && !clA.dataset.wired){ clA.dataset.wired="1"; clA.onclick=()=>{ if(SETTINGS.adminEmail){ toast("Admin sudah ada: "+SETTINGS.adminEmail); return; } const cur=fbAuth&&fbAuth.currentUser?fbAuth.currentUser.email:""; if(!cur){ toast("Login dulu baru bisa jadi admin"); return; } SETTINGS.adminEmail=cur.toLowerCase(); saveSettings(); fbUpdateAdminUI(); toast("Kamu sekarang ADMIN: "+cur); }; }
   }
   // Auto-init kalau mode sudah Firebase
   setTimeout(()=>{ if(SETTINGS.dbMode==="firebase"){ fbInit(); fbPull(false); } }, 800);
@@ -1923,7 +1980,7 @@ $("go").addEventListener("click", async () => {
   const SET_KEY="trp_settings_v1";
   const TEST_TYPES_KEY="trp_test_types_v1";
   const PLANTS_KEY="trp_plants_v1";
-  let SETTINGS={labName:"",labAddr:"",labPhone:"",labEmail:"",pic:"",target:7,plantName:"",plantAddr:"",plantContact:"",plantPhone:"",wfMasuk:1,wfProses:3,wfPending:2,dbMode:"local",fbApiKey:"AIzaSyDNhtxw21z2zkQ5v1LolTmUE2rv3rEjqbA",fbAuthDomain:"texlab-ba76c.firebaseapp.com",fbProjectId:"texlab-ba76c",fbStorage:"texlab-ba76c.firebasestorage.app",fbSender:"1014354282478",fbAppId:"1:1014354282478:web:2ac4d1c96e10d5e77670ff"};
+  let SETTINGS={labName:"",labAddr:"",labPhone:"",labEmail:"",pic:"",target:7,plantName:"",plantAddr:"",plantContact:"",plantPhone:"",wfMasuk:1,wfProses:3,wfPending:2,dbMode:"local",fbApiKey:"AIzaSyDNhtxw21z2zkQ5v1LolTmUE2rv3rEjqbA",fbAuthDomain:"texlab-ba76c.firebaseapp.com",fbProjectId:"texlab-ba76c",fbStorage:"texlab-ba76c.firebasestorage.app",fbSender:"1014354282478",fbAppId:"1:1014354282478:web:2ac4d1c96e10d5e77670ff",adminEmail:""};
   try{ const s=JSON.parse(localStorage.getItem(SET_KEY)||"{}"); if(s&&typeof s==="object") SETTINGS={...SETTINGS, ...s}; }catch(e){}
   function saveSettings(){ try{ localStorage.setItem(SET_KEY, JSON.stringify(SETTINGS)); }catch(e){} if(typeof fbAutoSave==="function") fbAutoSave(); if(typeof fbWireButtons==="function") fbWireButtons(); }
   let TEST_TYPES=["Full Package Test","Seam Strength","Dimensional Change","Wash and Wear","Appearance After Laundering","Attachment Strength","Colorfastness","Fabric Shrinkage","Shrinkage","Pilling"];
@@ -1975,6 +2032,8 @@ $("go").addEventListener("click", async () => {
     $("set_fbSender").value=SETTINGS.fbSender||"";
     $("set_fbAppId").value=SETTINGS.fbAppId||"";
     $("set_firebaseFields").hidden=SETTINGS.dbMode!=="firebase";
+    if($("set_adminEmail")) $("set_adminEmail").value=SETTINGS.adminEmail||"";
+    if(typeof fbUpdateAdminUI==="function") fbUpdateAdminUI();
     if(typeof fbUpdateStatus==="function") fbUpdateStatus();
     $("set_stat").textContent=R.length+" report · "+BUYERS.length+" buyer · "+TEST_TYPES.length+" test type · "+PLANTS.length+" plant · "+(SETTINGS.plantName||SETTINGS.labName||"Plant / Lab belum diisi");
     const sub=$("dsub"); if(sub) sub.textContent=(SETTINGS.labName||SETTINGS.plantName||"Pusat Laporan Pengujian")+(SETTINGS.pic?" · PIC: "+SETTINGS.pic:"");
@@ -2022,5 +2081,5 @@ $("go").addEventListener("click", async () => {
   load(); if(typeof saveTestTypes==="function") saveTestTypes(); if(typeof savePlants==="function") savePlants(); renderAll(); applyBuyers(); go("dash");
 })();
 </script>
-<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
+</body>
 </html>
