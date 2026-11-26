@@ -1,27 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
-<head><style>
-@font-face {
-  font-family: "Optimistic";
-  font-style: normal;
-  font-weight: 400 600;
-  font-display: swap;
-  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Optimistic Mono";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
-}
-:where(html) {
-  font-family: "Optimistic", system-ui, sans-serif;
-}
-:where(code, pre, kbd, samp) {
-  font-family: "Optimistic Mono", ui-monospace, monospace;
-}
-</style>
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Test Report Portal - Rapi 2</title>
@@ -431,6 +410,15 @@ body.locked .topbar, body.locked .main, body.locked #toast, body.locked #amodal,
 .login-divider{display:flex;align-items:center;gap:10px;color:#cbd5e1;font-size:11px;margin:14px 0 0}
 .login-divider::before,.login-divider::after{content:"";flex:1;height:1px;background:#e2e8f0}
 .login-hint{background:#f8fafc;border:1px dashed #cbd5e1;border-radius:10px;padding:10px;font-size:12px;color:#475569;text-align:left;margin-top:12px}
+
+  .notif-item{border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin-bottom:8px;background:#fff}
+  .notif-item.late{border-color:#fecaca;background:#fef2f2}
+  .notif-item.today{border-color:#fde68a;background:#fffbeb}
+  .notif-item.tomorrow{border-color:#bfdbfe;background:#eff6ff}
+  .notif-item.pending{border-color:#fed7aa;background:#fff7ed}
+  .notif-item.fail{border-color:#fecaca;background:#fef2f2}
+  .notif-tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;margin-right:4px}
+  .tag-late{background:#dc2626;color:#fff}.tag-today{background:#d97706;color:#fff}.tag-tom{background:#2563eb;color:#fff}.tag-pending{background:#ea580c;color:#fff}.tag-fail{background:#dc2626;color:#fff}
 </style>
 <!-- Firebase (compat) untuk sinkronisasi Firestore + Auth -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -475,7 +463,7 @@ body.locked .topbar, body.locked .main, body.locked #toast, body.locked #amodal,
     <div class="crumbs" id="crumbs"></div>
     <label class="search" style="margin:0"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input id="q" type="search" placeholder="Search buyers, brands, or test reports..." autocomplete="off"></label>
     <div class="tools">
-      <button type="button" class="ibtn" data-nav="Notifikasi" aria-label="Notifications"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></button>
+      <button type="button" class="ibtn" id="notifBell" aria-label="Notifikasi" title="Notifikasi" style="position:relative"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span id="notifBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:#dc2626;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:999px;display:grid;place-items:center;padding:0 4px">0</span></button>
       <div style="position:relative"><button type="button" class="plant" id="plantBtn" aria-haspopup="true" aria-expanded="false"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/></svg><span id="plantLabel" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Semua Plant</span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div id="plantMenu" class="plant-menu" hidden></div></div>
       <div style="position:relative"><button type="button" class="ibtn" id="profileBtn" aria-haspopup="true" aria-expanded="false" aria-label="Profile"><span id="profileAva" style="width:26px;height:26px;border-radius:50%;background:#dbeafe;color:#1e3a8a;display:grid;place-items:center;font-weight:700;font-size:12px;overflow:hidden"><svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width:20px;height:20px"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span></button><div id="profileMenu" class="profile-menu" hidden></div></div>
     </div>
@@ -500,7 +488,7 @@ body.locked .topbar, body.locked .main, body.locked #toast, body.locked #amodal,
   <div class="panel">
     <div class="ph"><h2>Recent Test Reports</h2><div class="fnote" id="fnote"></div></div>
     <div class="tw"><table>
-      <thead><tr><th>Report No.</th><th>Buyer</th><th>Plant</th><th>Style/Code</th><th>Test Type</th><th>Status</th><th>Target</th><th>Updated</th><th>Actions</th></tr></thead>
+      <thead><tr><th>Report No.</th><th>Buyer</th><th>Plant</th><th>Style/Code</th><th>Test Type</th><th>Status</th><th>Target</th><th>Keterangan</th><th>Updated</th><th>Actions</th></tr></thead>
       <tbody id="tbody"></tbody>
     </table></div>
     <div class="chips" id="chips"></div>
@@ -596,38 +584,7 @@ body.locked .topbar, body.locked .main, body.locked #toast, body.locked #amodal,
             <div style="margin-top:12px;border:1px dashed #cbd5e1;border-radius:10px;padding:12px;background:#f8fafc">
               <div style="font-weight:700;font-size:13px;margin-bottom:4px">Rules buat @texlab.com — copy ke Firebase Console > Firestore > Rules</div>
               <p class="set-note" style="margin:0 0 8px">Rules yang di foto kamu itu mode test, kedaluwarsa 26 Des 2026. Abis itu semua ditolak. Ganti pake yang ini biar cuma email @texlab.com yang bisa baca/tulis:</p>
-              <textarea id="fbRulesTxt" readonly style="width:100%;height:110px;font-family:monospace;font-size:12px;padding:8px;border:1px solid var(--bd);border-radius:8px;box-sizing:border-box">rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Semua user @texlab.com boleh baca/tulis report, buyer, meta
-    // Tapi bikin akun baru cuma dari Console / Admin (lihat portal)
-    match /reports/{docId} {
-      allow read, write: if request.auth != null
-        && request.auth.token.email.matches('.*@texlab\\.com$');
-    }
-    match /buyers/{docId} {
-      allow read, write: if request.auth != null
-        && request.auth.token.email.matches('.*@texlab\\.com$');
-    }
-    match /history/{docId} {
-      allow read: if request.auth != null
-        && request.auth.token.email.matches('.*@texlab\\.com$');
-      allow create: if request.auth != null
-        && request.auth.token.email.matches('.*@texlab\\.com$');
-      allow update, delete: if false;
-    }
-    match /meta/{docId} {
-      allow read, write: if request.auth != null
-        && request.auth.token.email.matches('.*@texlab\\.com$');
-    }
-    // Dokumen lama portal/main jangan dipake lagi, matikan tulisnya
-    match /portal/{docId} {
-      allow read: if request.auth != null
-        && request.auth.token.email.matches('.*@texlab\\.com$');
-      allow write: if false;
-    }
-  }
-}</textarea>
+              <textarea id="fbRulesTxt" readonly style="width:100%;height:170px;font-family:monospace;font-size:12px;padding:8px;border:1px solid var(--bd);border-radius:8px;box-sizing:border-box">rules_version = '2'; service cloud.firestore {   match /databases/{database}/documents {     // FIX KEAMANAN: email harus @texlab.com DAN sudah verifikasi email (email_verified). Biar orang luar nggak bisa bikin akun palsu fahim@texlab.com tanpa punya inbox-nya.     match /reports/{docId} {       allow read, write: if request.auth != null         && request.auth.token.email.matches('.*@texlab\\.com$')         && request.auth.token.email_verified == true;     }     match /buyers/{docId} {       allow read, write: if request.auth != null         && request.auth.token.email.matches('.*@texlab\\.com$')         && request.auth.token.email_verified == true;     }     match /history/{docId} {       allow read: if request.auth != null         && request.auth.token.email.matches('.*@texlab\\.com$')         && request.auth.token.email_verified == true;       allow create: if request.auth != null         && request.auth.token.email.matches('.*@texlab\\.com$')         && request.auth.token.email_verified == true;       allow update, delete: if false;     }     match /meta/{docId} {       allow read, write: if request.auth != null         && request.auth.token.email.matches('.*@texlab\\.com$')         && request.auth.token.email_verified == true;     }     match /portal/{docId} {       allow read: if request.auth != null         && request.auth.token.email.matches('.*@texlab\\.com$')         && request.auth.token.email_verified == true;       allow write: if false;     }   } }</textarea>
               <button type="button" class="sbtn" id="set_fbCopyRules" style="margin-top:8px">Copy Rules</button>
               <p class="set-note" style="margin:8px 0 0">Abis copy, paste di Firestore > Rules, klik Publish. Jangan lupa bikin user-nya di Authentication, bukan di Rules.</p>
             </div>
@@ -647,7 +604,7 @@ service cloud.firestore {
           <label>1. Backup — download ke PC</label>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button type="button" class="sbtn" id="set_exportJson" style="background:#166534;color:#fff;border-color:#166534">Backup ke PC (JSON Lengkap)</button>
-            <button type="button" class="sbtn" id="set_export">Backup CSV</button>
+            <button type="button" class="sbtn" id="set_export">Backup CSV buat Bos</button>
             <button type="button" class="sbtn" id="set_sample">Muat Data Contoh</button>
           </div>
           <p class="set-note">Nama file otomatis ada tanggalnya, contoh: <b>Texlab_Backup_2026-11-26.json</b>. Simpan di PC + copy ke Google Drive. Usahakan backup tiap Jumat / tiap ada laporan penting.</p>
@@ -664,6 +621,20 @@ service cloud.firestore {
             <button type="button" class="sbtn" id="set_reset_buyers">Reset Buyer Directory</button>
           </div>
           <p class="set-note">Reset menghapus data coba-coba kalau mau mulai ulang. Export dulu sebelum reset.</p>
+         </div></div>
+         <div class="panel"><div class="ph"><h2>Cek Keamanan</h2><span class="an-sub">Audit 26 Nov 2026 — Sudah Fix</span></div><div style="padding:4px 18px 16px">
+           <div style="font-size:12.5px;line-height:1.6;color:#334155">
+             <div>✅ <b>Rules Firestore:</b> cuma <b>@texlab.com + email terverifikasi</b> yang bisa baca/tulis. Orang luar yang bikin akun palsu <b>fahim@texlab.com</b> tanpa punya inbox-nya bakal ditolak, karena <b>email_verified = false</b>.</div>
+             <div>✅ <b>Login Gate:</b> kalau email belum verifikasi, langsung di-logout + dikirimin link verifikasi baru, nggak bisa masuk ke data.</div>
+             <div>✅ <b>Daftar Akun:</b> cuma admin yang bisa bikin akun di portal, abis bikin langsung dikirimin email verifikasi, harus verifikasi dulu baru bisa login.</div>
+             <div>✅ <b>Riwayat:</b> boleh baca + bikin baru, tapi <b>nggak boleh edit / hapus</b>, jadi jejak audit aman.</div>
+             <div>✅ <b>Dokumen lama portal/main:</b> cuma boleh baca, nggak boleh ditimpa.</div>
+             <div>✅ <b>XSS:</b> semua input user di-render pake <b>esc()</b>, jadi nggak bisa nyelipin script lewat nama buyer / komentar.</div>
+             <div>⚠️ <b>API Key di file HTML:</b> ini BUKAN bocor, API Key Firebase web emang boleh keliatan, yang ngamanin itu Rules, bukan nyembunyiin key. Tapi <b>jangan upload file ini ke GitHub publik / share link Drive publik</b>.</div>
+             <div>⚠️ <b>Delete masih boleh semua @texlab.com:</b> sengaja, karena dipake 1 orang. Kalau nanti dipake rame-rame, bilang aja, tak kunci delete-nya cuma buat admin.</div>
+             <div>⚠️ <b>Backup JSON:</b> isinya semua data, jangan share file backup ke orang luar, simpan di PC + Drive pribadi aja.</div>
+             <div style="margin-top:8px;background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:8px 10px"><b>Wajib lakuin di Console (1x aja):</b><br>1. Copy Rules baru di atas → Firestore → Rules → Publish.<br>2. Authentication → Users → cek akunmu <b>azis@texlab.com</b> — kalau belum verifikasi, klik akunnya → kirim email verifikasi / atau login sekali, portal bakal kirim link otomatis.<br>3. Abis verifikasi, login lagi, harusnya langsung masuk.</div>
+           </div>
         </div></div>
       </div>
     </section>
@@ -759,13 +730,19 @@ service cloud.firestore {
   <div><label for="f_type">Test Type</label><input id="f_type" list="testtypes" autocomplete="off"></div></div>
   <div class="row"><div><label for="f_st">Status</label><select id="f_st"><option value="masuk">Masuk</option><option value="proses">Proses</option><option value="pending">Pending</option><option value="pass">Selesai · Pass</option><option value="fail">Selesai · Fail</option></select></div>
   <div><label for="f_due">Target selesai</label><input id="f_due" type="date"></div></div>
-  <div id="f_why_w" hidden><label for="f_why">Alasan pending</label><input id="f_why" list="whys" autocomplete="off" placeholder="mis. Menunggu approval buyer"></div>
+  <div id="f_why_w" hidden><label for="f_why">Alasan pending</label><input id="f_why" list="whys" autocomplete="off" placeholder="mis. Menunggu approval buyer"></div>   <label for="f_comment">Komentar / Keterangan</label><textarea id="f_comment" rows="2" placeholder="mis. Sample kurang 1 pcs, nunggu kiriman dari Pringapus. / Sudah WA ke buyer, nunggu balasan." style="width:100%;padding:8px;border:1px solid var(--bd);border-radius:8px;box-sizing:border-box;font-family:inherit;font-size:13px;resize:vertical"></textarea>
   <datalist id="testtypes"><option value="Full Package Test"><option value="Seam Strength"><option value="Dimensional Change"><option value="Wash and Wear"><option value="Appearance After Laundering"><option value="Attachment Strength"><option value="Colorfastness"><option value="Fabric Shrinkage"></datalist>
   <datalist id="whys"><option value="Menunggu sampel"><option value="Menunggu approval buyer"><option value="Menunggu info dari buyer"><option value="Menunggu alat/mesin"></datalist>
   <ul class="hist" id="fhist"></ul>
   <div class="ferr" id="ferr"></div>
   <div class="fbtns"><button type="button" class="sbtn" id="fsaveopen" hidden>Simpan &amp; buka form report</button><button type="button" class="sbtn dbtn" id="fdel">Hapus</button><button type="button" class="sbtn" id="fcancel">Batal</button><button type="submit" class="pbtn">Simpan</button></div>
 </form></div>
+<div class="modal" id="notifModal" role="dialog" aria-modal="true"><div class="fbox" style="max-width:560px;max-height:85vh;overflow:auto">
+  <div style="display:flex;justify-content:space-between;align-items:start;gap:12px"><div><h4 style="margin:0;font-size:16px">Notifikasi — Yang Perlu Dikejar</h4><p id="notifSub" style="margin:4px 0 0;font-size:12px;color:#64748b"></p></div><button type="button" class="sbtn" id="notifClose" style="padding:4px 10px">Tutup</button></div>
+  <div id="notifSummary" style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0"></div>
+  <div id="notifList"></div>
+  <div style="display:flex;gap:8px;margin-top:14px"><button type="button" class="pbtn" id="notifClose2" style="flex:1">Mengerti, Tutup</button><button type="button" class="sbtn" id="notifShowAll">Lihat Semua Report Telat</button></div>
+</div></div>
 <div class="modal" id="amodal" role="dialog" aria-modal="true"><div class="fbox sm" id="abody"></div></div>
 <div class="toast" id="toast" hidden><span id="tmsg"></span><button type="button" id="tundo">Urungkan</button></div>
 
@@ -1534,9 +1511,9 @@ $("go").addEventListener("click", async () => {
     const l=filtered(), rows=showAll?l:l.slice(0,8);
     $("tbody").innerHTML=rows.length?rows.map(r=>
       '<tr><td>'+esc(r.no)+'</td><td>'+esc(r.buyer)+'</td><td>'+esc(r.plant||"PT. Ungaran Sari Garments Ungaran")+'</td><td>'+esc(r.style||"-")+'</td><td>'+esc(r.type||"-")+'</td>'+
-      '<td>'+statusCell(r)+'</td><td>'+dueHtml(r)+'</td><td class="mut">'+ago(r.updated)+'</td>'+
-      '<td><div class="acts"><button type="button" class="act" data-open="'+r.id+'">'+ICON_FILE+'Buka Form</button><button type="button" class="act" data-edit="'+r.id+'" aria-label="Edit" title="Edit">'+ICON_EDIT+'</button><button type="button" class="act del" data-del="'+r.id+'" aria-label="Hapus">'+ICON_DEL+'</button></div></td></tr>'
-    ).join(""):'<tr><td colspan="9"><div class="none">'+(R.length?'Tidak ada report yang cocok dengan filter.':'Belum ada report. Klik <b>+ Input Report</b> untuk mulai, atau lihat tampilan dengan data contoh.<br><br><button type="button" class="act" id="seedBtn">Muat data contoh</button>')+'</div></td></tr>';
+      '<td>'+statusCell(r)+'</td><td>'+dueHtml(r)+'</td><td style="max-width:180px;font-size:12px;line-height:1.4">'+(r.comment?'<span title="'+esc(r.comment)+'">'+esc(r.comment.length>55?r.comment.slice(0,55)+"…":r.comment)+'</span>':'<span style="color:#94a3b8">-</span>')+'</td><td class="mut">'+ago(r.updated)+'</td>'+
+      '<td><div class="acts"><button type="button" class="act" data-open="'+r.id+'">'+ICON_FILE+'Buka Form</button><button type="button" class="act" data-print="'+r.id+'" title="Print / PDF report ini">Print</button><button type="button" class="act" data-edit="'+r.id+'" aria-label="Edit" title="Edit">'+ICON_EDIT+'</button><button type="button" class="act del" data-del="'+r.id+'" aria-label="Hapus">'+ICON_DEL+'</button></div></td></tr>'
+    ).join(""):'<tr><td colspan="10"><div class="none">'+(R.length?'Tidak ada report yang cocok dengan filter.':'Belum ada report. Klik <b>+ Input Report</b> untuk mulai, atau lihat tampilan dengan data contoh.<br><br><button type="button" class="act" id="seedBtn">Muat data contoh</button>')+'</div></td></tr>';
     const lc=R.filter(r=>lateDays(r)>0).length; let n="";
     if(lc||lateFilter) n+='<button type="button" class="act sm late'+(lateFilter?' on':'')+'" data-late>Telat ('+lc+')</button>';
     if(stFilter) n+='<button type="button" class="act sm" data-clr="st">Status: '+STN[stFilter]+' ×</button>';
@@ -1612,9 +1589,9 @@ $("go").addEventListener("click", async () => {
   }
 
   document.addEventListener("click",e=>{
-    const t=e.target.closest("[data-edit],[data-del],[data-clr],[data-b],[data-next],[data-hold],[data-reopen],[data-late],[data-open],#seedBtn,#moreBtn,#clrAll"); if(!t) return;
+    const t=e.target.closest("[data-edit],[data-del],[data-clr],[data-b],[data-next],[data-hold],[data-reopen],[data-late],[data-open],[data-print],#seedBtn,#moreBtn,#clrAll"); if(!t) return;
     const d=t.dataset;
-    if(d.edit) openForm(d.edit);
+    if(d.print) printReport(d.print); else if(d.edit) openForm(d.edit);
     else if(d.open) openReport(d.open);
     else if(d.del){ const r=R.find(x=>x.id===d.del); if(r&&confirm("Hapus report "+r.no+"?")){ R=R.filter(x=>x!==r); save(); renderAll(); } }
     else if(d.clr){ stFilter=""; renderKpis(); renderTable(); }
@@ -1636,7 +1613,7 @@ $("go").addEventListener("click", async () => {
     editId=id||null; const r=id?R.find(x=>x.id===id):null; $("ferr").textContent="";
     $("ftitle").textContent=r?"Edit Report":"Input Report Baru";
     $("f_no").value=r?r.no:""; $("f_buyer").value=r?r.buyer:BUYERS[0]; if($("f_plant")){ if(typeof refreshPlantSelect==="function") refreshPlantSelect(); $("f_plant").value=r?(r.plant||PLANTS[0]):PLANTS[0]; } $("f_style").value=r?r.style:""; $("f_type").value=r?r.type:""; $("f_st").value=r?sel(r):"masuk";
-    $("f_due").value=r?(r.due||""):iso(new Date(Date.now()+7*DAY)); $("f_why").value=r?(r.reason||""):"";
+    $("f_due").value=r?(r.due||""):iso(new Date(Date.now()+7*DAY)); $("f_why").value=r?(r.reason||""):""; if($("f_comment")) $("f_comment").value=r?(r.comment||""):"";
     syncForm();
     $("fdel").style.display=r?"":"none";
     $("fhist").innerHTML=r?(r.history||[]).slice().reverse().map(h=>'<li>'+fdt(h.t)+' · '+LBL[h.s]+(h.w?' — '+esc(h.w):'')+'</li>').join(""):"";
@@ -1655,9 +1632,9 @@ $("go").addEventListener("click", async () => {
     if(R.some(r=>r.id!==editId&&r.no.toLowerCase()===no.toLowerCase())){ $("ferr").textContent="Report No. "+no+" sudah ada."; return; }
     const v=$("f_st").value, why=$("f_why").value.trim(), due=$("f_due").value; let r;
     if(editId){
-      r=R.find(x=>x.id===editId); r.no=no; r.buyer=$("f_buyer").value; r.plant=$("f_plant")?$("f_plant").value:PLANTS[0]; r.style=$("f_style").value.trim(); r.type=$("f_type").value.trim(); r.due=due; r.updated=Date.now(); setState(r,v,why);
+      r=R.find(x=>x.id===editId); r.no=no; r.buyer=$("f_buyer").value; r.plant=$("f_plant")?$("f_plant").value:PLANTS[0]; r.style=$("f_style").value.trim(); r.type=$("f_type").value.trim(); r.due=due; if($("f_comment")) r.comment=$("f_comment").value.trim(); r.updated=Date.now(); setState(r,v,why);
     } else {
-      const now=Date.now(); r={id:uid(),no:no,buyer:$("f_buyer").value,plant:$("f_plant")?$("f_plant").value:PLANTS[0],style:$("f_style").value.trim(),type:$("f_type").value.trim(),due:due,status:"masuk",result:"",reason:"",doneAt:0,updated:now,history:[{s:"masuk",t:now}]};
+      const now=Date.now(); r={id:uid(),no:no,buyer:$("f_buyer").value,plant:$("f_plant")?$("f_plant").value:PLANTS[0],style:$("f_style").value.trim(),type:$("f_type").value.trim(),due:due,status:"masuk",result:"",reason:"",comment:($("f_comment")?$("f_comment").value.trim():""),doneAt:0,updated:now,history:[{s:"masuk",t:now}]};
       R.push(r); setState(r,v,why);
     }
     save(); if(editId){ logActivity("Edit Report", "Mengedit report "+r.no+" ("+r.buyer+")", r.no, r.buyer); } else { logActivity("Buat Report", "Membuat report baru "+r.no+" ("+r.buyer+") — "+r.type, r.no, r.buyer); } closeForm(); stFilter=""; renderAll();
@@ -1710,7 +1687,7 @@ $("go").addEventListener("click", async () => {
       fbDb=firebase.firestore(); fbAuth=firebase.auth();
       if(!fbInitDone){
         fbInitDone=true;
-        fbAuth.onAuthStateChanged(u=>{ if(u){ fbSetAuthStatus("Login sebagai: "+u.email, "ok"); gateUpdate(false); if(typeof fbListen==="function") fbListen(); } else { fbSetAuthStatus("Belum login. Login dulu biar bisa baca/tulis Firestore kalau rules-nya butuh login.", "warn"); if(SETTINGS.dbMode==="firebase") gateUpdate(true); } if(typeof fbUpdateAdminUI==="function") fbUpdateAdminUI(); });
+        fbAuth.onAuthStateChanged(u=>{ if(u && !u.emailVerified){ fbSetAuthStatus("Email "+u.email+" belum verifikasi. Cek inbox, klik link verifikasi, baru bisa baca data.", "warn"); gateUpdate(true); return; } if(u){ fbSetAuthStatus("Login sebagai: "+u.email+" (terverifikasi)", "ok"); gateUpdate(false); if(typeof fbListen==="function") fbListen(); } else { fbSetAuthStatus("Belum login. Login dulu biar bisa baca/tulis Firestore kalau rules-nya butuh login.", "warn"); if(SETTINGS.dbMode==="firebase") gateUpdate(true); } if(typeof fbUpdateAdminUI==="function") fbUpdateAdminUI(); });
       }
       fbUpdateStatus(); return true;
     }catch(e){ fbSetStatus("Gagal init Firebase: "+e.message, "err"); return false; }
@@ -1843,8 +1820,8 @@ $("go").addEventListener("click", async () => {
     const c=$("set_fbConnect"); if(c && !c.dataset.wired){ c.dataset.wired="1"; c.onclick=async()=>{ SETTINGS.fbApiKey=$("set_fbApiKey").value.trim(); SETTINGS.fbAuthDomain=$("set_fbAuthDomain").value.trim(); SETTINGS.fbProjectId=$("set_fbProjectId").value.trim(); SETTINGS.fbStorage=$("set_fbStorage").value.trim(); SETTINGS.fbSender=$("set_fbSender").value.trim(); SETTINGS.fbAppId=$("set_fbAppId").value.trim(); SETTINGS.dbMode="firebase"; saveSettings(); if(fbInit()){ await fbPush(true); } }; }
     const pu=$("set_fbPull"); if(pu && !pu.dataset.wired){ pu.dataset.wired="1"; pu.onclick=()=>fbPull(true); }
     const ps=$("set_fbPush"); if(ps && !ps.dataset.wired){ ps.dataset.wired="1"; ps.onclick=()=>fbPush(true); }
-    const li=$("set_fbLogin"); if(li && !li.dataset.wired){ li.dataset.wired="1"; li.onclick=async()=>{ if(!fbDb && !fbInit()) return; const em=fbNormEmail($("set_fbEmail").value), pw=$("set_fbPass").value; if(!em||!pw){ toast("Isi username + password dulu"); return; } try{ await fbAuth.signInWithEmailAndPassword(em,pw); toast("Login berhasil"); logActivity("Login", "Login sebagai "+em, "", ""); }catch(e){ fbSetAuthStatus("Login gagal: "+e.message, "err"); } }; }
-    const rg=$("set_fbRegister"); if(rg && !rg.dataset.wired){ rg.dataset.wired="1"; rg.onclick=async()=>{ if(!fbDb && !fbInit()) return; const adm=(SETTINGS.adminEmail||"").toLowerCase(); const cur=fbAuth.currentUser?fbAuth.currentUser.email.toLowerCase():""; if(adm && cur!==adm){ toast("Cuma admin ("+adm+") yang bisa bikin akun. Minta admin yang bikinin."); fbSetAuthStatus("Ditolak: cuma admin yang bisa bikin akun.", "err"); return; } const em=fbNormEmail($("set_fbEmail").value), pw=$("set_fbPass").value; if(!em||!pw){ toast("Isi username + password dulu"); return; } if(pw.length<6){ toast("Password minimal 6 karakter"); return; } try{ const cred=await fbAuth.createUserWithEmailAndPassword(em,pw); if(!adm){ SETTINGS.adminEmail=em; saveSettings(); toast("Akun pertama jadi ADMIN: "+em); } else { toast("Akun dibuat: "+em+" — oleh admin"); } if(typeof fbUpdateAdminUI==="function") fbUpdateAdminUI(); }catch(e){ fbSetAuthStatus("Daftar gagal: "+e.message, "err"); } }; }
+    const li=$("set_fbLogin"); if(li && !li.dataset.wired){ li.dataset.wired="1"; li.onclick=async()=>{ if(!fbDb && !fbInit()) return; const em=fbNormEmail($("set_fbEmail").value), pw=$("set_fbPass").value; if(!em||!pw){ toast("Isi username + password dulu"); return; } try{ await fbAuth.signInWithEmailAndPassword(em,pw); const _u2=fbAuth.currentUser; if(_u2 && !_u2.emailVerified){ try{ await _u2.sendEmailVerification(); }catch(e){} await fbAuth.signOut(); fbSetAuthStatus("Email belum verifikasi. Cek inbox / spam, klik link verifikasi, baru login lagi.", "err"); return; } toast("Login berhasil"); logActivity("Login", "Login sebagai "+em, "", ""); }catch(e){ fbSetAuthStatus("Login gagal: "+e.message, "err"); } }; }
+    const rg=$("set_fbRegister"); if(rg && !rg.dataset.wired){ rg.dataset.wired="1"; rg.onclick=async()=>{ if(!fbDb && !fbInit()) return; const adm=(SETTINGS.adminEmail||"").toLowerCase(); const cur=fbAuth.currentUser?fbAuth.currentUser.email.toLowerCase():""; if(adm && cur!==adm){ toast("Cuma admin ("+adm+") yang bisa bikin akun. Minta admin yang bikinin."); fbSetAuthStatus("Ditolak: cuma admin yang bisa bikin akun.", "err"); return; } const em=fbNormEmail($("set_fbEmail").value), pw=$("set_fbPass").value; if(!em||!pw){ toast("Isi username + password dulu"); return; } if(pw.length<6){ toast("Password minimal 6 karakter"); return; } try{ const cred=await fbAuth.createUserWithEmailAndPassword(em,pw); try{ await cred.user.sendEmailVerification(); }catch(e){} if(!adm){ SETTINGS.adminEmail=em; saveSettings(); } try{ await fbAuth.signOut(); }catch(e){} toast("Akun dibuat: "+em+" — cek inbox buat verifikasi email dulu, baru bisa login"); fbSetAuthStatus("Akun dibuat. Cek inbox "+em+" buat verifikasi email, baru login. Link verifikasi udah dikirim.", "ok"); if(typeof fbUpdateAdminUI==="function") fbUpdateAdminUI(); }catch(e){ fbSetAuthStatus("Daftar gagal: "+e.message, "err"); } }; }
     const cp=$("set_fbCopyRules"); if(cp && !cp.dataset.wired){ cp.dataset.wired="1"; cp.onclick=async()=>{ const txt=$("fbRulesTxt").value; try{ await navigator.clipboard.writeText(txt); toast("Rules tercopy, tinggal paste di Firebase"); }catch(e){ $("fbRulesTxt").select(); document.execCommand("copy"); toast("Rules tercopy"); } }; }
     const lo=$("set_fbLogout"); if(lo && !lo.dataset.wired){ lo.dataset.wired="1"; lo.onclick=async()=>{ if(!fbAuth) return; await fbAuth.signOut(); try{ localStorage.removeItem("trp_session_v1"); }catch(e){} fbUnlisten(); gateUpdate(true); toast("Logout"); logActivity("Logout", "Logout", "", ""); }; }
     const svA=$("set_saveAdmin"); if(svA && !svA.dataset.wired){ svA.dataset.wired="1"; svA.onclick=()=>{ const v=fbNormEmail($("set_adminEmail").value); if(!v){ toast("Isi email admin dulu, contoh azis@texlab.com"); return; } SETTINGS.adminEmail=v; saveSettings(); fbUpdateAdminUI(); toast("Admin disimpan: "+v); logActivity("Admin", "Set admin jadi "+v, "", ""); }; }
@@ -1944,6 +1921,7 @@ $("go").addEventListener("click", async () => {
           if(e && e.message==="TIMEOUT"){ gateShowErr("Koneksi ke Firebase timeout (12 detik). Internet kamu mungkin putus / lemot. Cek WiFi, reload, coba lagi."); return; }
           throw e;
         }
+        const _u = fbAuth.currentUser; if(_u && !_u.emailVerified){ try{ await _u.sendEmailVerification(); }catch(e){} try{ await fbAuth.signOut(); }catch(e){} gateShowErr("Email "+em+" belum verifikasi. Cek inbox / spam, klik link verifikasi, baru login lagi. Link baru udah dikirim."); return; }
         if(typeof logActivity==="function") logActivity("Login", "Login sebagai "+em, "", "");
         gateShowErr("");
       } else {
@@ -2359,10 +2337,80 @@ $("go").addEventListener("click", async () => {
   $("set_clear").onclick=()=>{ if(!confirm("Hapus semua report? Data tidak bisa dikembalikan. Export dulu kalau perlu.")) return; const cnt=R.length; R.length=0; save(); logActivity("Hapus Report", "Menghapus SEMUA report ("+cnt+" report)", "", ""); renderAll(); };
   $("set_reset_buyers").onclick=()=>{ if(!confirm("Reset semua profil buyer ke kosong + logo?")) return; try{ localStorage.removeItem(DIR_KEY); }catch(e){} BDIR={}; renderDirectory(); renderSettings(); alert("Buyer Directory sudah di-reset ke kosong."); };
 
+  
+  /* ---------- Print / PDF per SGR ---------- */
+  function printReport(id){
+    const r=R.find(x=>x.id===id); if(!r) return;
+    const w=window.open("", "_blank"); if(!w){ toast("Popup diblokir, izinkan popup dulu"); return; }
+    const stMap={masuk:"Masuk",proses:"Proses",pending:"Pending",pass:"Selesai - Pass",fail:"Selesai - Fail"};
+    const hist=(r.history||[]).map(h=>'<tr><td>'+esc(fdt(h.t))+'</td><td>'+esc(LBL[h.s]||h.s)+'</td><td>'+esc(h.w||"-")+'</td></tr>').join("")||'<tr><td colspan="3">-</td></tr>';
+    w.document.write('<html><head><meta charset="utf-8"><title>Report '+esc(r.no)+' - '+esc(r.buyer)+'</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#111;max-width:720px;margin:auto}h1{font-size:20px;margin:0}h2{font-size:14px;margin:24px 0 8px;border-bottom:2px solid #111;padding-bottom:4px}.kop{border-bottom:3px solid #111;padding-bottom:12px;margin-bottom:16px}.kop small{color:#555}table{width:100%;border-collapse:collapse;font-size:13px}td,th{border:1px solid #ccc;padding:8px;text-align:left;vertical-align:top}th{background:#f1f5f9;width:32%}.box{border:1px solid #ccc;border-radius:8px;padding:12px;font-size:13px;line-height:1.6;background:#f8fafc}.foot{margin-top:24px;display:flex;justify-content:space-between;font-size:12px;color:#555}.btn{margin-top:16px;padding:10px 16px;background:#111;color:#fff;border:none;border-radius:8px;cursor:pointer}@media print{.btn{display:none}}</style></head><body>'
+      +'<div class="kop"><h1>TEXLAB - PT. Sinar Garmindo Raya Semarang</h1><small>Test Report Portal - Jl. Letnan Jenderal S. Parman No. 41, Gajahmungkur, Kota Semarang</small><h2 style="border:none;margin:12px 0 0">Test Report - '+esc(r.no)+'</h2></div>'
+      +'<table><tr><th>Report No.</th><td><b>'+esc(r.no)+'</b></td></tr><tr><th>Buyer</th><td>'+esc(r.buyer)+'</td></tr><tr><th>Plant</th><td>'+esc(r.plant||"PT. Ungaran Sari Garments Ungaran")+'</td></tr><tr><th>Style / Code</th><td>'+esc(r.style||"-")+'</td></tr><tr><th>Test Type</th><td>'+esc(r.type||"-")+'</td></tr><tr><th>Status</th><td>'+esc(stMap[r.status]||r.status)+'</td></tr><tr><th>Target Selesai</th><td>'+esc(r.due||"-")+'</td></tr><tr><th>Terakhir Update</th><td>'+esc(fdt(r.updated))+'</td></tr></table>'
+      +'<h2>Komentar / Keterangan</h2><div class="box">'+esc(r.comment||"Tidak ada keterangan.")+(r.reason?'<br><b>Alasan Pending:</b> '+esc(r.reason):'')+'</div>'
+      +'<h2>Riwayat Status</h2><table><tr><th>Waktu</th><th>Status</th><th>Keterangan</th></tr>'+hist+'</table>'
+      +'<div class="foot"><span>Dicetak dari Test Report Portal - '+new Date().toLocaleString("id-ID")+'</span><span>Paraf: ________________</span></div>'
+      +'<button class="btn" onclick="window.print()">Print / Simpan PDF</button>'
+      +'</body></html>');
+    w.document.close();
+    setTimeout(()=>{ try{ w.focus(); w.print(); }catch(e){} }, 400);
+    logActivity("Print Report", "Print / PDF report "+r.no+" ("+r.buyer+")", r.no, r.buyer);
+  }
+
+  /* ---------- Notifikasi Pop-up Layar + Rincian ---------- */
+  function notifData(){
+    const today=new Date(); today.setHours(0,0,0,0);
+    const tom=new Date(today.getTime()+86400000);
+    const isoToday=today.toISOString().slice(0,10);
+    const isoTom=tom.toISOString().slice(0,10);
+    const late=R.filter(r=>lateDays(r)>0).sort((a,b)=>lateDays(b)-lateDays(a));
+    const dueToday=R.filter(r=>r.due===isoToday && r.status!=="pass" && r.status!=="fail");
+    const dueTom=R.filter(r=>r.due===isoTom && r.status!=="pass" && r.status!=="fail");
+    const pending=R.filter(r=>r.status==="pending");
+    const fail=R.filter(r=>r.status==="fail" || (r.status==="selesai"&&r.result==="fail"));
+    return {late, dueToday, dueTom, pending, fail, total: late.length+dueToday.length+dueTom.length+pending.length+fail.length};
+  }
+  function notifItemHtml(r, tag, cls){
+    const tagCls = cls==="late"?"tag-late":cls==="today"?"tag-today":cls==="tomorrow"?"tag-tom":cls==="pending"?"tag-pending":"tag-fail";
+    return '<div class="notif-item '+cls+'"><div style="display:flex;justify-content:space-between;gap:8px"><b>'+esc(r.no)+' - '+esc(r.buyer)+'</b><span class="notif-tag '+tagCls+'">'+tag+'</span></div>'
+      +'<div style="font-size:12.5px;color:#334155;line-height:1.6;margin-top:4px">Plant: '+esc(r.plant||"PT. Ungaran Sari Garments Ungaran")+'<br>Style: '+esc(r.style||"-")+' - Test: '+esc(r.type||"-")+'<br>Status: '+esc(r.status)+' - Target: '+esc(r.due||"-")+(lateDays(r)>0?' - <b style="color:#dc2626">Telat '+lateDays(r)+' hari</b>':'')
+      +(r.reason?'<br>Alasan: '+esc(r.reason):'')+(r.comment?'<br>Keterangan: '+esc(r.comment):'')+'</div>'
+      +'<div style="display:flex;gap:6px;margin-top:8px"><button type="button" class="sbtn" onclick="window.__notifOpen && window.__notifOpen(\''+r.id+'\')">Buka Report</button><button type="button" class="sbtn" onclick="window.__notifPrint && window.__notifPrint(\''+r.id+'\')">Print / PDF</button></div></div>';
+  }
+  function showNotif(auto){
+    const d=notifData();
+    const badge=$("notifBadge"); if(badge){ badge.textContent=d.total>99?"99+":d.total; badge.style.display=d.total?"grid":"none"; }
+    if(auto && !d.total) return;
+    const sub=$("notifSub"); if(sub) sub.textContent = d.total ? (d.total+" hal yang perlu dikejar hari ini - "+new Date().toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric"})) : "Semua aman, tidak ada yang telat / jatuh tempo.";
+    const sum=$("notifSummary"); if(sum) sum.innerHTML = '<span class="notif-tag tag-late">Telat: '+d.late.length+'</span><span class="notif-tag tag-today">Hari Ini: '+d.dueToday.length+'</span><span class="notif-tag tag-tom">Besok: '+d.dueTom.length+'</span><span class="notif-tag tag-pending">Pending: '+d.pending.length+'</span><span class="notif-tag tag-fail">Fail: '+d.fail.length+'</span>';
+    const list=$("notifList"); if(list){
+      if(!d.total){ list.innerHTML='<div style="padding:12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;font-size:13px">Semua aman. Tidak ada report telat, jatuh tempo hari ini, pending, atau fail.</div>'; }
+      else {
+        let html="";
+        if(d.late.length) html+='<div style="font-weight:700;font-size:13px;margin:8px 0 6px;color:#dc2626">Telat - kejar dulu</div>'+d.late.map(r=>notifItemHtml(r,"Telat "+lateDays(r)+" hari","late")).join("");
+        if(d.dueToday.length) html+='<div style="font-weight:700;font-size:13px;margin:10px 0 6px;color:#b45309">Jatuh Tempo Hari Ini</div>'+d.dueToday.map(r=>notifItemHtml(r,"Hari Ini","today")).join("");
+        if(d.dueTom.length) html+='<div style="font-weight:700;font-size:13px;margin:10px 0 6px;color:#1d4ed8">Jatuh Tempo Besok</div>'+d.dueTom.map(r=>notifItemHtml(r,"Besok","tomorrow")).join("");
+        if(d.pending.length) html+='<div style="font-weight:700;font-size:13px;margin:10px 0 6px;color:#ea580c">Pending - nunggu sesuatu</div>'+d.pending.map(r=>notifItemHtml(r,"Pending","pending")).join("");
+        if(d.fail.length) html+='<div style="font-weight:700;font-size:13px;margin:10px 0 6px;color:#dc2626">Fail - perlu tindak lanjut</div>'+d.fail.map(r=>notifItemHtml(r,"Fail","fail")).join("");
+        list.innerHTML=html;
+      }
+    }
+    window.__notifOpen=(id)=>{ closeNotif(); openForm(id); };
+    window.__notifPrint=(id)=>{ printReport(id); };
+    const m=$("notifModal"); if(m) m.classList.add("show");
+  }
+  function closeNotif(){ const m=$("notifModal"); if(m) m.classList.remove("show"); }
+  if($("notifBell")) $("notifBell").onclick=()=>showNotif(false);
+  if($("notifClose")) $("notifClose").onclick=closeNotif;
+  if($("notifClose2")) $("notifClose2").onclick=closeNotif;
+  if($("notifShowAll")) $("notifShowAll").onclick=()=>{ closeNotif(); lateFilter=true; showAll=true; renderTable(); window.scrollTo(0,0); };
+  if($("notifModal")) $("notifModal").addEventListener("mousedown",e=>{ if(e.target===$("notifModal")) closeNotif(); });
+
   load(); if(typeof saveTestTypes==="function") saveTestTypes(); if(typeof savePlants==="function") savePlants(); renderAll(); applyBuyers(); go("dash");
    // Gate dipanggil di sini, setelah SETTINGS dkk kebikin, biar nggak TDZ lagi
-   if(typeof gateWire==="function") gateWire(); if(typeof gateCheck==="function") gateCheck();;
+   if(typeof gateWire==="function") gateWire(); if(typeof gateCheck==="function") gateCheck();
+   setTimeout(()=>{ try{ const todayKey=new Date().toISOString().slice(0,10); const lastSeen=localStorage.getItem("trp_notif_seen"); if(lastSeen!==todayKey){ localStorage.setItem("trp_notif_seen", todayKey); showNotif(true); } else { const d=notifData(); const badge=$("notifBadge"); if(badge){ badge.textContent=d.total>99?"99+":d.total; badge.style.display=d.total?"grid":"none"; } } }catch(e){} }, 1200);;
 })();
 </script>
-<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
+</body>
 </html>
