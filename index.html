@@ -1,6 +1,27 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
+<head><style>
+@font-face {
+  font-family: "Optimistic";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Optimistic Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
+}
+:where(html) {
+  font-family: "Optimistic", system-ui, sans-serif;
+}
+:where(code, pre, kbd, samp) {
+  font-family: "Optimistic Mono", ui-monospace, monospace;
+}
+</style>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Test Report Portal - Rapi 2</title>
@@ -402,7 +423,8 @@ body.locked .topbar, body.locked .main, body.locked #toast, body.locked #amodal,
 .login-field .eye svg{width:15px;height:15px}
 .login-btn{width:100%;padding:9px;border:none;border-radius:6px;background:#2563eb;color:#fff;font-weight:600;font-size:13px;cursor:pointer;margin-top:2px}
 .login-btn:hover{background:#1d4ed8}
-.login-btn:disabled{opacity:.6;cursor:wait}
+.login-btn:disabled{opacity:.85;cursor:wait}
+#loginGate{filter:none!important}
 .login-err{font-size:11.5px;color:#dc2626;text-align:center;margin-top:10px;display:none}
 .login-bottom{font-size:11px;color:#9ca3af;text-align:center;margin:14px 0 0}
 .login-bottom b{color:#6b7280;font-weight:600}
@@ -1668,13 +1690,18 @@ $("go").addEventListener("click", async () => {
   function fbSetStatus(msg, cls){ const el=$("fbStatus"); if(el){ el.textContent=msg; el.className="fb-status "+(cls||""); } }
   function fbSetAuthStatus(msg, cls){ const el=$("fbAuthStatus"); if(el){ el.textContent=msg; el.className="fb-status "+(cls||""); } }
   function fbUpdateStatus(){ if(SETTINGS.dbMode!=="firebase"){ fbSetStatus("Mode Local. Data cuma di browser ini."); return; } if(!fbDb){ fbSetStatus("Belum terhubung. Klik Hubungkan & Sinkron Sekarang.", "warn"); return; } fbSetStatus("Terhubung ke Firebase project "+(SETTINGS.fbProjectId||"")+" — terakhir sinkron: "+(fbLastSync?new Date(fbLastSync).toLocaleString("id-ID"):"belum pernah"), "ok"); }
+  let fbInitDone=false;
   function fbInit(){
+    if(fbInitDone && fbDb && fbAuth) return true;
     if(typeof firebase==="undefined"){ fbSetStatus("Firebase SDK belum ke-load. Cek internet, lalu reload halaman.", "err"); return false; }
     const cfg=fbConfig(); if(!cfg.apiKey||!cfg.projectId||!cfg.appId){ fbSetStatus("Config Firebase belum lengkap. Cek API Key / Project ID / App ID di Settings.", "err"); return false; }
     try{
       if(!firebase.apps.length){ fbApp=firebase.initializeApp(cfg); } else { fbApp=firebase.app(); }
       fbDb=firebase.firestore(); fbAuth=firebase.auth();
-      fbAuth.onAuthStateChanged(u=>{ if(u){ fbSetAuthStatus("Login sebagai: "+u.email, "ok"); gateUpdate(false); } else { fbSetAuthStatus("Belum login. Login dulu biar bisa baca/tulis Firestore kalau rules-nya butuh login.", "warn"); if(SETTINGS.dbMode==="firebase") gateUpdate(true); } if(typeof fbUpdateAdminUI==="function") fbUpdateAdminUI(); });
+      if(!fbInitDone){
+        fbInitDone=true;
+        fbAuth.onAuthStateChanged(u=>{ if(u){ fbSetAuthStatus("Login sebagai: "+u.email, "ok"); gateUpdate(false); } else { fbSetAuthStatus("Belum login. Login dulu biar bisa baca/tulis Firestore kalau rules-nya butuh login.", "warn"); if(SETTINGS.dbMode==="firebase") gateUpdate(true); } if(typeof fbUpdateAdminUI==="function") fbUpdateAdminUI(); });
+      }
       fbUpdateStatus(); return true;
     }catch(e){ fbSetStatus("Gagal init Firebase: "+e.message, "err"); return false; }
   }
@@ -1774,9 +1801,8 @@ $("go").addEventListener("click", async () => {
     const svA=$("set_saveAdmin"); if(svA && !svA.dataset.wired){ svA.dataset.wired="1"; svA.onclick=()=>{ const v=fbNormEmail($("set_adminEmail").value); if(!v){ toast("Isi email admin dulu, contoh azis@texlab.com"); return; } SETTINGS.adminEmail=v; saveSettings(); fbUpdateAdminUI(); toast("Admin disimpan: "+v); logActivity("Admin", "Set admin jadi "+v, "", ""); }; }
     const clA=$("set_claimAdmin"); if(clA && !clA.dataset.wired){ clA.dataset.wired="1"; clA.onclick=()=>{ if(SETTINGS.adminEmail){ toast("Admin sudah ada: "+SETTINGS.adminEmail); return; } const cur=fbAuth&&fbAuth.currentUser?fbAuth.currentUser.email:""; if(!cur){ toast("Login dulu baru bisa jadi admin"); return; } SETTINGS.adminEmail=cur.toLowerCase(); saveSettings(); fbUpdateAdminUI(); toast("Kamu sekarang ADMIN: "+cur); logActivity("Admin", "Klaim admin: "+cur, "", ""); }; }
   }
-  // Auto-init kalau mode sudah Firebase
-  gateWire(); gateCheck();
-  setTimeout(()=>{ if(SETTINGS.dbMode==="firebase"){ if(fbInit()){ /* jangan auto-pull kalau belum login, biar data nggak ke-load sebelum gate kebuka */ if(fbAuth && fbAuth.currentUser) fbPull(false); } } }, 800);
+  // Auto-init kalau mode sudah Firebase — JANGAN panggil gateWire/gateCheck di sini, SETTINGS belum kebikin (TDZ). Dipanggil di akhir script aja.
+  setTimeout(()=>{ try{ if(typeof SETTINGS!=="undefined" && SETTINGS.dbMode==="firebase"){ if(fbInit()){ if(fbAuth && fbAuth.currentUser) fbPull(false); } } }catch(e){} }, 800);
 
   /* ---------- Riwayat Perubahan (audit log) ---------- */
   const HIST_KEY="trp_history_v1";
@@ -1827,14 +1853,17 @@ $("go").addEventListener("click", async () => {
     else { g.hidden=true; document.body.classList.remove("locked"); }
   }
   function gateCheck(){
-    // Firebase mode: nunggu auth state. Local mode: cek session lokal.
-    if(typeof SETTINGS!=="undefined" && SETTINGS.dbMode==="firebase"){
-      try{ if(typeof fbAuth!=="undefined" && fbAuth && fbAuth.currentUser){ gateUpdate(false); return; } }catch(e){}
-      gateUpdate(true);
-    } else {
-      let sess=""; try{ sess=localStorage.getItem("trp_session_v1")||""; }catch(e){}
-      gateUpdate(!sess);
-    }
+    try{
+      let mode="firebase";
+      try{ if(typeof SETTINGS!=="undefined" && SETTINGS && SETTINGS.dbMode) mode=SETTINGS.dbMode; }catch(e){ mode="firebase"; }
+      if(mode==="firebase"){
+        try{ if(typeof fbAuth!=="undefined" && fbAuth && fbAuth.currentUser){ gateUpdate(false); return; } }catch(e){}
+        gateUpdate(true);
+      } else {
+        let sess=""; try{ sess=localStorage.getItem("trp_session_v1")||""; }catch(e){}
+        gateUpdate(!sess);
+      }
+    }catch(e){ gateUpdate(true); }
   }
   function gateWire(){
     const eye=$("gateEye"); if(eye && !eye.dataset.wired){ eye.dataset.wired="1"; eye.onclick=()=>{ const p=$("gatePass"); if(!p) return; p.type=p.type==="password"?"text":"password"; }; }
@@ -1843,31 +1872,50 @@ $("go").addEventListener("click", async () => {
     const uu=$("gateUser"); if(uu && !uu.dataset.wired){ uu.dataset.wired="1"; uu.addEventListener("keydown", e=>{ if(e.key==="Enter") $("gatePass").focus(); }); }
   }
   async function gateDoLogin(){
-    gateShowErr(""); const btn=$("gateLogin"); if(btn) btn.disabled=true;
-    const raw=$("gateUser").value.trim(); const pw=$("gatePass").value;
-    if(!raw || !pw){ gateShowErr("Isi username + password dulu."); if(btn) btn.disabled=false; return; }
-    const em=fbNormEmail(raw);
-    // Kalau mode Firebase, login beneran via Firebase Auth
-    if(SETTINGS.dbMode==="firebase"){
-      try{
-        if(!fbDb && !fbInit()){ gateShowErr("Firebase belum terhubung. Cek config di Settings atau hubungi admin."); if(btn) btn.disabled=false; return; }
-        await fbAuth.signInWithEmailAndPassword(em, pw);
-        // onAuthStateChanged yang akan nutup gate
+    gateShowErr("");
+    try{ if(typeof SETTINGS==="undefined"){ gateShowErr("Halaman belum selesai loading. Reload (F5) lalu coba lagi."); return; } }catch(e){ gateShowErr("Halaman belum selesai loading. Reload (F5) lalu coba lagi."); return; } const btn=$("gateLogin"); const origTxt=btn?btn.textContent:"Masuk";
+    if(btn){ btn.disabled=true; btn.textContent="Memproses..."; }
+    try{
+      const raw=$("gateUser").value.trim(); const pw=$("gatePass").value;
+      if(!raw || !pw){ gateShowErr("Isi username + password dulu."); return; }
+      const em=fbNormEmail(raw);
+      if(SETTINGS.dbMode==="firebase"){
+        if(!fbDb && !fbInit()){
+          // SDK belum ke-load / config salah -> kasih tau jelas, jangan muter terus
+          if(typeof firebase==="undefined") gateShowErr("Firebase SDK belum ke-load. Cek internet / WiFi, lalu reload halaman (F5) dan coba lagi.");
+          else gateShowErr("Config Firebase belum lengkap / salah. Buka Settings, cek API Key & Project ID, atau hubungi admin.");
+          return;
+        }
+        if(!fbAuth){ gateShowErr("Firebase Auth belum siap. Reload halaman (F5) lalu coba lagi."); return; }
+        // Timeout 12 detik, biar nggak muter terus kalau internet putus / Firebase nggak respon
+        const loginP = fbAuth.signInWithEmailAndPassword(em, pw);
+        const timeoutP = new Promise((_,rej)=>setTimeout(()=>rej(new Error("TIMEOUT")), 12000));
+        try{ await Promise.race([loginP, timeoutP]); }
+        catch(e){
+          if(e && e.message==="TIMEOUT"){ gateShowErr("Koneksi ke Firebase timeout (12 detik). Internet kamu mungkin putus / lemot. Cek WiFi, reload, coba lagi."); return; }
+          throw e;
+        }
         if(typeof logActivity==="function") logActivity("Login", "Login sebagai "+em, "", "");
         gateShowErr("");
-      }catch(e){
-        let msg=e.message||"Login gagal";
-        if(String(msg).includes("user-not-found")||String(msg).includes("invalid-credential")||String(msg).includes("wrong-password")) msg="Username / password salah. Cek lagi, atau minta admin reset password kamu.";
-        if(String(msg).includes("too-many-requests")) msg="Kebanyakan percobaan. Tunggu bentar lalu coba lagi.";
-        gateShowErr(msg);
+      } else {
+        try{ localStorage.setItem("trp_session_v1", em); }catch(e){}
+        if(typeof logActivity==="function") logActivity("Login", "Login (Local) sebagai "+em, "", "");
+        gateUpdate(false);
       }
-    } else {
-      // Mode Local: simpan session lokal aja, tapi tetap kunci data sampai login
-      try{ localStorage.setItem("trp_session_v1", em); }catch(e){}
-      if(typeof logActivity==="function") logActivity("Login", "Login (Local) sebagai "+em, "", "");
-      gateUpdate(false);
+    }catch(e){
+      const rawMsg=(e && (e.code||"")+" "+(e.message||"")).toLowerCase();
+      let msg="";
+      if(rawMsg.includes("user-not-found")||rawMsg.includes("invalid-credential")||rawMsg.includes("wrong-password")||rawMsg.includes("invalid-email")) msg="Akun / password salah. Akun "+fbNormEmail($("gateUser").value)+" belum ada di Firebase? Bikin dulu di Firebase Console > Authentication > Add user, atau minta admin reset password.";
+      else if(rawMsg.includes("too-many-requests")) msg="Kebanyakan percobaan. Tunggu 1 menit, lalu coba lagi.";
+      else if(rawMsg.includes("network-request-failed")||rawMsg.includes("failed to fetch")||rawMsg.includes("network")) msg="Internet putus / Firebase tidak bisa dihubungi. Cek WiFi, reload (F5), coba lagi.";
+      else if(rawMsg.includes("operation-not-allowed")) msg="Email/Password belum diaktifkan di Firebase. Admin harus aktifkan di Console > Authentication > Sign-in method > Email/Password > Enable.";
+      else if(rawMsg.includes("unauthorized-domain")||rawMsg.includes("unauthorised")) msg="Domain file ini belum diizinkan di Firebase. Buka file lewat localhost / hosting, jangan double-click file://, atau tambahkan domain di Console > Authentication > Settings > Authorized domains.";
+      else if(rawMsg.includes("invalid-api-key")||rawMsg.includes("project-not-found")||rawMsg.includes("api-key")) msg="Config Firebase salah (API Key / Project ID). Cek di Settings, samakan dengan Firebase Console.";
+      else msg="Login gagal: "+(e.message||e);
+      gateShowErr(msg);
+    }finally{
+      if(btn){ btn.disabled=false; btn.textContent=origTxt||"Masuk"; }
     }
-    if(btn) btn.disabled=false;
   }
   // Logout di header profile: balik ke gate lagi
   // Patch: saat logout dari Settings, juga hapus session lokal
@@ -2256,7 +2304,9 @@ $("go").addEventListener("click", async () => {
   $("set_reset_buyers").onclick=()=>{ if(!confirm("Reset semua profil buyer ke kosong + logo?")) return; try{ localStorage.removeItem(DIR_KEY); }catch(e){} BDIR={}; renderDirectory(); renderSettings(); alert("Buyer Directory sudah di-reset ke kosong."); };
 
   load(); if(typeof saveTestTypes==="function") saveTestTypes(); if(typeof savePlants==="function") savePlants(); renderAll(); applyBuyers(); go("dash");
+   // Gate dipanggil di sini, setelah SETTINGS dkk kebikin, biar nggak TDZ lagi
+   if(typeof gateWire==="function") gateWire(); if(typeof gateCheck==="function") gateCheck();;
 })();
 </script>
-</body>
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
 </html>
