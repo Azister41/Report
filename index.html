@@ -546,7 +546,8 @@ body.locked .topbar, body.locked .main, body.locked #toast, body.locked #amodal,
         <div><h1>Settings</h1><p class="sub">Manage master data, plant profile & workflow rules, database & backup</p></div>
         <button type="button" class="pbtn" id="setSave">Simpan Semua</button>
       </div>
-      <div class="panel"><div class="ph"><h2>Master Data Management</h2><span class="an-sub">Atur daftar buyer & jenis tes biar input nggak salah ketik / beda penulisan</span></div>
+      <div id="setAdminOnlyNotice" hidden style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;margin:0 0 12px;font-size:13px;line-height:1.5;color:#92400e"><b>Kamu login sebagai anggota, bukan admin.</b><br>Bagian <b>Master Data, Data &amp; Storage (API Key, Rules), Backup &amp; Restore, dan Cek Keamanan</b> disembunyikan. Cuma admin (<b id="setAdminOnlyName">-</b>) yang bisa lihat / ubah itu. Kamu tetap bisa pakai Test Reports, Lab Analysis, Buyer Directory, dan Riwayat seperti biasa.</div>
+      <div class="panel" id="panelMaster"><div class="ph"><h2>Master Data Management</h2><span class="an-sub" style="font-size:11px;color:#991b1b">Admin only</span><span class="an-sub">Atur daftar buyer & jenis tes biar input nggak salah ketik / beda penulisan</span></div>
         <div style="padding:4px 18px 16px">
           <div class="seg" id="setMasterTab"><button type="button" data-mtab="buyers" class="on">Buyers</button><button type="button" data-mtab="tests">Test Types</button><button type="button" data-mtab="plants">Plants</button></div>
           <div id="setMasterBuyers">
@@ -586,7 +587,7 @@ body.locked .topbar, body.locked .main, body.locked #toast, body.locked #amodal,
         </div></div>
       </div>
       <div class="set-grid">
-        <div class="panel"><div class="ph"><h2>Data & Storage</h2><span class="an-sub">Database Connection</span></div><div style="padding:4px 18px 16px">
+        <div class="panel" id="panelDataStorage"><div class="ph"><h2>Data & Storage</h2><span class="an-sub" style="font-size:11px;color:#991b1b">Admin only</span><span class="an-sub">Database Connection</span></div><div style="padding:4px 18px 16px">
           <label>Mode Penyimpanan</label><div style="display:flex;align-items:center;gap:8px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px 12px"><span style="width:10px;height:10px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 4px #dcfce7"></span><div><div style="font-weight:700;font-size:13px;color:#1e40af">Firebase (Firestore - texlab-ba76c) — Full Firebase</div><div style="font-size:11.5px;color:#475569">Wajib. Local Storage cuma jadi cache offline, bukan penyimpanan utama. Biar Fahim, Riski, dan bos lihat data yang sama, real-time.</div></div></div><select id="set_dbMode" style="display:none"><option value="firebase" selected>Firebase (Firestore - texlab-ba76c)</option></select>
           <div id="set_firebaseFields" hidden>
             <div class="fb-field"><label for="set_fbApiKey">Firebase API Key</label><input id="set_fbApiKey" placeholder="AIza..."></div>
@@ -620,7 +621,7 @@ body.locked .topbar, body.locked .main, body.locked #toast, body.locked #amodal,
           </div>
           <p class="set-note" id="set_stat">0 report · 0 buyer</p>
         </div></div>
-        <div class="panel"><div class="ph"><h2>Backup & Restore — ke PC</h2><span class="an-sub">Wajib, lapis ke-2 selain Firebase</span></div><div style="padding:4px 18px 16px">
+        <div class="panel" id="panelBackup"><div class="ph"><h2>Backup & Restore — ke PC</h2><span class="an-sub">Wajib, lapis ke-2 selain Firebase</span></div><div style="padding:4px 18px 16px">
           <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 12px;margin-bottom:10px"><div style="font-weight:700;font-size:13px;color:#166534">Backup ke PC itu PERLU, walau udah Full Firebase</div><div style="font-size:12px;color:#475569;line-height:1.5">Firebase itu lapis 1 (biar semua HP sinkron). Backup ke PC itu lapis 2 (kalau Firebase kehapus / akun ke-lock / rules salah / mau audit). File-nya disimpan di <b>PC > Folder Texlab > Backup</b>, plus copy ke Google Drive biar dobel aman. File JSON = bisa di-restore balik 100%. File CSV = buat bos, cuma buat dibaca, nggak bisa di-restore.</div><div id="backupStatus" style="font-size:12px;color:#166534;margin-top:6px;font-weight:600">Belum pernah backup.</div></div>
           <label>1. Backup — download ke PC</label>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -643,7 +644,7 @@ body.locked .topbar, body.locked .main, body.locked #toast, body.locked #amodal,
           </div>
           <p class="set-note">Reset menghapus data coba-coba kalau mau mulai ulang. Export dulu sebelum reset.</p>
          </div></div>
-         <div class="panel"><div class="ph"><h2>Cek Keamanan</h2><span class="an-sub">Audit 26 Nov 2026 — Fix Allowlist, BUKAN Verifikasi Email</span></div><div style="padding:4px 18px 16px">
+         <div class="panel" id="panelSecurity"><div class="ph"><h2>Cek Keamanan</h2><span class="an-sub" style="font-size:11px;color:#991b1b">Admin only</span><span class="an-sub">Audit 26 Nov 2026 — Fix Allowlist, BUKAN Verifikasi Email</span></div><div style="padding:4px 18px 16px">
            <div style="font-size:12.5px;line-height:1.6;color:#334155">
              <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:8px 10px;margin-bottom:8px"><b>Kenapa verifikasi email DIBATALKAN?</b><br>Karena login-mu pake <b>@texlab.com</b> yang <b>bukan email beneran</b>. Firebase ngirim link verifikasi ke inbox <b>fahim@texlab.com</b>. Kalau inbox itu nggak ada (nggak ada Google Workspace / cPanel / mailbox Texlab), email-nya <b>nggak akan pernah nyampe, mental / bounce</b>. Jadi kalau tak wajibin verifikasi, sampean sendiri nggak bisa login. Makanya tak ganti cara.</div>
              <div>✅ <b>Rules sekarang pake ALLOWLIST:</b> cuma <b>azis@texlab.com, fahim@texlab.com, riski@texlab.com</b> yang boleh baca/tulis. Orang luar bikin akun <b>hacker@texlab.com</b> bakal <b>DITOLAK</b> Firestore, karena namanya nggak ada di daftar.</div>
@@ -2284,6 +2285,13 @@ $("go").addEventListener("click", async () => {
   }
   function renderSettings(){
     if(!$("set_labName")) return;
+    // --- ADMIN ONLY: sembunyikan panel sensitif buat non-admin ---
+    const _curEmail = (fbAuth && fbAuth.currentUser && fbAuth.currentUser.email ? fbAuth.currentUser.email.toLowerCase() : (function(){ try{ return (localStorage.getItem("trp_session_v1")||"").toLowerCase(); }catch(e){ return ""; } })());
+    const _admEmail = (SETTINGS.adminEmail||"").toLowerCase();
+    const _isAdmin = !_admEmail || (_curEmail && _curEmail===_admEmail);
+    ["panelMaster","panelDataStorage","panelBackup","panelSecurity"].forEach(function(id){ const el=document.getElementById(id); if(el) el.hidden = !_isAdmin; });
+    const _notice=document.getElementById("setAdminOnlyNotice"); if(_notice){ _notice.hidden=_isAdmin; const _nm=document.getElementById("setAdminOnlyName"); if(_nm) _nm.textContent=_admEmail||"belum diset"; }
+    const _saveBtn=document.getElementById("setSave"); if(_saveBtn){ _saveBtn.textContent=_isAdmin?"Simpan Semua Settings":"Simpan Info Lab / Plant (bukan Admin)"; }
     $("set_labName").value=SETTINGS.labName||"";
     $("set_labAddr").value=SETTINGS.labAddr||"";
     $("set_labPhone").value=SETTINGS.labPhone||"";
@@ -2314,6 +2322,13 @@ $("go").addEventListener("click", async () => {
     renderMasterBuyers(); renderMasterTests(); renderMasterPlants(); refreshPlantSelect();
   }
   function collectSettings(){
+    const _cur2 = (fbAuth && fbAuth.currentUser && fbAuth.currentUser.email ? fbAuth.currentUser.email.toLowerCase() : (function(){ try{ return (localStorage.getItem("trp_session_v1")||"").toLowerCase(); }catch(e){ return ""; } })());
+    const _adm2 = (SETTINGS.adminEmail||"").toLowerCase();
+    const _isAdm2 = !_adm2 || (_cur2 && _cur2===_adm2);
+    if(!_isAdm2){
+      SETTINGS={...SETTINGS, labName:$("set_labName").value.trim(), labAddr:$("set_labAddr").value.trim(), labPhone:$("set_labPhone").value.trim(), labEmail:$("set_labEmail").value.trim(), pic:$("set_pic").value.trim(), target:+$("set_target").value||7, plantName:$("set_plantName").value.trim(), plantAddr:$("set_plantAddr").value.trim(), plantContact:$("set_plantContact").value.trim(), plantPhone:$("set_plantPhone").value.trim(), wfMasuk:+$("set_wfMasuk").value||0, wfProses:+$("set_wfProses").value||0, wfPending:+$("set_wfPending").value||0, dbMode:"firebase"};
+      saveSettings(); renderSettings(); $("setSaved").style.display="block"; setTimeout(()=>{ $("setSaved").style.display="none"; },2000); toast("Disimpan (Info Lab / Plant). Setting Admin tidak diubah karena kamu bukan admin."); return;
+    }
     SETTINGS={...SETTINGS, labName:$("set_labName").value.trim(), labAddr:$("set_labAddr").value.trim(), labPhone:$("set_labPhone").value.trim(), labEmail:$("set_labEmail").value.trim(), pic:$("set_pic").value.trim(), target:+$("set_target").value||7, plantName:$("set_plantName").value.trim(), plantAddr:$("set_plantAddr").value.trim(), plantContact:$("set_plantContact").value.trim(), plantPhone:$("set_plantPhone").value.trim(), wfMasuk:+$("set_wfMasuk").value||0, wfProses:+$("set_wfProses").value||0, wfPending:+$("set_wfPending").value||0, dbMode:"firebase", fbApiKey:$("set_fbApiKey").value.trim(), fbAuthDomain:$("set_fbAuthDomain").value.trim(), fbProjectId:$("set_fbProjectId").value.trim(), fbStorage:$("set_fbStorage").value.trim(), fbSender:$("set_fbSender").value.trim(), fbAppId:$("set_fbAppId").value.trim()};
     saveSettings(); renderSettings(); $("setSaved").style.display="block"; setTimeout(()=>{ $("setSaved").style.display="none"; },2000);
   }
