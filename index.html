@@ -735,7 +735,8 @@ body.locked .topbar, body.locked .main, body.locked #toast, body.locked #amodal,
 <div id="pg2" hidden></div><div id="pg3" hidden></div><div id="pg4" hidden></div><datalist id="rt"><option value="PASS"><option value="FAIL"><option value="/"></datalist>
 
 
-        <div class="actions"><button id="go" type="button" class="p">Export ke Excel</button><button id="gopdf" type="button" class="s">Export ke PDF</button></div>
+        <div class="actions"><button id="go" type="button" class="p">Export ke Excel</button><button id="gopdf" type="button" class="s">Export ke PDF</button><button id="syncResult" type="button" class="p" style="background:#16a34a">Simpan Hasil ke Dashboard</button></div>
+        <div id="syncNote" style="font-size:12px;color:#475569;margin-top:6px">Tombol hijau ini nyambungin form ini ke Dashboard. Pilih Overall Rating PASS / FAIL di atas, klik ini, status report di Test Reports langsung jadi <b>Selesai · Pass / Fail</b>, diagram QA + Lab Analysis langsung ke-update. Export Excel / PDF juga otomatis nyambung.</div>
         <div id="msg"></div>
       </div>
     </section>
@@ -1396,13 +1397,24 @@ $("gopdf").addEventListener("click", async () => {
     const r = await exportXlsx("pdf"), bytes = await renderPdf(r.zip), url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
     const link = document.createElement("a"); link.href = url; link.download = r.name; document.body.appendChild(link); link.click(); link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 8000); $("msg").textContent = "Selesai: " + r.name;
-  } catch (e) { $("msg").textContent = "Gagal: " + e.message; console.error(e); }
-});
+    // --- SYNC KE DASHBOARD: kirim rating ke script utama ---
+    try{ const _rt = ($("rating") ? $("rating").value : "").trim().toUpperCase(); const _rn = ($("rno") ? $("rno").value : "").trim(); if(_rt==="PASS"||_rt==="FAIL"){ window.dispatchEvent(new CustomEvent("llbean-export", {detail:{rating:_rt, rno:_rn}})); } }catch(e){}
+  } catch (e) { $("msg").textContent = "Gagal: " + e.message; console.error(e); } });
+  // --- Tombol hijau: Simpan Hasil ke Dashboard tanpa export ---
+  if($("syncResult")){ $("syncResult").addEventListener("click", () => {
+    const _rt = ($("rating") ? $("rating").value : "").trim().toUpperCase(); const _rn = ($("rno") ? $("rno").value : "").trim();
+    if(!_rn){ $("msg").textContent = "Isi Report No. dulu."; return; }
+    if(_rt!=="PASS" && _rt!=="FAIL"){ $("msg").textContent = "Pilih Overall Rating PASS / FAIL dulu."; return; }
+    window.dispatchEvent(new CustomEvent("llbean-export", {detail:{rating:_rt, rno:_rn}}));
+    $("msg").textContent = "Mengirim hasil "+_rt+" ke Dashboard...";
+  }); }
 $("go").addEventListener("click", async () => {
   $("msg").textContent = "Membuat file…";
-  try { $("msg").textContent = "Selesai: " + await exportXlsx(); }
-  catch (e) { $("msg").textContent = "Gagal: " + e.message; console.error(e); }
-});
+  try { $("msg").textContent = "Selesai: " + await exportXlsx();
+    // --- SYNC KE DASHBOARD ---
+    try{ const _rt = ($("rating") ? $("rating").value : "").trim().toUpperCase(); const _rn = ($("rno") ? $("rno").value : "").trim(); if(_rt==="PASS"||_rt==="FAIL"){ window.dispatchEvent(new CustomEvent("llbean-export", {detail:{rating:_rt, rno:_rn}})); } }catch(e){}
+  }
+  catch (e) { $("msg").textContent = "Gagal: " + e.message; console.error(e); } });
 </script>
 <script>
 (function(){
@@ -1600,6 +1612,28 @@ $("go").addEventListener("click", async () => {
     el.hidden=false;
     el.innerHTML='<span>Terhubung ke report <b>#'+esc(r.no)+'</b> ('+esc(r.buyer)+')</span>'+statusCell(r)+'<span>Target: '+dueHtml(r)+'</span><button type="button" class="act sm" data-edit="'+r.id+'">Edit data</button>';
   }
+  /* ---------- SYNC LL Bean Form -> Dashboard ---------- */
+  // Form Excel/PDF kirim event llbean-export dengan {rating: PASS/FAIL, rno}. Kita update R biar Dashboard + Lab Analysis ke-update.
+  window.addEventListener("llbean-export", function(ev){
+    try{
+      const d = ev.detail||{}; const rating = String(d.rating||"").toUpperCase(); const rno = String(d.rno||"").trim();
+      if(!rno || (rating!=="PASS" && rating!=="FAIL")) return;
+      // Cari report-nya: utamakan linkId (yang lagi dibuka), kalau nggak cocok cari by No.
+      let r = null;
+      if(typeof linkId!=="undefined" && linkId){ const _c = R.find(x=>x.id===linkId); if(_c && _c.no===rno) r=_c; }
+      if(!r) r = R.find(x=>x.no===rno);
+      if(!r){ if(typeof toast==="function") toast("Report "+rno+" nggak ketemu di Test Reports. Input dulu di + Input Report."); const _msg=document.getElementById("msg"); if(_msg) _msg.textContent="Report "+rno+" belum ada di Test Reports. Input dulu di + Input Report, baru sync lagi."; return; }
+      const target = rating==="PASS" ? "pass" : "fail";
+      const beforeSel = (typeof sel==="function" ? sel(r) : "");
+      const changed = setState(r, target, "");
+      // setState udah push history + update updated/doneAt
+      save();
+      if(typeof logActivity==="function") logActivity("Sync Hasil LL Bean", "Form LL Bean "+r.no+" -> Selesai "+(rating==="PASS"?"Pass":"Fail")+" (dari Export / Simpan Hasil)", r.no, r.buyer);
+      renderAll();
+      const _msg2=document.getElementById("msg"); if(_msg2) _msg2.textContent="Tersimpan ke Dashboard: "+r.no+" -> Selesai "+(rating==="PASS"?"Pass":"Fail")+" ✓ Diagram QA + Lab Analysis udah ke-update.";
+      if(typeof toast==="function") toast("Dashboard ke-update: "+r.no+" -> Selesai "+(rating==="PASS"?"Pass":"Fail"));
+    }catch(e){ console.error(e); }
+  });
   function openReport(id){
     const r=R.find(x=>x.id===id); if(!r) return;
     if(r.buyer!=="LL Bean"){ dev("Form report "+r.buyer); return; }
