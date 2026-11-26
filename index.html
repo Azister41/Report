@@ -1,36 +1,599 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
+<head><style>
+@font-face {
+  font-family: "Optimistic";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Optimistic Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
+}
+:where(html) {
+  font-family: "Optimistic", system-ui, sans-serif;
+}
+:where(code, pre, kbd, samp) {
+  font-family: "Optimistic Mono", ui-monospace, monospace;
+}
+</style>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Test Report – Halaman 1</title>
+<title>Test Report Portal - Rapi 2</title>
 <style>
-:root{--bg:#f4f5f7;--card:#fff;--tx:#1a1d21;--mut:#5f6872;--bd:#c9cfd6;--ac:#12395e}
-@media (prefers-color-scheme:dark){:root{--bg:#14171a;--card:#1e2226;--tx:#eceff2;--mut:#98a2ad;--bd:#3a4148;--ac:#5aa2e0}}
+:root{--sb:#0f172a;--sb2:#1e293b;--ac:#2563eb;--ac2:#1d4ed8;--bg:#f8fafc;--card:#fff;--tx:#0f172a;--mut:#64748b;--bd:#e2e8f0;--bd2:#cbd5e1}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.4 Arial,Helvetica,sans-serif}
-main{max-width:640px;margin:0 auto;padding:16px}
-h1{font-size:20px;margin:4px 0 2px}
-.sub{color:var(--mut);margin:0 0 14px;font-size:13px}
-fieldset{background:var(--card);border:1px solid var(--bd);border-radius:10px;margin:0 0 14px;padding:12px 14px}
-legend{font-weight:bold;padding:0 6px;color:var(--ac)}
-label{display:block;font-size:13px;color:var(--mut);margin:10px 0 3px}
-input,select{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-#thumb{max-width:100%;max-height:220px;margin-top:8px;border:1px solid var(--bd);display:none}
-button{width:100%;padding:14px;border:0;border-radius:10px;background:var(--ac);color:#fff;font:bold 16px Arial;cursor:pointer}
-@media (prefers-color-scheme:dark){button{color:#0b1620}}
-.tabs{display:flex;gap:8px;margin:0 0 14px}.tabs button{flex:1;padding:10px;background:var(--card);color:var(--tx);border:1px solid var(--bd);font-size:14px}.tabs button.on{background:var(--ac);color:#fff}textarea{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit;min-height:80px}.tr{border-top:1px solid var(--bd);padding:4px 0 8px;display:grid;gap:8px}.tr label{margin:6px 0 2px;font-size:11px}.tr input,.tr select,.tr textarea{padding:8px}.grp{border-top:2px solid var(--bd);margin-top:10px;padding-top:6px}.gh{display:flex;justify-content:space-between;align-items:center}.mini{width:auto;padding:6px 12px;font-size:13px;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:8px;margin-top:8px;font-weight:normal}.hint{font-size:12px;color:var(--mut);margin:8px 0 0}
-#msg{margin-top:10px;font-size:13px;color:var(--mut);min-height:18px}
+html{color-scheme:light}
+body{margin:0;background:var(--bg);color:var(--tx);font:13px/1.35 Inter,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer}
+svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+
+/* ---------- shell ---------- */
+.side{position:fixed;inset:0 auto 0 0;width:228px;background:var(--sb);color:#cbd5e1;display:flex;flex-direction:column;z-index:30}
+.brand{height:58px;display:flex;align-items:center;gap:8px;padding:0 16px;border-bottom:1px solid var(--sb2);color:#fff;font-weight:700;font-size:14px;letter-spacing:-.01em}
+.logo{width:32px;height:32px;border-radius:8px;background:var(--ac);display:grid;place-items:center}
+.logo svg{width:18px;height:18px}
+.nav{padding:12px 12px;display:flex;flex-direction:column;gap:5px;flex:1}
+.nav button{position:relative;display:flex;align-items:center;gap:10px;height:34px;padding:0 9px;border:0;border-radius:8px;background:none;color:#cbd5e1;font-size:15px;font-weight:500;text-align:left;transition:background .15s,color .15s}
+.nav button svg{color:#94a3b8}
+.nav button:hover{background:var(--sb2);color:#fff}
+.nav button.on{background:var(--ac);color:#fff}
+.nav button.on svg{color:#fff}
+.nav button.on::before{content:"";position:absolute;left:-17px;top:0;bottom:0;width:4px;background:#3b82f6;border-radius:0 4px 4px 0}
+.side-foot{height:52px;border-top:1px solid var(--sb2);display:flex;align-items:center;padding:0 16px}
+.avatar{width:34px;height:34px;border-radius:50%;background:#dbeafe;display:grid;place-items:center;overflow:hidden}
+.avatar svg{width:26px;height:26px;color:#1e3a8a;fill:#1e3a8a;stroke:none}
+.scrim{display:none}
+
+.wrap{margin-left:228px;min-height:100vh}
+.top{position:sticky;top:0;z-index:20;height:58px;background:#fff;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:14px;padding:0 18px}
+.burger{display:none;border:1px solid var(--bd);background:#fff;border-radius:8px;width:34px;height:34px;place-items:center;color:var(--tx)}
+.crumbs{font-size:15px;color:var(--mut);white-space:nowrap;display:flex;gap:8px;align-items:center}
+.crumbs button{border:0;background:none;padding:0;color:var(--mut);font-size:inherit}
+.crumbs button:hover{color:var(--tx)}
+.crumbs b{color:var(--tx);font-weight:500}
+.crumbs .sep{color:var(--bd2)}
+.search{position:absolute;left:50%;transform:translateX(-50%);width:min(480px,38%);display:flex;align-items:center;gap:8px;height:34px;padding:0 14px;border:1px solid var(--bd);border-radius:8px;background:#fff;color:var(--mut);box-shadow:0 1px 2px rgba(15,23,42,.04)}
+.search:focus-within{border-color:var(--ac);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+.search input{flex:1;min-width:0;border:0;outline:0;background:none;font:inherit;color:var(--tx);padding:0}
+.search input::placeholder{color:#94a3b8}
+.tools{margin-left:auto;display:flex;align-items:center;gap:18px}
+.ibtn{border:0;background:none;color:#334155;display:grid;place-items:center;width:34px;height:34px;border-radius:8px}
+.ibtn:hover{background:#f1f5f9}
+.plant{display:flex;align-items:center;gap:8px;height:36px;padding:0 14px;border:1px solid var(--bd);border-radius:8px;background:#fff;font-weight:500;color:var(--tx);box-shadow:0 1px 2px rgba(15,23,42,.04)}
+.plant svg{color:#64748b}
+.plant svg.i{width:18px;height:18px}
+
+main{padding:22px 18px 28px}
+.phead{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+h1{font-size:21px;line-height:1.2;margin:0 0 4px;letter-spacing:-.02em;font-weight:700}
+.sub{margin:0;color:var(--mut);font-size:13px}
+.seg{display:inline-flex;padding:4px;background:#f1f5f9;border-radius:10px;gap:2px;max-width:100%;overflow-x:auto}
+.seg button{border:0;background:none;height:32px;padding:0 16px;border-radius:7px;color:var(--mut);font-weight:500;white-space:nowrap;transition:color .15s,background .15s}
+.seg button:hover{color:var(--tx)}
+.seg button.on{background:#fff;color:var(--tx);box-shadow:0 1px 2px rgba(15,23,42,.1)}
+
+/* ---------- buyer cards ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.bc{display:flex;flex-direction:column;gap:8px;text-align:left;padding:14px;background:#fff;border:1px solid var(--bd);border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.04);cursor:pointer;transition:background .18s,border-color .18s,box-shadow .18s;font:inherit;color:inherit;width:100%}
+.bc h3{margin:0;font-size:15px;font-weight:600;letter-spacing:-.01em;line-height:1.3}
+.chip{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;height:22px;padding:0 8px;border:1px solid var(--bd);border-radius:999px;background:#f8fafc;color:#475569;font-size:13px}
+.chip svg.i{width:16px;height:16px}
+.go{display:flex;align-items:center;justify-content:center;gap:7px;height:30px;margin-top:2px;border:1px solid var(--bd);border-radius:8px;background:#fff;color:var(--ac2);font-weight:500;font-size:13px}
+.go svg.i{width:16px;height:16px}
+.bc:hover,.bc:focus-visible{background:linear-gradient(180deg,#eff6ff,#e8f1ff);border-color:#93b8f7;box-shadow:0 0 0 1px rgba(59,130,246,.35),0 4px 14px rgba(37,99,235,.10);outline:0}
+.bc:hover .chip,.bc:focus-visible .chip{background:#fff;border-color:#dbe4f3}
+.bc:hover .go,.bc:focus-visible .go{border-color:#bcd2f7}
+.empty{display:none;padding:56px 20px;text-align:center;color:var(--mut);border:1px dashed var(--bd2);border-radius:12px;background:#fff}
+
+/* ---------- dev modal ---------- */
+.modal{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(15,23,42,.45)}
+.modal.show{display:flex}
+.mbox{width:min(380px,100%);background:#fff;border-radius:14px;padding:28px 24px 22px;text-align:center;box-shadow:0 20px 50px rgba(15,23,42,.25)}
+.mico{width:48px;height:48px;border-radius:50%;background:#eff6ff;color:var(--ac);display:grid;place-items:center;margin:0 auto 14px}
+.mico svg.i{width:24px;height:24px}
+.mbox h4{margin:0 0 6px;font-size:18px}
+.mbox p{margin:0 0 20px;color:var(--mut)}
+.pbtn{height:40px;padding:0 22px;border:0;border-radius:8px;background:var(--ac);color:#fff;font-weight:600}
+.pbtn:hover{background:var(--ac2)}
+
+/* ---------- report form ---------- */
+#viewReport .doc{max-width:860px}
+.back{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px 0 8px;margin-bottom:16px;border:1px solid var(--bd);border-radius:8px;background:#fff;color:#334155;font-weight:500;font-size:14px}
+.back:hover{background:#f1f5f9}
+.back svg.i{width:16px;height:16px;transform:rotate(180deg)}
+.tabs{display:flex;margin:0 0 20px}
+.tabs .seg{width:100%}
+.tabs .seg button{flex:1}
+fieldset{min-width:0;background:var(--card);border:1px solid var(--bd);border-radius:10px;margin:0 0 14px;padding:13px 18px 18px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+legend{float:left;width:100%;margin:0 0 6px;padding:0;font-weight:600;font-size:15px;color:var(--tx);display:flex;align-items:center;gap:10px}
+legend::before{content:"";width:4px;height:16px;border-radius:2px;background:var(--ac)}
+legend+*{clear:both}
+label{display:block;font-size:13px;font-weight:500;color:#475569;margin:14px 0 5px}
+input,select,textarea{width:100%;padding:0 10px;height:36px;border:1px solid var(--bd2);border-radius:8px;background:#fff;color:var(--tx);font:inherit;transition:border-color .15s,box-shadow .15s}
+textarea{height:auto;min-height:84px;padding:10px 12px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--ac);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+input[type=file]{height:auto;padding:8px;background:#f8fafc;border-style:dashed}
+input[type=file]::file-selector-button{margin-right:12px;border:0;border-radius:6px;background:#eff6ff;color:var(--ac2);padding:7px 12px;font:inherit;font-weight:500;cursor:pointer}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+#thumb{max-width:100%;max-height:240px;margin-top:12px;border:1px solid var(--bd);border-radius:8px;display:none}
+.tr{border-top:1px solid #eef2f7;padding:2px 0 10px;display:grid;gap:10px;align-items:end}
+.tr label{margin:10px 0 4px;font-size:12px}
+.tr input,.tr select,.tr textarea{height:34px;padding:0 9px;font-size:14px}
+.grp{border-top:1px dashed var(--bd2);margin-top:16px;padding-top:10px}
+.gh{display:flex;justify-content:space-between;align-items:center}
+.mini{height:32px;padding:0 12px;font-size:13px;font-weight:500;background:#fff;color:#334155;border:1px solid var(--bd2);border-radius:8px;margin-top:10px;transition:background .15s,color .15s,border-color .15s}
+.mini:hover{background:#eff6ff;color:var(--ac2);border-color:#bcd2f7}
+.mini[data-act^="del"]{color:#dc2626;border-color:#fecaca}
+.mini[data-act^="del"]:hover{background:#fef2f2;color:#b91c1c;border-color:#fca5a5}
+.tr .mini{margin:0;height:36px}
+.hint{font-size:13px;color:var(--mut);margin:8px 0 0}
+.actions{position:sticky;bottom:0;display:flex;gap:12px;padding:14px 0 6px;background:linear-gradient(180deg,rgba(248,250,252,0),var(--bg) 30%)}
+.actions button{flex:1;height:44px;border-radius:10px;font-weight:600;font-size:15px;border:1px solid var(--ac);transition:background .15s}
+.actions .p{background:var(--ac);color:#fff}
+.actions .p:hover{background:var(--ac2)}
+.actions .s{background:#fff;color:var(--ac2)}
+.actions .s:hover{background:#eff6ff}
+#msg{margin-top:6px;font-size:13px;color:var(--mut);min-height:18px}
+
+
+
+/* ---------- buyer directory ---------- */
+.dir-tools{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+.dir-tools .fld{display:flex;flex-direction:column;gap:4px}
+.dir-tools label{font-size:12px;font-weight:500;color:#475569;margin:0}
+.dir-tools input{height:34px;padding:0 10px;border:1px solid var(--bd2);border-radius:8px;background:#fff;font:inherit;min-width:180px}
+.dir-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.dir-card{display:flex;flex-direction:column;gap:10px;text-align:left;padding:14px;background:#fff;border:1px solid var(--bd);border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.04);cursor:pointer;transition:background .18s,border-color .18s,box-shadow .18s;font:inherit;color:inherit;width:100%}
+.dir-card:hover{border-color:#93b8f7;box-shadow:0 0 0 1px rgba(59,130,246,.35),0 4px 14px rgba(37,99,235,.10)}
+.dir-top{display:flex;gap:10px;align-items:center}
+.dir-logo{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;font-weight:700;font-size:15px;color:#fff;flex:none;overflow:hidden;border:1px solid #e2e8f0}
+.dir-logo img{width:100%;height:100%;object-fit:contain;background:#fff;padding:3px}
+.dir-name{font-size:15px;font-weight:600;line-height:1.3;letter-spacing:-.01em}
+.dir-cat{font-size:12px;color:var(--mut)}
+.dir-meta{font-size:12px;color:#475569;line-height:1.5}
+.dir-meta b{color:#0f172a;font-weight:600}
+.dir-stats{display:flex;gap:6px;flex-wrap:wrap}
+.dir-stat{font-size:12px;font-weight:600;padding:3px 8px;border-radius:999px;background:#f1f5f9;color:#334155}
+.dir-stat.green{background:#dcfce7;color:#15803d}
+.dir-stat.red{background:#fee2e2;color:#dc2626}
+.dir-std{display:flex;gap:4px;flex-wrap:wrap}
+.dir-std span{font-size:11px;padding:2px 7px;border:1px solid var(--bd);border-radius:999px;background:#f8fafc;color:#475569}
+.dir-view{height:32px;border:1px solid var(--bd);border-radius:8px;background:#fff;color:var(--ac2);font-weight:500;font-size:13px}
+.dir-view:hover{background:#eff6ff}
+.dbox{width:min(560px,100%);background:#fff;border-radius:14px;padding:22px;text-align:left;box-shadow:0 20px 50px rgba(15,23,42,.25);max-height:88vh;overflow:auto}
+.dbox h4{margin:0 0 4px;font-size:18px}
+.dbox .dsub{margin:0 0 14px;color:var(--mut);font-size:13px}
+.d-prof{display:flex;gap:14px;align-items:center;padding:12px;background:#f8fafc;border:1px solid var(--bd);border-radius:10px;margin-bottom:12px}
+.d-prof .dir-logo{width:56px;height:56px;font-size:18px;border-radius:12px}.d-prof .dir-logo img{padding:5px}
+.d-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;font-size:13px;margin-bottom:12px}
+.d-grid div{background:#fff;border:1px solid var(--bd);border-radius:8px;padding:8px 10px}
+.d-grid .lbl{font-size:11px;color:var(--mut);display:block;margin-bottom:2px}
+.d-recent{font-size:13px;color:#334155}
+.d-recent li{margin-bottom:4px}
+
+/* ---------- lab analysis ---------- */
+.an-filter{display:flex;align-items:end;gap:10px;flex-wrap:wrap}
+.an-filter label{margin:0 0 5px;font-size:12px;font-weight:500;color:#475569}
+.an-filter .fld{display:flex;flex-direction:column}
+.an-filter select{height:34px;padding:0 10px;border:1px solid var(--bd2);border-radius:8px;background:#fff;font:inherit;min-width:150px}
+.an-bars{padding:6px 18px 16px;display:flex;flex-direction:column;gap:12px}
+.an-row{display:grid;grid-template-columns:140px 1fr 32px;gap:10px;align-items:center;font-size:13px}
+.an-row .lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1e293b;font-weight:500}
+.an-track{height:10px;background:#f1f5f9;border-radius:999px;overflow:hidden}
+.an-fill{height:100%;background:#ef5b5b;border-radius:999px}
+.an-row:nth-child(2) .an-fill{background:#f97316}
+.an-row:nth-child(3) .an-fill{background:#eab308}
+.an-row:nth-child(4) .an-fill{background:#3b82f6}
+.an-row:nth-child(5) .an-fill{background:#8b5cf6}
+.an-val{text-align:right;font-weight:600;color:#0f172a}
+.an-ins{padding:4px 18px 16px;display:flex;flex-direction:column;gap:8px;font-size:13px;color:#334155;line-height:1.5}
+.an-ins b{color:#0f172a}
+.an-badge{font-size:12px;font-weight:600;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.an-badge.good{background:#dcfce7;color:#15803d}
+.an-badge.warn{background:#fef9c3;color:#a16207}
+.an-badge.bad{background:#fee2e2;color:#dc2626}
+.an-badge.neutral{background:#f1f5f9;color:#475569}
+.an-sub{font-size:12px;color:var(--mut);display:block;margin-top:4px}
+
+/* ---------- responsive ---------- */
+@media (max-width:1100px){.search{width:min(360px,34%)}}
+@media (max-width:900px){
+  .side{transform:translateX(-100%);transition:transform .22s}
+  body.menu .side{transform:none}
+  body.menu .scrim{display:block;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:25}
+  .wrap{margin-left:0}
+  .burger{display:grid}
+  .top{padding:0 16px;gap:12px}
+  .search{position:static;transform:none;width:auto;flex:1}
+  .crumbs{display:none}
+  .plant span{display:none}
+  .plant{padding:0 10px}
+  .tools{margin-left:0;gap:6px}
+  main{padding:24px 16px 40px}
+}
+@media (max-width:560px){
+  h1{font-size:20px}
+  .grid{grid-template-columns:1fr}
+  fieldset{padding:16px}
+  #pg4 fieldset{overflow-x:auto}
+  #pg4 .tr{min-width:600px}
+  .actions{flex-direction:column}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.search input:focus{box-shadow:none;border:0}
+.pbtn.add{display:inline-flex;align-items:center;gap:8px}
+.pbtn.add svg.i{width:18px;height:18px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:12px}
+.kpi{display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;padding:16px;background:#fff;border:1px solid var(--bd);border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.04);cursor:pointer;font:inherit;color:inherit;width:100%;transition:background .18s,border-color .18s,box-shadow .18s}
+.kt{display:block;font-size:13px;font-weight:500;color:#1e293b;margin-bottom:6px}
+.kv{display:flex;align-items:center;gap:8px;font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1}
+.kb{font-size:13px;font-weight:600;padding:3px 9px;border-radius:999px;background:#dcfce7;color:#15803d;letter-spacing:0}
+.kic{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;flex:none}
+.kic svg.i{width:18px;height:18px}
+.c-blue{background:#dbeafe;color:#2563eb}.c-cyan{background:#cffafe;color:#0e7490}.c-orange{background:#ffedd5;color:#ea580c}.c-green{background:#dcfce7;color:#16a34a}
+.kpi:hover,.kpi:focus-visible,.kpi.on{background:linear-gradient(180deg,#eff6ff,#e8f1ff);border-color:#93b8f7;box-shadow:0 0 0 1px rgba(59,130,246,.35),0 4px 14px rgba(37,99,235,.10);outline:0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.panel{background:#fff;border:1px solid var(--bd);border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.04);overflow:hidden;min-width:0}
+.ph{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 16px 6px}
+.ph h2{margin:0;font-size:16px;font-weight:600;letter-spacing:-.01em}
+.leg{display:flex;gap:16px;font-size:14px;color:#334155}
+.leg i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+#chart{padding:4px 18px 16px}
+#chart svg{display:block;width:100%;height:auto}
+#chart text{font:12px Inter,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;fill:#64748b}
+#chart .vl{fill:#475569}
+#alerts{max-height:300px;overflow:auto;padding-bottom:6px}
+.al{display:flex;align-items:center;gap:10px;padding:9px 14px;border-top:1px solid #eef2f7}
+.al:first-child{border-top:0}
+.ai{width:28px;height:28px;border-radius:50%;background:#fee2e2;color:#dc2626;display:grid;place-items:center;font-weight:700;font-size:14px;flex:none}
+.ai.o{background:#ffedd5;color:#ea580c}
+.at{flex:1;min-width:0;font-size:14px}
+.at b{font-weight:500}.at .f{color:#dc2626}.at .p{color:#d97706}
+.rv{height:34px;padding:0 20px;border:1px solid var(--bd2);border-radius:8px;background:#fff;color:var(--ac2);font-weight:500}
+.rv:hover{background:#eff6ff;border-color:#bcd2f7}
+.none{padding:36px 22px;text-align:center;color:var(--mut)}
+.fnote{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--mut)}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:820px}
+th{background:#f8fafc;text-align:left;font-weight:600;font-size:13px;padding:8px 14px;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);color:#1e293b;white-space:nowrap}
+td{padding:8px 14px;border-bottom:1px solid #eef2f7;font-size:14px;vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:#fafcff}
+td.mut{color:var(--mut);font-size:14px;white-space:nowrap}
+select.st{appearance:none;-webkit-appearance:none;width:auto;height:28px;border:0;border-radius:999px;padding:0 26px 0 12px;font:500 14px/28px inherit;font-family:inherit;cursor:pointer;background-repeat:no-repeat;background-position:right 9px center;background-size:11px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")}
+.st-masuk{background-color:#e2e8f0;color:#334155}
+.st-proses{background-color:#dbeafe;color:#1d4ed8}
+.st-pending{background-color:#fef3c7;color:#b45309}
+.st-pass{background-color:#dcfce7;color:#15803d}
+.st-fail{background-color:#fee2e2;color:#dc2626}
+.acts{display:flex;gap:8px;white-space:nowrap}
+.act{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid var(--bd2);border-radius:8px;background:#fff;color:#334155;font-weight:500;font-size:14px}
+.act svg.i{width:16px;height:16px}
+.act:hover{background:#eff6ff;color:var(--ac2);border-color:#bcd2f7}
+.act.del{padding:0 9px;color:#dc2626;border-color:#fecaca}
+.act.del:hover{background:#fef2f2;border-color:#fca5a5;color:#b91c1c}
+.act.sm{height:28px;font-size:13px}
+.chips{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:18px 22px;border-top:1px solid var(--bd)}
+.cp{height:36px;padding:0 20px;border:1px solid var(--bd);border-radius:999px;background:#f1f5f9;color:#1e293b;font-weight:500;transition:background .15s,border-color .15s}
+.cp:hover{background:#e8f0fd;border-color:#bcd2f7}
+.cp.on{background:#dbeafe;border-color:#93b8f7;color:#1d4ed8}
+.chips .act{margin-left:auto}
+.fbox{width:min(480px,100%);max-height:calc(100vh - 40px);overflow:auto;background:#fff;border-radius:14px;padding:24px;box-shadow:0 20px 50px rgba(15,23,42,.25)}
+.fbox h4{margin:0 0 4px;font-size:18px}
+.fbox label:first-of-type{margin-top:12px}
+.hist{margin:14px 0 0;padding:0;list-style:none;font-size:13px;color:var(--mut);max-height:110px;overflow:auto}
+.hist li{padding:3px 0}
+.ferr{color:#dc2626;font-size:13px;min-height:18px;margin-top:10px}
+.fbtns{display:flex;gap:10px;margin-top:8px}
+.fbtns>*{flex:1}
+.sbtn{height:40px;padding:0 18px;border:1px solid var(--bd2);border-radius:8px;background:#fff;font-weight:600;color:#334155}
+.sbtn:hover{background:#f1f5f9}
+.sbtn.dbtn{color:#dc2626;border-color:#fecaca}
+.sbtn.dbtn:hover{background:#fef2f2}
+@media (max-width:900px){.two{grid-template-columns:1fr}.chips .act{margin-left:0}}
+@media (max-width:560px){.kv{font-size:34px}.ph,.al,.chips{padding-left:16px;padding-right:16px}th,td{padding-left:14px;padding-right:14px}.fbtns{flex-wrap:wrap}.pbtn.add{width:100%;justify-content:center}}
+.fbtns{flex-wrap:wrap}
+#fsaveopen{flex:1 1 100%;color:var(--ac2);border-color:#bcd2f7;background:#eff6ff}
+#fsaveopen:hover{background:#dbeafe}
+#fsaveopen[hidden]{display:none}
+.fbox.sm{width:min(380px,100%)}
+.fbox.sm p{margin:0 0 4px;color:var(--mut);font-size:14px}
+.sbtn.ok{color:#15803d;border-color:#bbf7d0}
+.sbtn.ok:hover{background:#f0fdf4}
+.pill{display:inline-flex;align-items:center;height:28px;padding:0 12px;border-radius:999px;font-weight:500;font-size:14px;white-space:nowrap}
+.stc{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.nx{height:28px;padding:0 10px;border:1px solid #bcd2f7;border-radius:8px;background:#eff6ff;color:var(--ac2);font-size:13px;font-weight:600;white-space:nowrap}
+.nx:hover{background:#dbeafe}
+.nx.hold{background:#fff;color:#475569;border-color:var(--bd2);font-weight:500}
+.nx.hold:hover{background:#f1f5f9}
+.why{flex-basis:100%;font-size:12px;color:var(--mut)}
+.late{color:#dc2626;font-weight:600}
+.soon{color:#d97706;font-weight:600}
+td small{display:block;color:var(--mut);font-size:12px;font-weight:400}
+.act.late{color:#dc2626;border-color:#fecaca}
+.act.late.on{background:#fee2e2;border-color:#fca5a5}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:70;display:flex;align-items:center;gap:16px;padding:12px 16px;border-radius:10px;background:#0f172a;color:#fff;font-size:14px;box-shadow:0 10px 30px rgba(15,23,42,.3)}
+.toast[hidden]{display:none}
+.toast button{border:0;background:none;color:#93c5fd;font-weight:600;padding:0}
+.linkbar{display:flex;align-items:center;flex-wrap:wrap;gap:14px;padding:12px 16px;margin-bottom:18px;background:#eff6ff;border:1px solid #bcd2f7;border-radius:10px;color:#1e3a8a;font-size:14px}
+.linkbar[hidden]{display:none}
+.linkbar .act{margin-left:auto}
+
+table{min-width:1100px}
+
+.stc{flex-wrap:nowrap}
+.why{margin-top:4px;font-size:12px;color:var(--mut)}
+.linkbar .why{display:none}
+td:first-child,td:nth-child(6){white-space:nowrap}
+th,td{padding-left:16px;padding-right:16px}
+td .late,td .soon{white-space:nowrap}
+
+th,td{padding-left:12px;padding-right:12px}
+th:first-child,td:first-child{padding-left:22px}
+table{min-width:1000px}
+.act:has(>svg:only-child){padding:0 9px}
+
+th,td{padding-left:10px;padding-right:10px}
+th:first-child,td:first-child{padding-left:18px}
+.acts{gap:6px}
+
+@media (max-width:1400px){th:nth-child(7),td:nth-child(7){display:none}}
+
+/* ---------- settings ---------- */
+.set-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.set-note{font-size:12px;color:var(--mut);line-height:1.5;margin:6px 0 0}
+.set-stat{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+
+/* ---------- settings v2 ---------- */
+.set-list{display:flex;flex-direction:column;gap:6px}
+.set-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:#f8fafc}
+.set-item span{flex:1;font-size:13px;font-weight:500}
+.set-item .cnt{font-size:12px;color:var(--mut);font-weight:400}
+.set-item button{height:28px;padding:0 10px;border:1px solid var(--bd);border-radius:6px;background:#fff;font-size:12px}
+.set-item button.danger{color:#dc2626;border-color:#fecaca}
+
+/* ---------- plant filter dropdown ---------- */
+.plant-menu{position:absolute;top:calc(100% + 6px);right:0;min-width:280px;max-width:340px;background:#fff;border:1px solid var(--bd);border-radius:10px;box-shadow:0 12px 28px rgba(15,23,42,.18);padding:6px;z-index:60}
+.plant-menu button{display:block;width:100%;text-align:left;padding:9px 10px;border:0;background:#fff;border-radius:8px;font-size:13px;cursor:pointer}
+.plant-menu button:hover{background:#f1f5f9}
+.plant-menu button.on{background:#eff6ff;font-weight:600;color:#1d4ed8}
+.plant-menu .pm-title{padding:8px 10px 4px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--mut);font-weight:600}
+
+/* ---------- profile menu ---------- */
+.profile-menu{position:absolute;top:calc(100% + 6px);right:0;width:300px;background:#fff;border:1px solid var(--bd);border-radius:12px;box-shadow:0 12px 28px rgba(15,23,42,.18);padding:14px;z-index:60}
+.profile-menu .pf-head{display:flex;gap:10px;align-items:center;padding-bottom:12px;border-bottom:1px solid #eef2f7;margin-bottom:10px}
+.profile-menu .pf-ava{width:44px;height:44px;min-width:44px;border-radius:50%;background:#dbeafe;color:#1e3a8a;display:grid;place-items:center;font-weight:700;font-size:16px}
+.profile-menu .pf-name{font-weight:700;font-size:14px;line-height:1.2}
+.profile-menu .pf-role{font-size:12px;color:var(--mut)}
+.profile-menu .pf-lab{font-size:11px;color:#2563eb;margin-top:2px}
+.profile-menu label{font-size:12px;font-weight:600;color:#334155;display:block;margin:8px 0 4px}
+.profile-menu input{width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;font-size:13px;box-sizing:border-box}
+.profile-menu .pf-btn{width:100%;padding:9px;border:0;border-radius:8px;font-weight:600;cursor:pointer;font-size:13px;margin-top:10px}
+.profile-menu .pf-save{background:var(--ac);color:#fff}
+.profile-menu .pf-ghost{background:#f1f5f9;color:#0f172a}
+
+/* ---------- firebase ---------- */
+.fb-status{font-size:12px;padding:8px 10px;border-radius:8px;background:#f1f5f9;color:#334155;margin-top:10px;line-height:1.4}
+.fb-status.ok{background:#dcfce7;color:#166534}
+.fb-status.err{background:#fee2e2;color:#991b1b}
+.fb-status.warn{background:#fef9c3;color:#854d0e}
+.fb-field{margin-bottom:8px}
 </style>
+<!-- Firebase (compat) untuk sinkronisasi Firestore + Auth -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 </head>
 <body>
-<main>
-<h1>Test Report – Halaman 1</h1>
-<p class="sub">Isi data, lalu Export. Hasilnya memakai file contoh asli (Halaman 1–5), hanya data yang diisi yang diganti.</p>
+<aside class="side" id="side">
+  <div class="brand"><span class="logo"><svg class="i" viewBox="0 0 24 24" style="color:#fff;width:18px;height:18px"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></span>Test Report Portal</div>
+  <nav class="nav">
+    <button type="button" class="on" data-nav="dashboard"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Dashboard</button>
+    <button type="button" data-nav="Buyer Directory"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Buyer Directory</button>
+    <button type="button" data-nav="reports"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>Test Reports</button>
+    <button type="button" data-nav="Lab Analysis"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>Lab Analysis</button>
+    <button type="button" data-nav="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</button>
+  </nav>
+  <div class="side-foot"><span class="avatar"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4.5"/><path d="M3.5 22c0-5 3.8-8 8.5-8s8.5 3 8.5 8z"/></svg></span></div>
+</aside>
+<div class="scrim" id="scrim"></div>
 
-<div class="tabs"><button type="button" id="tab1" class="on">Hal 1</button><button type="button" id="tab2">Hal 2</button><button type="button" id="tab3">Hal 3</button><button type="button" id="tab4">Hasil Uji</button></div>
-<div id="pg1">
+<div class="wrap">
+  <header class="top">
+    <button type="button" class="burger" id="burger" aria-label="Menu"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <div class="crumbs" id="crumbs"></div>
+    <label class="search" style="margin:0"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input id="q" type="search" placeholder="Search buyers, brands, or test reports..." autocomplete="off"></label>
+    <div class="tools">
+      <button type="button" class="ibtn" data-nav="Notifikasi" aria-label="Notifications"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></button>
+      <div style="position:relative"><button type="button" class="plant" id="plantBtn" aria-haspopup="true" aria-expanded="false"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/></svg><span id="plantLabel" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Semua Plant</span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div id="plantMenu" class="plant-menu" hidden></div></div>
+      <div style="position:relative"><button type="button" class="ibtn" id="profileBtn" aria-haspopup="true" aria-expanded="false" aria-label="Profile"><span id="profileAva" style="width:26px;height:26px;border-radius:50%;background:#dbeafe;color:#1e3a8a;display:grid;place-items:center;font-weight:700;font-size:12px;overflow:hidden"><svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width:20px;height:20px"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span></button><div id="profileMenu" class="profile-menu" hidden></div></div>
+    </div>
+  </header>
+
+  <main>
+    <section id="viewDash">
+  <div class="phead">
+    <div><h1>Quality Assurance Overview</h1><p class="sub" id="dsub"></p></div>
+    <button type="button" class="pbtn add" id="addBtn"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg> Input Report</button>
+  </div>
+  <div class="kpis" id="kpis">
+    <button type="button" class="kpi" data-st="masuk"><span><span class="kt">Masuk</span><span class="kv"><span id="k_masuk">0</span></span></span><span class="kic c-blue"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></span></button>
+    <button type="button" class="kpi" data-st="proses"><span><span class="kt">Proses</span><span class="kv"><span id="k_proses">0</span></span></span><span class="kic c-cyan"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg></span></button>
+    <button type="button" class="kpi" data-st="pending"><span><span class="kt">Pending</span><span class="kv"><span id="k_pending">0</span></span></span><span class="kic c-orange"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span></button>
+    <button type="button" class="kpi" data-st="selesai"><span><span class="kt">Selesai</span><span class="kv"><span id="k_selesai">0</span><span class="kb" id="kb_selesai" hidden></span></span></span><span class="kic c-green"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span></button>
+  </div>
+  <div class="two">
+    <div class="panel"><div class="ph"><h2>Test Status Trend (Last 6 Months)</h2><div class="leg"><span><i style="background:#4ebb74"></i>Pass</span><span><i style="background:#ef5b5b"></i>Fail</span></div></div><div id="chart"></div></div>
+    <div class="panel"><div class="ph"><h2>Action Needed / Urgent Alerts</h2></div><div id="alerts"></div></div>
+  </div>
+  <div class="panel">
+    <div class="ph"><h2>Recent Test Reports</h2><div class="fnote" id="fnote"></div></div>
+    <div class="tw"><table>
+      <thead><tr><th>Report No.</th><th>Buyer</th><th>Plant</th><th>Style/Code</th><th>Test Type</th><th>Status</th><th>Target</th><th>Updated</th><th>Actions</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table></div>
+    <div class="chips" id="chips"></div>
+  </div>
+</section>
+
+    <section id="viewBuyers" hidden>
+      <div class="phead">
+        <div><h1>Test Reports</h1><p class="sub">Select a buyer to view their laboratory and fabric test reports</p></div>
+        <div class="seg" id="flt"><button type="button" class="on" data-f="all">All Buyers</button><button type="button" data-f="active">Active Reports</button><button type="button" data-f="pending">Pending Review</button></div>
+      </div>
+      <div class="grid" id="grid"><button type="button" class="bc" data-buyer="Hugo Boss"><h3>Hugo Boss</h3><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>Apparel</span><span class="go">View Test Report</span></button><button type="button" class="bc" data-buyer="American Eagle Outfitters"><h3>American Eagle Outfitters</h3><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>Apparel</span><span class="go">View Test Report</span></button><button type="button" class="bc" data-buyer="Polo Ralph Lauren"><h3>Polo Ralph Lauren</h3><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>Apparel</span><span class="go">View Test Report</span></button><button type="button" class="bc" data-buyer="Ann Taylor"><h3>Ann Taylor</h3><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>Apparel</span><span class="go">View Test Report</span></button><button type="button" class="bc" data-buyer="Target"><h3>Target</h3><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>Apparel</span><span class="go">View Test Report</span></button><button type="button" class="bc" data-buyer="PVH"><h3>PVH</h3><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>Apparel</span><span class="go">View Test Report</span></button><button type="button" class="bc" data-buyer="LL Bean"><h3>LL Bean</h3><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>Apparel</span><span class="go">View Test Report</span></button><button type="button" class="bc" data-buyer="Macy's"><h3>Macy's</h3><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>Apparel</span><span class="go">View Test Report</span></button><button type="button" class="bc" data-buyer="Eileen Fisher"><h3>Eileen Fisher</h3><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>Apparel</span><span class="go">View Test Report</span></button><button type="button" class="bc" data-buyer="Brooks Brothers"><h3>Brooks Brothers</h3><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>Apparel</span><span class="go">View Test Report</span></button><button type="button" class="bc" data-buyer="Bonobos"><h3>Bonobos</h3><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>Apparel</span><span class="go">View Test Report</span></button><button type="button" class="bc" data-buyer="Carhartt"><h3>Carhartt</h3><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>Apparel</span><span class="go">View Test Report</span></button><button type="button" class="bc" data-buyer="GU"><h3>GU</h3><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>Apparel</span><span class="go">View Test Report</span></button><button type="button" class="bc" data-buyer="Tailored Brand, Inc"><h3>Tailored Brand, Inc</h3><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>Apparel</span><span class="go">View Test Report</span></button><button type="button" class="bc" data-buyer="Lululemon"><h3>Lululemon</h3><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>Apparel</span><span class="go">View Test Report</span></button><button type="button" class="bc" data-buyer="J-Jill"><h3>J-Jill</h3><span class="chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>Apparel</span><span class="go">View Test Report</span></button></div>
+      <div class="empty" id="empty"></div>
+    </section>
+
+
+
+    <section id="viewDirectory" hidden>
+      <div class="phead">
+        <div><h1>Buyer Directory</h1><p class="sub">Profil merek, aturan pengujian, dan kontak buyer · terpisah dari daftar laporan</p><p style="margin:8px 0 0;font-size:12px;color:#b45309;background:#fef3c7;border:1px solid #fde68a;padding:6px 10px;border-radius:8px;display:inline-block">Data profil masih kosong, silakan isi via View Buyer Profile lalu Edit Profil. Logo sudah terpasang.</p></div>
+        <div class="dir-tools">
+          <div class="fld"><label for="dirSearch">Cari buyer</label><input id="dirSearch" placeholder="Nama, HQ, standar..." autocomplete="off"></div>
+          <button type="button" class="pbtn add" id="dirAdd"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Tambah Buyer</button>
+        </div>
+      </div>
+      <div class="seg" id="dirFilter" style="margin-bottom:16px"><button type="button" data-df="all" class="on">Semua</button><button type="button" data-df="active">Ada Report Aktif</button><button type="button" data-df="attention">Perlu Perhatian</button></div>
+      <div class="dir-grid" id="dirGrid"></div>
+      <div class="empty" id="dirEmpty" style="display:none">Tidak ada buyer yang cocok.</div>
+    </section>
+
+
+        <section id="viewSettings" hidden>
+      <div class="phead">
+        <div><h1>Settings</h1><p class="sub">Manage master data, plant profile & workflow rules, database & backup</p></div>
+        <button type="button" class="pbtn" id="setSave">Simpan Semua</button>
+      </div>
+      <div class="panel"><div class="ph"><h2>Master Data Management</h2><span class="an-sub">Atur daftar buyer & jenis tes biar input nggak salah ketik / beda penulisan</span></div>
+        <div style="padding:4px 18px 16px">
+          <div class="seg" id="setMasterTab"><button type="button" data-mtab="buyers" class="on">Buyers</button><button type="button" data-mtab="tests">Test Types</button><button type="button" data-mtab="plants">Plants</button></div>
+          <div id="setMasterBuyers">
+            <div style="display:flex;gap:8px;margin:12px 0"><input id="set_newBuyer" placeholder="Nama buyer baru, mis. Hugo Boss" style="flex:1"><button type="button" class="pbtn" id="set_addBuyer">+ Add New Buyer</button></div>
+            <div id="set_buyerList" class="set-list"></div>
+            <p class="set-note">Mengubah di sini langsung mengubah pilihan Buyer di Input Report, Buyer Directory, dan Lab Analysis.</p>
+          </div>
+          <div id="setMasterTests" hidden>
+            <div style="display:flex;gap:8px;margin:12px 0"><input id="set_newTest" placeholder="Jenis tes baru, mis. Shrinkage" style="flex:1"><button type="button" class="pbtn" id="set_addTest">+ Add Test Type</button></div>
+            <div id="set_testList" class="set-list"></div>
+            <p class="set-note">Mengubah di sini langsung mengubah pilihan Test Type di Input Report (datalist).</p>
+          </div>
+          <div id="setMasterPlants" hidden>
+            <div style="display:flex;gap:8px;margin:12px 0"><input id="set_newPlant" placeholder="PT. baru, mis. PT. Contoh Garments" style="flex:1"><button type="button" class="pbtn" id="set_addPlant">+ Add Plant</button></div>
+            <div id="set_plantList" class="set-list"></div>
+            <p class="set-note">Plant ini yang muncul di pilihan Plant pas Input SGR. Pakai nama PT lengkap, mis. PT. Ungaran Sari Garments Ungaran, biar nggak salah ketik.</p>
+          </div>
+        </div>
+      </div>
+      <div class="set-grid">
+        <div class="panel"><div class="ph"><h2>Plant & Workflow</h2></div><div style="padding:4px 18px 16px">
+          <label for="set_plantName">Plant Name</label><input id="set_plantName" placeholder="mis. PT. Ungaran Sari Garments Ungaran">
+          <label for="set_plantAddr">Address</label><textarea id="set_plantAddr" placeholder="Jl. ..."></textarea>
+          <div class="row"><div><label for="set_plantContact">Contact Person</label><input id="set_plantContact" placeholder="Nama PIC plant"></div><div><label for="set_plantPhone">Phone Number</label><input id="set_plantPhone" placeholder="0274-..."></div></div>
+          <label>Workflow Rules - Target Hari per Status</label>
+          <div class="row"><div><label for="set_wfMasuk">Masuk (hari)</label><input id="set_wfMasuk" type="number" min="0" max="30" value="1"></div><div><label for="set_wfProses">Proses (hari)</label><input id="set_wfProses" type="number" min="0" max="30" value="3"></div></div>
+          <div class="row"><div><label for="set_wfPending">Pending (hari)</label><input id="set_wfPending" type="number" min="0" max="30" value="2"></div><div><label for="set_target">Total Target (hari)</label><input id="set_target" type="number" min="1" max="30" value="7"></div></div>
+          <p class="set-note">Kalau report melebihi target ini, muncul di Urgent Alerts. Target total dipakai di Lab Analysis.</p>
+        </div></div>
+        <div class="panel"><div class="ph"><h2>Informasi Lab</h2></div><div style="padding:4px 18px 16px">
+          <label for="set_labName">Nama Lab</label><input id="set_labName" placeholder="mis. PT Texlab Indonesia">
+          <label for="set_labEmail">Email Lab</label><input id="set_labEmail" placeholder="lab@...">
+          <label for="set_pic">Penanggung Jawab</label><input id="set_pic" placeholder="Nama atasan / QA Manager">
+          <label for="set_labAddr">Alamat Lab</label><textarea id="set_labAddr" placeholder="Jl. ..."></textarea>
+          <label for="set_labPhone">Telepon Lab</label><input id="set_labPhone" placeholder="0274-...">
+          <p class="set-note" id="setSaved" style="color:#15803d;font-weight:600;display:none">Tersimpan ✓</p>
+        </div></div>
+      </div>
+      <div class="set-grid">
+        <div class="panel"><div class="ph"><h2>Data & Storage</h2><span class="an-sub">Database Connection</span></div><div style="padding:4px 18px 16px">
+          <label for="set_dbMode">Mode Penyimpanan</label><select id="set_dbMode"><option value="local">Local Storage Browser (default)</option><option value="firebase">Firebase (Firestore - texlab-ba76c)</option></select>
+          <div id="set_firebaseFields" hidden>
+            <div class="fb-field"><label for="set_fbApiKey">Firebase API Key</label><input id="set_fbApiKey" placeholder="AIza..."></div>
+            <div class="fb-field"><label for="set_fbAuthDomain">Auth Domain</label><input id="set_fbAuthDomain" placeholder="texlab-ba76c.firebaseapp.com"></div>
+            <div class="fb-field"><label for="set_fbProjectId">Project ID</label><input id="set_fbProjectId" placeholder="texlab-ba76c"></div>
+            <div class="fb-field"><label for="set_fbStorage">Storage Bucket</label><input id="set_fbStorage" placeholder="texlab-ba76c.firebasestorage.app"></div>
+            <div class="fb-field"><label for="set_fbSender">Messaging Sender ID</label><input id="set_fbSender" placeholder="1014354282478"></div>
+            <div class="fb-field"><label for="set_fbAppId">App ID</label><input id="set_fbAppId" placeholder="1:1014354282478:web:..."></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+              <button type="button" class="sbtn" id="set_fbConnect">Hubungkan &amp; Sinkron Sekarang</button>
+              <button type="button" class="sbtn" id="set_fbPull">Muat dari Firebase</button>
+              <button type="button" class="sbtn" id="set_fbPush">Kirim Data Lokal ke Firebase</button>
+            </div>
+            <div id="fbStatus" class="fb-status">Belum terhubung. Pilih mode Firebase, cek config di atas, lalu klik Hubungkan.</div>
+            <p class="set-note">Akun login pake Firebase Auth (Email / Password). Daftar / login dari menu Profil di kanan atas. Pastikan di Firebase Console sudah nyalain Firestore Database + Authentication Email/Password.</p>
+            <div style="margin-top:12px;border:1px dashed #cbd5e1;border-radius:10px;padding:12px;background:#f8fafc">
+              <div style="font-weight:700;font-size:13px;margin-bottom:4px">Rules buat @texlab.com — copy ke Firebase Console > Firestore > Rules</div>
+              <p class="set-note" style="margin:0 0 8px">Rules yang di foto kamu itu mode test, kedaluwarsa 26 Des 2026. Abis itu semua ditolak. Ganti pake yang ini biar cuma email @texlab.com yang bisa baca/tulis:</p>
+              <textarea id="fbRulesTxt" readonly style="width:100%;height:110px;font-family:monospace;font-size:12px;padding:8px;border:1px solid var(--bd);border-radius:8px;box-sizing:border-box">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if request.auth != null
+        && request.auth.token.email.matches('.*@texlab\\.com$');
+    }
+  }
+}</textarea>
+              <button type="button" class="sbtn" id="set_fbCopyRules" style="margin-top:8px">Copy Rules</button>
+              <p class="set-note" style="margin:8px 0 0">Abis copy, paste di Firestore > Rules, klik Publish. Jangan lupa bikin user-nya di Authentication, bukan di Rules.</p>
+            </div>
+            <div style="margin-top:10px"><label for="set_fbEmail">Username / Email Akun Pabrik (untuk Login)</label><input id="set_fbEmail" placeholder="ketik fahim aja — otomatis jadi fahim@texlab.com" autocomplete="username"><div style="font-size:12px;color:var(--mut);margin-top:4px">Bisa ketik <b>fahim</b> aja, atau lengkap <b>fahim@texlab.com</b>. Keduanya jadi sama.</div><label for="set_fbPass">Password</label><input id="set_fbPass" type="password" placeholder="minimal 6 karakter" autocomplete="current-password"><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button type="button" class="sbtn" id="set_fbLogin">Login</button><button type="button" class="sbtn" id="set_fbRegister">Daftar Akun Pabrik</button><button type="button" class="sbtn" id="set_fbLogout">Logout</button></div><div id="fbAuthStatus" class="fb-status">Belum login.</div><p class="set-note">Contoh: ketik <b>fahim</b> + password, klik Daftar Akun Pabrik, jadi akun <b>fahim@texlab.com</b>. Besok orang pabrik tinggal ketik <b>fahim</b> + password-nya buat login. Buat riski, ketik <b>riski</b> aja.</p></div>
+          </div>
+          <p class="set-note" id="set_stat">0 report · 0 buyer</p>
+        </div></div>
+        <div class="panel"><div class="ph"><h2>Backup & Export</h2></div><div style="padding:4px 18px 16px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button type="button" class="sbtn" id="set_export">Export All Data (CSV)</button>
+            <button type="button" class="sbtn" id="set_exportJson">Export All Data (JSON)</button>
+            <button type="button" class="sbtn" id="set_sample">Muat Data Contoh</button>
+          </div>
+          <hr style="margin:16px 0;border:none;border-top:1px solid var(--bd)">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button type="button" class="sbtn" id="set_clear" style="color:#dc2626;border-color:#fecaca">Reset / Clear Data</button>
+            <button type="button" class="sbtn" id="set_reset_buyers">Reset Buyer Directory</button>
+          </div>
+          <p class="set-note">Reset menghapus data coba-coba kalau mau mulai ulang. Export dulu sebelum reset.</p>
+        </div></div>
+      </div>
+    </section>
+
+
+    <section id="viewAnalysis" hidden>
+      <div class="phead">
+        <div><h1>Lab Analysis</h1><p class="sub">Evaluasi kinerja lab dari data test report yang tersimpan · dihitung otomatis dari Dashboard</p></div>
+        <div class="an-filter">
+          <div class="fld"><label for="anPeriod">Time Period</label><select id="anPeriod"><option value="30">Last 30 Days</option><option value="90">Last 90 Days</option><option value="180" selected>Last 180 Days</option><option value="0">All Time</option></select></div>
+          <button type="button" class="rv" id="anExport">Export Report</button>
+        </div>
+      </div>
+      <div class="kpis">
+        <div class="kpi" style="cursor:default"><span><span class="kt">Total Lab Tests</span><span class="kv"><span id="an_total">0</span></span><span class="an-sub" id="an_total_sub"></span></span><span class="kic c-blue"><svg class="i" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg></span></div>
+        <div class="kpi" style="cursor:default"><span><span class="kt">Overall Pass Rate</span><span class="kv"><span id="an_passrate">0%</span></span><span class="an-sub" id="an_passrate_sub"></span></span><span class="kic c-green"><svg class="i" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span></div>
+        <div class="kpi" style="cursor:default"><span><span class="kt">Avg Lab Turnaround</span><span class="kv"><span id="an_turn">-</span></span><span class="an-sub" id="an_turn_sub"></span></span><span class="kic c-orange"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span></div>
+        <div class="kpi" style="cursor:default"><span><span class="kt">Retest Rate</span><span class="kv"><span id="an_retest">0%</span></span><span class="an-sub" id="an_retest_sub"></span></span><span class="kic c-cyan"><svg class="i" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></span></div>
+      </div>
+      <div class="two">
+        <div class="panel"><div class="ph"><h2>Failures by Test Type</h2><span class="an-sub" id="an_fail_sub"></span></div><div class="an-bars" id="anFailBars"></div></div>
+        <div class="panel"><div class="ph"><h2>Insight Otomatis</h2></div><div class="an-ins" id="anInsight"></div></div>
+      </div>
+      <div class="panel"><div class="ph"><h2>Lab Test Breakdown by Buyer</h2><div class="fnote" id="anNote"></div></div><div class="tw"><table><thead><tr><th>Buyer</th><th>Tests</th><th>Pass</th><th>Fail</th><th>Pass Rate</th><th>Status</th></tr></thead><tbody id="anBuyerBody"></tbody></table></div></div>
+    </section>
+
+    <section id="viewReport" hidden>
+      <div class="doc">
+        <button type="button" class="back" id="back"><span id="backt">All Buyers</span></button>
+        <div class="linkbar" id="rlink" hidden></div>
+        <div class="phead" style="margin-bottom:20px"><div><h1>LL Bean – Test Report</h1>
+        <p class="sub">Isi data, lalu Export. Hasilnya memakai file contoh asli (Halaman 1–5), hanya data yang diisi yang diganti.</p></div></div>
+        <div class="tabs"><div class="seg"><button type="button" id="tab1" class="on">Hal 1</button><button type="button" id="tab2">Hal 2</button><button type="button" id="tab3">Hal 3</button><button type="button" id="tab4">Hasil Uji</button></div></div>
+        <div id="pg1">
 <fieldset><legend>Header</legend>
 <label for="rno">Report No.</label>
 <input id="rno" value="SGR-1211263155">
@@ -65,11 +628,36 @@ button{width:100%;padding:14px;border:0;border-radius:10px;background:var(--ac);
 </div>
 <div id="pg2" hidden></div><div id="pg3" hidden></div><div id="pg4" hidden></div><datalist id="rt"><option value="PASS"><option value="FAIL"><option value="/"></datalist>
 
-<button id="go" type="button">Export ke Excel</button>
-<button id="gopdf" type="button" style="margin-top:10px">Export ke PDF</button>
-<div id="msg"></div>
-</main>
 
+        <div class="actions"><button id="go" type="button" class="p">Export ke Excel</button><button id="gopdf" type="button" class="s">Export ke PDF</button></div>
+        <div id="msg"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="modal" id="fmodal" role="dialog" aria-modal="true"><form class="fbox" id="rform" novalidate>
+  <h4 id="ftitle">Input Report</h4>
+  <label for="f_no">Report No.</label><input id="f_no" autocomplete="off" placeholder="mis. SGR-1211263155">
+  <label for="f_buyer">Buyer</label><select id="f_buyer"></select>
+  <label for="f_plant">Plant</label><div style="display:flex;gap:6px"><select id="f_plant" style="flex:1"></select><button type="button" class="sbtn" id="f_addPlant" style="white-space:nowrap">+ Plant Baru</button></div>
+  <div class="row"><div><label for="f_style">Style/Code</label><input id="f_style" autocomplete="off"></div>
+  <div><label for="f_type">Test Type</label><input id="f_type" list="testtypes" autocomplete="off"></div></div>
+  <div class="row"><div><label for="f_st">Status</label><select id="f_st"><option value="masuk">Masuk</option><option value="proses">Proses</option><option value="pending">Pending</option><option value="pass">Selesai · Pass</option><option value="fail">Selesai · Fail</option></select></div>
+  <div><label for="f_due">Target selesai</label><input id="f_due" type="date"></div></div>
+  <div id="f_why_w" hidden><label for="f_why">Alasan pending</label><input id="f_why" list="whys" autocomplete="off" placeholder="mis. Menunggu approval buyer"></div>
+  <datalist id="testtypes"><option value="Full Package Test"><option value="Seam Strength"><option value="Dimensional Change"><option value="Wash and Wear"><option value="Appearance After Laundering"><option value="Attachment Strength"><option value="Colorfastness"><option value="Fabric Shrinkage"></datalist>
+  <datalist id="whys"><option value="Menunggu sampel"><option value="Menunggu approval buyer"><option value="Menunggu info dari buyer"><option value="Menunggu alat/mesin"></datalist>
+  <ul class="hist" id="fhist"></ul>
+  <div class="ferr" id="ferr"></div>
+  <div class="fbtns"><button type="button" class="sbtn" id="fsaveopen" hidden>Simpan &amp; buka form report</button><button type="button" class="sbtn dbtn" id="fdel">Hapus</button><button type="button" class="sbtn" id="fcancel">Batal</button><button type="submit" class="pbtn">Simpan</button></div>
+</form></div>
+<div class="modal" id="amodal" role="dialog" aria-modal="true"><div class="fbox sm" id="abody"></div></div>
+<div class="toast" id="toast" hidden><span id="tmsg"></span><button type="button" id="tundo">Urungkan</button></div>
+
+
+<div class="modal" id="dmodal" role="dialog" aria-modal="true"><div class="dbox" id="dbody"></div></div>
+<div class="modal" id="modal" role="dialog" aria-modal="true"><div class="mbox"><div class="mico"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg></div><h4 id="mt">Masih dalam tahap pengembangan</h4><p id="mp"></p><button type="button" class="pbtn" id="mok">Mengerti</button></div></div>
 <script>/*!
 
 JSZip v3.10.1 - A JavaScript class for generating and reading zip files
@@ -704,5 +1292,735 @@ $("go").addEventListener("click", async () => {
   catch (e) { $("msg").textContent = "Gagal: " + e.message; console.error(e); }
 });
 </script>
-</body>
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const BUYERS=["Hugo Boss","American Eagle Outfitters","Polo Ralph Lauren","Ann Taylor","Target","PVH","LL Bean","Macy's","Eileen Fisher","Brooks Brothers","Bonobos","Carhartt","GU","Tailored Brand, Inc","Lululemon","J-Jill"];
+  const CHIPS=[["Hugo Boss","Hugo Boss"],["American Eagle","American Eagle Outfitters"],["Polo RL","Polo Ralph Lauren"],["Target","Target"],["PVH","PVH"]];
+  const LBL={masuk:"Masuk",proses:"Proses",pending:"Pending",pass:"Selesai · Pass",fail:"Selesai · Fail"};
+  const STN={masuk:"Masuk",proses:"Proses",pending:"Pending",selesai:"Selesai"};
+  const MON=["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+  const KEY="trp_reports_v1", DAY=864e5;
+  let R=[], canSave=true, stFilter="", buyerFilter="", plantFilter="", showAll=false, q="", view="dash", editId=null, bfilter="all", lateFilter=false, linkId=null, lastUndo=null, toastT=null, openAfter=false;
+
+  /* ---------- data ---------- */
+  function load(){ try{ const s=localStorage.getItem(KEY); R=s?JSON.parse(s):[]; if(!Array.isArray(R)) R=[]; }catch(e){ R=[]; canSave=false; } }
+  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(R)); canSave=true; }catch(e){ canSave=false; } if(typeof fbAutoSave==="function") fbAutoSave(); }
+  function byPlant(list){ return plantFilter ? list.filter(r=>(r.plant||"PT. Ungaran Sari Garments Ungaran")===plantFilter) : list; }
+  const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  const sel=r=>r.status==="selesai"?(r.result==="fail"?"fail":"pass"):r.status;
+  function setState(r,v,why){
+    if(sel(r)===v){ if(v==="pending"&&why!=null) r.reason=why; return false; }
+    const now=Date.now();
+    if(v==="pending"){ r.prev=(r.status==="masuk"||r.status==="proses")?r.status:(r.prev||"proses"); r.reason=why||""; } else r.reason="";
+    if(v==="pass"||v==="fail"){ r.status="selesai"; r.result=v; r.doneAt=now; } else { r.status=v; r.result=""; r.doneAt=0; }
+    r.updated=now; (r.history=r.history||[]).push({s:v,t:now,w:why||""}); return true;
+  }
+  function seed(){
+    const now=Date.now();
+    [["SGR-2611001","Hugo Boss","HB-2201","Fabric Shrinkage","fail",1],["SGR-2611002","Target","TG-8841","Colorfastness","fail",2],
+     ["SGR-2611003","LL Bean","530010","Full Package Test","pass",3],["SGR-2611004","Lululemon","LU-310","Seam Strength","proses",.2,1],
+     ["SGR-2611005","Carhartt","CH-777","Wash and Wear","masuk",.05,5],["SGR-2611006","Polo Ralph Lauren","PRL-92","Attachment Strength","pending",1.5,-2,"Menunggu approval buyer"],
+     ["SGR-2611008","Brooks Brothers","BB-41","Seam Strength","masuk",3,-1],
+     ["SGR-2611007","PVH","PVH-45","Dimensional Change","pass",6],["SGR-2610001","American Eagle Outfitters","AE-118","Full Package Test","pass",25],
+     ["SGR-2610002","Target","TG-8790","Seam Strength","pass",32],["SGR-2610003","Hugo Boss","HB-2188","Colorfastness","fail",40],
+     ["SGR-2609001","Macy's","MY-204","Wash and Wear","pass",58],["SGR-2609002","Carhartt","CH-751","Fabric Shrinkage","pass",65],
+     ["SGR-2608001","GU","GU-601","Full Package Test","pass",90],["SGR-2607001","Lululemon","LU-288","Seam Strength","fail",120],
+     ["SGR-2607002","Brooks Brothers","BB-33","Appearance After Laundering","pass",125]
+    ].forEach(a=>{
+      if(R.some(r=>r.no===a[0])) return;
+      const t=now-a[5]*DAY, fin=a[4]==="pass"||a[4]==="fail", h=[{s:"masuk",t:t-2*DAY}];
+      if(fin||a[4]==="pending") h.push({s:"proses",t:t-DAY});
+      h.push({s:a[4],t:t,w:a[7]||""});
+      R.push({id:uid(),no:a[0],buyer:a[1],plant:"PT. Ungaran Sari Garments Ungaran",style:a[2],type:a[3],status:fin?"selesai":a[4],result:fin?a[4]:"",doneAt:fin?t:0,updated:t,
+        due:a[6]!=null?iso(new Date(now+a[6]*DAY)):"",reason:a[7]||"",prev:a[4]==="pending"?"proses":"",history:h});
+    });
+    save(); renderAll();
+  }
+
+  /* ---------- helpers ---------- */
+  function ago(t){
+    const m=Math.floor((Date.now()-t)/6e4);
+    if(m<1) return "baru saja"; if(m<60) return m+" menit lalu";
+    const h=Math.floor(m/60); if(h<24) return h+" jam lalu";
+    const d=Math.floor(h/24); return d+" hari lalu";
+  }
+  const fdt=t=>{ const d=new Date(t); return d.getDate()+" "+MON[d.getMonth()]+" "+String(d.getHours()).padStart(2,"0")+"."+String(d.getMinutes()).padStart(2,"0"); };
+  const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  const fdate=d=>d.getDate()+" "+MON[d.getMonth()];
+  function dueInfo(r){ if(!r.due) return null; const t=new Date(); t.setHours(0,0,0,0); const d=new Date(r.due+"T00:00:00"); return {diff:Math.round((d-t)/DAY),date:d}; }
+  function lateDays(r){ if(r.status==="selesai") return 0; const i=dueInfo(r); return i&&i.diff<0?-i.diff:0; }
+  function dueHtml(r){
+    const i=dueInfo(r); if(!i) return '<span class="mut">-</span>';
+    const ds=fdate(i.date);
+    if(r.status==="selesai") return '<span class="mut">'+ds+'</span>';
+    if(i.diff<0) return '<span class="late">Telat '+(-i.diff)+' hari</span><small>'+ds+'</small>';
+    if(i.diff===0) return '<span class="soon">Hari ini</span>';
+    if(i.diff===1) return '<span class="soon">Besok</span><small>'+ds+'</small>';
+    return ds;
+  }
+  function statusCell(r){
+    const v=sel(r), id=r.id; let b="";
+    if(r.status==="masuk") b='<button type="button" class="nx" data-next="'+id+'">Mulai proses</button><button type="button" class="nx hold" data-hold="'+id+'">Tahan</button>';
+    else if(r.status==="proses") b='<button type="button" class="nx" data-next="'+id+'">Selesaikan</button><button type="button" class="nx hold" data-hold="'+id+'">Tahan</button>';
+    else if(r.status==="pending") b='<button type="button" class="nx" data-next="'+id+'">Lanjutkan</button>';
+    else b='<button type="button" class="nx hold" data-reopen="'+id+'">Buka lagi</button>';
+    return '<div class="stc"><span class="pill st-'+v+'">'+LBL[v]+'</span>'+b+'</div>'+(r.status==="pending"&&r.reason?'<div class="why">'+esc(r.reason)+'</div>':'');
+  }
+  const niceStep=v=>{ const p=Math.pow(10,Math.floor(Math.log10(v))), n=v/p; return (n<=1?1:n<=2?2:n<=5?5:10)*p; };
+
+  /* ---------- render ---------- */
+  function renderKpis(){
+    const _pl=byPlant(R); const c={masuk:0,proses:0,pending:0,selesai:0}, pass=_pl.filter(r=>r.status==="selesai"&&r.result!=="fail").length;
+    _pl.forEach(r=>{ if(c[r.status]!=null) c[r.status]++; });
+    Object.keys(c).forEach(k=>$("k_"+k).textContent=c[k]);
+    const kb=$("kb_selesai"); kb.hidden=!c.selesai; if(c.selesai) kb.textContent="Pass "+(Math.round(pass/c.selesai*1000)/10)+"%";
+    document.querySelectorAll(".kpi").forEach(b=>b.classList.toggle("on",b.dataset.st===stFilter));
+  }
+  function renderChart(){
+    const now=new Date(), M=[];
+    for(let i=5;i>=0;i--){ const d=new Date(now.getFullYear(),now.getMonth()-i,1); M.push({y:d.getFullYear(),m:d.getMonth(),p:0,f:0}); }
+    byPlant(R).forEach(r=>{ if(r.status!=="selesai"||!r.doneAt) return; const d=new Date(r.doneAt), x=M.find(o=>o.y===d.getFullYear()&&o.m===d.getMonth()); if(x){ r.result==="fail"?x.f++:x.p++; } });
+    const mx=Math.max(4,...M.map(o=>Math.max(o.p,o.f))), step=niceStep(mx/4), top=step*4;
+    const W=600,H=250,L=40,Rr=10,T=24,B=30,pw=W-L-Rr,ph=H-T-B, y=v=>T+ph-(v/top)*ph, gw=pw/6, bw=gw*.28;
+    let s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Grafik tren Pass dan Fail 6 bulan terakhir">';
+    for(let k=0;k<=4;k++){ const v=k*step; s+='<line x1="'+L+'" x2="'+(W-Rr)+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="'+(k?'#e2e8f0':'#cbd5e1')+'"'+(k?' stroke-dasharray="4 4"':'')+'/><text x="'+(L-8)+'" y="'+(y(v)+4)+'" text-anchor="end">'+v+'</text>'; }
+    let any=false;
+    M.forEach((o,i)=>{
+      const x0=L+i*gw+(gw-(2*bw+4))/2;
+      [[o.p,"#4ebb74",x0],[o.f,"#ef5b5b",x0+bw+4]].forEach(a=>{
+        if(a[0]>0){ any=true; const h=Math.max(2,ph-(y(a[0])-T)); s+='<rect x="'+a[2]+'" y="'+(T+ph-h)+'" width="'+bw+'" height="'+h+'" rx="3" fill="'+a[1]+'"/><text class="vl" x="'+(a[2]+bw/2)+'" y="'+(T+ph-h-5)+'" text-anchor="middle">'+a[0]+'</text>'; }
+      });
+      s+='<text x="'+(L+i*gw+gw/2)+'" y="'+(H-8)+'" text-anchor="middle" style="font-size:13px">'+MON[o.m]+'</text>';
+    });
+    if(!any) s+='<text x="'+(L+pw/2)+'" y="'+(T+ph/2)+'" text-anchor="middle">Belum ada report selesai</text>';
+    $("chart").innerHTML=s+"</svg>";
+  }
+  function renderAlerts(){
+    const a=byPlant(R).filter(r=>lateDays(r)>0||r.status==="pending"||(r.status==="selesai"&&r.result==="fail")).sort((x,y)=>(lateDays(y)-lateDays(x))||(y.updated-x.updated)).slice(0,8);
+    $("alerts").innerHTML=a.length?a.map(r=>{
+      const t=[], ld=lateDays(r), fail=r.status==="selesai";
+      if(ld) t.push('<b class="f">Telat '+ld+' hari</b>');
+      if(r.status==="pending") t.push('<b class="p">Pending'+(r.reason?': '+esc(r.reason):'')+'</b>');
+      if(fail) t.push('<b class="f">Fail</b>');
+      return '<div class="al"><span class="ai'+(ld||fail?'':' o')+'">!</span><span class="at">Report #'+esc(r.no)+' ('+esc(r.buyer)+')'+(r.type?' - '+esc(r.type):'')+' - '+t.join(" · ")+'</span><button type="button" class="rv" data-edit="'+r.id+'">Review</button></div>';
+    }).join(""):'<div class="none">Tidak ada report yang perlu ditindaklanjuti.</div>';
+  }
+  function filtered(){
+    let l=R.slice().sort((a,b)=>b.updated-a.updated);
+    if(stFilter) l=l.filter(r=>r.status===stFilter);
+    if(lateFilter) l=l.filter(r=>lateDays(r)>0);
+    if(buyerFilter) l=l.filter(r=>r.buyer===buyerFilter);
+    if(plantFilter) l=l.filter(r=>(r.plant||"PT. Ungaran Sari Garments Ungaran")===plantFilter);
+    if(q) l=l.filter(r=>(r.no+" "+r.buyer+" "+(r.plant||"")+" "+r.style+" "+r.type).toLowerCase().includes(q));
+    return l;
+  }
+  function renderTable(){
+    const l=filtered(), rows=showAll?l:l.slice(0,8);
+    $("tbody").innerHTML=rows.length?rows.map(r=>
+      '<tr><td>'+esc(r.no)+'</td><td>'+esc(r.buyer)+'</td><td>'+esc(r.plant||"PT. Ungaran Sari Garments Ungaran")+'</td><td>'+esc(r.style||"-")+'</td><td>'+esc(r.type||"-")+'</td>'+
+      '<td>'+statusCell(r)+'</td><td>'+dueHtml(r)+'</td><td class="mut">'+ago(r.updated)+'</td>'+
+      '<td><div class="acts"><button type="button" class="act" data-open="'+r.id+'">'+ICON_FILE+'Buka Form</button><button type="button" class="act" data-edit="'+r.id+'" aria-label="Edit" title="Edit">'+ICON_EDIT+'</button><button type="button" class="act del" data-del="'+r.id+'" aria-label="Hapus">'+ICON_DEL+'</button></div></td></tr>'
+    ).join(""):'<tr><td colspan="9"><div class="none">'+(R.length?'Tidak ada report yang cocok dengan filter.':'Belum ada report. Klik <b>+ Input Report</b> untuk mulai, atau lihat tampilan dengan data contoh.<br><br><button type="button" class="act" id="seedBtn">Muat data contoh</button>')+'</div></td></tr>';
+    const lc=R.filter(r=>lateDays(r)>0).length; let n="";
+    if(lc||lateFilter) n+='<button type="button" class="act sm late'+(lateFilter?' on':'')+'" data-late>Telat ('+lc+')</button>';
+    if(stFilter) n+='<button type="button" class="act sm" data-clr="st">Status: '+STN[stFilter]+' ×</button>';
+    if(l.length>8) n+='<button type="button" class="act sm" id="moreBtn">'+(showAll?'Ringkas':'Lihat semua ('+l.length+')')+'</button>';
+    $("fnote").innerHTML=n;
+  }
+  function renderChips(){
+    const extra=[...new Set(R.map(r=>r.buyer))].filter(b=>!CHIPS.some(c=>c[1]===b)).map(b=>[b,b]);
+    $("chips").innerHTML='<button type="button" class="cp'+(buyerFilter?'':' on')+'" data-b="">Semua</button>'+
+      CHIPS.concat(extra).map(c=>'<button type="button" class="cp'+(buyerFilter===c[1]?' on':'')+'" data-b="'+esc(c[1])+'">'+esc(c[0])+'</button>').join("")+
+      (R.length?'<button type="button" class="act del sm" id="clrAll">Hapus semua data</button>':'');
+  }
+  function updSub(){
+    const d=new Date();
+    $("dsub").textContent="Diperbarui "+String(d.getHours()).padStart(2,"0")+"."+String(d.getMinutes()).padStart(2,"0")+" · "+(canSave?"tersimpan di browser ini":"penyimpanan browser tidak aktif, data hilang saat ditutup");
+  }
+  function renderAll(){ renderKpis(); renderChart(); renderAlerts(); renderTable(); renderChips(); renderLink(); renderAnalysis(); renderDirectory(); renderSettings(); if(typeof renderPlantMenu==="function") renderPlantMenu(); if(typeof renderProfileMenu==="function") renderProfileMenu(); if(typeof fbWireButtons==="function") fbWireButtons(); updSub(); }
+  const ICON_FILE='<svg class="i" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>';
+  const ICON_EDIT='<svg class="i" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+  const ICON_DEL='<svg class="i" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+
+  /* ---------- interaksi dashboard ---------- */
+  document.querySelectorAll(".kpi").forEach(b=>b.onclick=()=>{ stFilter=stFilter===b.dataset.st?"":b.dataset.st; showAll=false; renderKpis(); renderTable(); });
+
+  /* ---------- ubah status: tahap berikutnya, tahan, urungkan ---------- */
+  function toast(m){ $("tmsg").textContent=m; $("toast").hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>{ $("toast").hidden=true; },7000); }
+  function change(r,v,why){
+    const snap=JSON.parse(JSON.stringify(r));
+    if(!setState(r,v,why)) return;
+    lastUndo={id:r.id,snap:snap}; save(); renderAll(); toast("Report "+r.no+" jadi "+LBL[sel(r)]);
+  }
+  $("tundo").onclick=()=>{
+    if(!lastUndo) return; const i=R.findIndex(x=>x.id===lastUndo.id); if(i>=0) R[i]=lastUndo.snap;
+    lastUndo=null; $("toast").hidden=true; save(); renderAll();
+  };
+  const openAsk=h=>{ $("abody").innerHTML=h; $("amodal").classList.add("show"); };
+  const closeAsk=()=>$("amodal").classList.remove("show");
+  function act(kind,id){
+    const r=R.find(x=>x.id===id); if(!r) return;
+    if(kind==="next"){
+      if(r.status==="masuk") change(r,"proses");
+      else if(r.status==="proses") openAsk('<h4>Hasil test</h4><p>Report '+esc(r.no)+' ('+esc(r.buyer)+')</p><div class="fbtns"><button type="button" class="sbtn ok" data-res="pass" data-id="'+r.id+'">Pass</button><button type="button" class="sbtn dbtn" data-res="fail" data-id="'+r.id+'">Fail</button></div><div class="fbtns"><button type="button" class="sbtn" data-cancel>Batal</button></div>');
+      else if(r.status==="pending") change(r,r.prev||"proses");
+    } else if(kind==="hold"){
+      openAsk('<h4>Tahan report (Pending)</h4><p>Report '+esc(r.no)+' ('+esc(r.buyer)+')</p><label for="a_why">Alasan</label><input id="a_why" list="whys" placeholder="mis. Menunggu approval buyer" autocomplete="off"><div class="fbtns" style="margin-top:16px"><button type="button" class="sbtn" data-cancel>Batal</button><button type="button" class="pbtn" data-hold-ok="'+r.id+'">Tahan</button></div>');
+      $("a_why").focus();
+    } else if(kind==="reopen") change(r,"proses");
+  }
+  $("abody").addEventListener("click",e=>{
+    const b=e.target.closest("button"); if(!b) return;
+    if(b.dataset.cancel!=null){ closeAsk(); return; }
+    const r=R.find(x=>x.id===(b.dataset.id||b.dataset.holdOk)); if(!r) return;
+    if(b.dataset.res){ closeAsk(); change(r,b.dataset.res); }
+    else if(b.dataset.holdOk!=null){ const w=$("a_why").value.trim(); closeAsk(); change(r,"pending",w); }
+  });
+  $("abody").addEventListener("keydown",e=>{ if(e.key==="Enter"&&e.target.id==="a_why"){ e.preventDefault(); const b=$("abody").querySelector("[data-hold-ok]"); if(b) b.click(); } });
+  $("amodal").addEventListener("mousedown",e=>{ if(e.target===$("amodal")) closeAsk(); });
+
+  /* ---------- hubungan dashboard <-> form report ---------- */
+  function renderLink(){
+    const el=$("rlink"), r=linkId&&R.find(x=>x.id===linkId);
+    if(!r){ el.hidden=true; el.innerHTML=""; return; }
+    el.hidden=false;
+    el.innerHTML='<span>Terhubung ke report <b>#'+esc(r.no)+'</b> ('+esc(r.buyer)+')</span>'+statusCell(r)+'<span>Target: '+dueHtml(r)+'</span><button type="button" class="act sm" data-edit="'+r.id+'">Edit data</button>';
+  }
+  function openReport(id){
+    const r=R.find(x=>x.id===id); if(!r) return;
+    if(r.buyer!=="LL Bean"){ dev("Form report "+r.buyer); return; }
+    linkId=id; $("rno").value=r.no;
+    const lb=[...document.querySelectorAll('label[for^="p2_"]')].find(l=>l.textContent.trim()==="Style");
+    if(lb&&r.style) $(lb.htmlFor).value=r.style;
+    go("report");
+  }
+
+  document.addEventListener("click",e=>{
+    const t=e.target.closest("[data-edit],[data-del],[data-clr],[data-b],[data-next],[data-hold],[data-reopen],[data-late],[data-open],#seedBtn,#moreBtn,#clrAll"); if(!t) return;
+    const d=t.dataset;
+    if(d.edit) openForm(d.edit);
+    else if(d.open) openReport(d.open);
+    else if(d.del){ const r=R.find(x=>x.id===d.del); if(r&&confirm("Hapus report "+r.no+"?")){ R=R.filter(x=>x!==r); save(); renderAll(); } }
+    else if(d.clr){ stFilter=""; renderKpis(); renderTable(); }
+    else if(d.late!=null){ lateFilter=!lateFilter; showAll=false; renderTable(); }
+    else if(d.next) act("next",d.next);
+    else if(d.hold) act("hold",d.hold);
+    else if(d.reopen) act("reopen",d.reopen);
+    else if(d.b!=null&&t.classList.contains("cp")){ buyerFilter=d.b; showAll=false; renderChips(); renderTable(); }
+    else if(t.id==="seedBtn") seed();
+    else if(t.id==="moreBtn"){ showAll=!showAll; renderTable(); }
+    else if(t.id==="clrAll"){ if(confirm("Hapus semua data report di browser ini?")){ R=[]; save(); stFilter=buyerFilter=""; lateFilter=false; renderAll(); } }
+  });
+
+  /* ---------- form input / edit ---------- */
+  $("f_buyer").innerHTML=BUYERS.map(b=>'<option>'+esc(b)+'</option>').join("");
+  // Plant select diisi di renderSettings via refreshPlantSelect, biar tidak error sebelum PLANTS diinisialisasi
+  $("f_addPlant").onclick=()=>{ const nv=prompt("Nama pabrik baru (nama PT lengkap):"); if(!nv) return; const nn=nv.trim(); if(!nn) return; if(PLANTS.includes(nn)){ alert("Plant sudah ada."); if($("f_plant")) $("f_plant").value=nn; return; } PLANTS.push(nn); savePlants(); refreshPlantSelect(); if($("f_plant")) $("f_plant").value=nn; renderSettings(); alert("Plant "+nn+" sudah ditambahkan dan langsung terpilih."); };
+  function openForm(id){
+    editId=id||null; const r=id?R.find(x=>x.id===id):null; $("ferr").textContent="";
+    $("ftitle").textContent=r?"Edit Report":"Input Report Baru";
+    $("f_no").value=r?r.no:""; $("f_buyer").value=r?r.buyer:BUYERS[0]; if($("f_plant")){ if(typeof refreshPlantSelect==="function") refreshPlantSelect(); $("f_plant").value=r?(r.plant||PLANTS[0]):PLANTS[0]; } $("f_style").value=r?r.style:""; $("f_type").value=r?r.type:""; $("f_st").value=r?sel(r):"masuk";
+    $("f_due").value=r?(r.due||""):iso(new Date(Date.now()+7*DAY)); $("f_why").value=r?(r.reason||""):"";
+    syncForm();
+    $("fdel").style.display=r?"":"none";
+    $("fhist").innerHTML=r?(r.history||[]).slice().reverse().map(h=>'<li>'+fdt(h.t)+' · '+LBL[h.s]+(h.w?' — '+esc(h.w):'')+'</li>').join(""):"";
+    $("fmodal").classList.add("show"); $("f_no").focus();
+  }
+  function syncForm(){ $("f_why_w").hidden=$("f_st").value!=="pending"; $("fsaveopen").hidden=$("f_buyer").value!=="LL Bean"; }
+  $("f_st").onchange=$("f_buyer").onchange=syncForm;
+  const closeForm=()=>$("fmodal").classList.remove("show");
+  $("addBtn").onclick=()=>openForm(); $("fcancel").onclick=closeForm;
+  $("fsaveopen").onclick=()=>{ openAfter=true; $("rform").requestSubmit(); };
+  $("fmodal").addEventListener("mousedown",e=>{ if(e.target===$("fmodal")) closeForm(); });
+  $("fdel").onclick=()=>{ const r=R.find(x=>x.id===editId); if(r&&confirm("Hapus report "+r.no+"?")){ R=R.filter(x=>x!==r); save(); closeForm(); renderAll(); } };
+  $("rform").addEventListener("submit",e=>{
+    e.preventDefault(); const oa=openAfter; openAfter=false;
+    const no=$("f_no").value.trim(); if(!no){ $("ferr").textContent="Report No. wajib diisi."; $("f_no").focus(); return; }
+    if(R.some(r=>r.id!==editId&&r.no.toLowerCase()===no.toLowerCase())){ $("ferr").textContent="Report No. "+no+" sudah ada."; return; }
+    const v=$("f_st").value, why=$("f_why").value.trim(), due=$("f_due").value; let r;
+    if(editId){
+      r=R.find(x=>x.id===editId); r.no=no; r.buyer=$("f_buyer").value; r.plant=$("f_plant")?$("f_plant").value:PLANTS[0]; r.style=$("f_style").value.trim(); r.type=$("f_type").value.trim(); r.due=due; r.updated=Date.now(); setState(r,v,why);
+    } else {
+      const now=Date.now(); r={id:uid(),no:no,buyer:$("f_buyer").value,plant:$("f_plant")?$("f_plant").value:PLANTS[0],style:$("f_style").value.trim(),type:$("f_type").value.trim(),due:due,status:"masuk",result:"",reason:"",doneAt:0,updated:now,history:[{s:"masuk",t:now}]};
+      R.push(r); setState(r,v,why);
+    }
+    save(); closeForm(); stFilter=""; renderAll();
+    if(oa) openReport(r.id);
+  });
+
+  /* ---------- sinkron antar tab + waktu relatif ---------- */
+  window.addEventListener("storage",e=>{ if(e.key===KEY){ load(); renderAll(); } });
+  setInterval(()=>{ renderTable(); updSub(); },30000);
+
+  /* ---------- profil user di header ---------- */
+  const PKEY="trp_profile_v1";
+  let PROFILE={name:"",role:"Lab Staff",email:"",lab:"Texlab - PT. Sinar Garmindo Raya Semarang"};
+  function loadProfile(){ try{ const s=localStorage.getItem(PKEY); if(s){ PROFILE=Object.assign(PROFILE,JSON.parse(s)); } }catch(e){} }
+  function saveProfile(){ try{ localStorage.setItem(PKEY,JSON.stringify(PROFILE)); }catch(e){} }
+  function initials(name){ const n=(name||"").trim(); if(!n) return ""; const parts=n.split(/\s+/); if(parts.length===1) return parts[0].slice(0,2).toUpperCase(); return (parts[0][0]+parts[parts.length-1][0]).toUpperCase(); }
+  function renderProfileMenu(){
+    const menu=$("profileMenu"); if(!menu) return;
+    const ini=initials(PROFILE.name);
+    const ava=$("profileAva");
+    if(ava){ if(ini){ ava.textContent=ini; ava.style.fontSize="11px"; } else { ava.innerHTML='<svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width:20px;height:20px"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'; } }
+    menu.innerHTML='<div class="pf-head"><div class="pf-ava">'+(ini||'<svg viewBox="0 0 24 24" style="width:24px;height:24px" fill="currentColor"><circle cx="12" cy="8" r="4.5"/><path d="M3.5 22c0-5 3.8-8 8.5-8s8.5 3 8.5 8z"/></svg>')+'</div><div><div class="pf-name">'+esc(PROFILE.name||"Belum diisi")+'</div><div class="pf-role">'+esc(PROFILE.role||"Lab Staff")+'</div><div class="pf-lab">'+esc(PROFILE.lab||"")+'</div></div></div>'
+      +'<label>Nama</label><input id="pfName" value="'+esc(PROFILE.name||"")+'" placeholder="Contoh: Mas Azis">'
+      +'<label>Jabatan</label><input id="pfRole" value="'+esc(PROFILE.role||"")+'" placeholder="Contoh: Staff Lab / Supervisor">'
+      +'<label>Email</label><input id="pfEmail" value="'+esc(PROFILE.email||"")+'" placeholder="nama@perusahaan.com">'
+      +'<button type="button" class="pf-btn pf-save" id="pfSave">Simpan Profil</button>'
+      +'<button type="button" class="pf-btn pf-ghost" id="pfToSettings">Buka Settings</button>'
+      +'<div style="font-size:11px;color:var(--mut);margin-top:10px;line-height:1.4">Profil ini cuma tersimpan di browser ini. Buat ganti nama yang tampil di pojok kanan atas.</div>';
+    $("pfSave").onclick=()=>{ PROFILE.name=$("pfName").value.trim(); PROFILE.role=$("pfRole").value.trim()||"Lab Staff"; PROFILE.email=$("pfEmail").value.trim(); saveProfile(); renderProfileMenu(); toast("Profil disimpan"); };
+    $("pfToSettings").onclick=()=>{ $("profileMenu").hidden=true; showSettings(); };
+  }
+  loadProfile();
+  $("profileBtn").onclick=(e)=>{ e.stopPropagation(); renderProfileMenu(); const m=$("profileMenu"); m.hidden=!m.hidden; $("profileBtn").setAttribute("aria-expanded", String(!m.hidden)); };
+  document.addEventListener("click",e=>{ const m=$("profileMenu"); if(m&&!m.hidden&&!e.target.closest("#profileBtn")&&!e.target.closest("#profileMenu")){ m.hidden=true; $("profileBtn").setAttribute("aria-expanded","false"); } });
+
+  /* ---------- Firebase (ganti Firebase) ---------- */
+  let fbApp=null, fbDb=null, fbAuth=null, fbSaving=false, fbLastSync=0;
+  function fbNormEmail(v){ v=(v||"").trim().toLowerCase(); if(!v) return ""; if(!v.includes("@")) v=v+"@texlab.com"; return v; }
+  function fbConfig(){ return {apiKey:SETTINGS.fbApiKey||"", authDomain:SETTINGS.fbAuthDomain||"", projectId:SETTINGS.fbProjectId||"", storageBucket:SETTINGS.fbStorage||"", messagingSenderId:SETTINGS.fbSender||"", appId:SETTINGS.fbAppId||""}; }
+  function fbSetStatus(msg, cls){ const el=$("fbStatus"); if(el){ el.textContent=msg; el.className="fb-status "+(cls||""); } }
+  function fbSetAuthStatus(msg, cls){ const el=$("fbAuthStatus"); if(el){ el.textContent=msg; el.className="fb-status "+(cls||""); } }
+  function fbUpdateStatus(){ if(SETTINGS.dbMode!=="firebase"){ fbSetStatus("Mode Local. Data cuma di browser ini."); return; } if(!fbDb){ fbSetStatus("Belum terhubung. Klik Hubungkan & Sinkron Sekarang.", "warn"); return; } fbSetStatus("Terhubung ke Firebase project "+(SETTINGS.fbProjectId||"")+" — terakhir sinkron: "+(fbLastSync?new Date(fbLastSync).toLocaleString("id-ID"):"belum pernah"), "ok"); }
+  function fbInit(){
+    if(typeof firebase==="undefined"){ fbSetStatus("Firebase SDK belum ke-load. Cek internet, lalu reload halaman.", "err"); return false; }
+    const cfg=fbConfig(); if(!cfg.apiKey||!cfg.projectId||!cfg.appId){ fbSetStatus("Config Firebase belum lengkap. Cek API Key / Project ID / App ID di Settings.", "err"); return false; }
+    try{
+      if(!firebase.apps.length){ fbApp=firebase.initializeApp(cfg); } else { fbApp=firebase.app(); }
+      fbDb=firebase.firestore(); fbAuth=firebase.auth();
+      fbAuth.onAuthStateChanged(u=>{ if(u){ fbSetAuthStatus("Login sebagai: "+u.email, "ok"); } else { fbSetAuthStatus("Belum login. Login dulu biar bisa baca/tulis Firestore kalau rules-nya butuh login.", "warn"); } });
+      fbUpdateStatus(); return true;
+    }catch(e){ fbSetStatus("Gagal init Firebase: "+e.message, "err"); return false; }
+  }
+  function fbPayload(){ return {reports:R, buyers:BDIR, plants:PLANTS, testTypes:TEST_TYPES, settings:SETTINGS, profile:PROFILE, updatedAt:Date.now()}; }
+  async function fbPush(showToast){
+    if(SETTINGS.dbMode!=="firebase"){ if(showToast) toast("Ganti Mode Penyimpanan ke Firebase dulu di Settings"); return; }
+    if(!fbDb && !fbInit()) return;
+    if(fbSaving) return; fbSaving=true; fbSetStatus("Mengirim data ke Firebase...", "warn");
+    try{ await fbDb.collection("portal").doc("main").set(fbPayload()); fbLastSync=Date.now(); fbUpdateStatus(); if(showToast) toast("Data terkirim ke Firebase"); }
+    catch(e){ fbSetStatus("Gagal kirim ke Firebase: "+e.message+" — Cek Firestore Rules: kalau masih Test Mode harusnya bisa, kalau Production butuh login dulu.", "err"); if(showToast) toast("Gagal kirim ke Firebase"); }
+    fbSaving=false;
+  }
+  async function fbPull(showToast){
+    if(SETTINGS.dbMode!=="firebase"){ if(showToast) toast("Ganti Mode Penyimpanan ke Firebase dulu"); return; }
+    if(!fbDb && !fbInit()) return;
+    fbSetStatus("Memuat data dari Firebase...", "warn");
+    try{
+      const doc=await fbDb.collection("portal").doc("main").get();
+      if(!doc.exists){ fbSetStatus("Belum ada data di Firebase. Klik Kirim Data Lokal ke Firebase dulu.", "warn"); if(showToast) toast("Belum ada data di Firebase"); return; }
+      const d=doc.data()||{};
+      if(Array.isArray(d.reports)) R=d.reports;
+      if(d.buyers&&typeof d.buyers==="object") BDIR=d.buyers;
+      if(Array.isArray(d.plants)&&d.plants.length) PLANTS=d.plants;
+      if(Array.isArray(d.testTypes)&&d.testTypes.length) TEST_TYPES=d.testTypes;
+      if(d.profile&&typeof d.profile==="object") PROFILE={...PROFILE, ...d.profile};
+      if(d.settings&&typeof d.settings==="object") SETTINGS={...SETTINGS, ...d.settings};
+      try{ localStorage.setItem(KEY, JSON.stringify(R)); localStorage.setItem(DIR_KEY, JSON.stringify(BDIR)); localStorage.setItem(PLANTS_KEY, JSON.stringify(PLANTS)); localStorage.setItem(TEST_TYPES_KEY, JSON.stringify(TEST_TYPES)); localStorage.setItem(SET_KEY, JSON.stringify(SETTINGS)); localStorage.setItem(PKEY, JSON.stringify(PROFILE)); }catch(e){}
+      fbLastSync=Date.now(); fbUpdateStatus(); renderAll(); if(showToast) toast("Data dimuat dari Firebase");
+    }catch(e){ fbSetStatus("Gagal muat dari Firebase: "+e.message, "err"); }
+  }
+  // Debounce save ke Firebase tiap kali data lokal berubah
+  let fbTimer=null;
+  function fbAutoSave(){ if(SETTINGS.dbMode!=="firebase"||!fbDb) return; clearTimeout(fbTimer); fbTimer=setTimeout(()=>{ fbPush(false); }, 1200); }
+  // Wire tombol Firebase di Settings (dipanggil tiap renderSettings)
+  function fbWireButtons(){
+    const c=$("set_fbConnect"); if(c && !c.dataset.wired){ c.dataset.wired="1"; c.onclick=async()=>{ SETTINGS.fbApiKey=$("set_fbApiKey").value.trim(); SETTINGS.fbAuthDomain=$("set_fbAuthDomain").value.trim(); SETTINGS.fbProjectId=$("set_fbProjectId").value.trim(); SETTINGS.fbStorage=$("set_fbStorage").value.trim(); SETTINGS.fbSender=$("set_fbSender").value.trim(); SETTINGS.fbAppId=$("set_fbAppId").value.trim(); SETTINGS.dbMode="firebase"; saveSettings(); if(fbInit()){ await fbPush(true); } }; }
+    const pu=$("set_fbPull"); if(pu && !pu.dataset.wired){ pu.dataset.wired="1"; pu.onclick=()=>fbPull(true); }
+    const ps=$("set_fbPush"); if(ps && !ps.dataset.wired){ ps.dataset.wired="1"; ps.onclick=()=>fbPush(true); }
+    const li=$("set_fbLogin"); if(li && !li.dataset.wired){ li.dataset.wired="1"; li.onclick=async()=>{ if(!fbDb && !fbInit()) return; const em=fbNormEmail($("set_fbEmail").value), pw=$("set_fbPass").value; if(!em||!pw){ toast("Isi username + password dulu"); return; } try{ await fbAuth.signInWithEmailAndPassword(em,pw); toast("Login berhasil"); }catch(e){ fbSetAuthStatus("Login gagal: "+e.message, "err"); } }; }
+    const rg=$("set_fbRegister"); if(rg && !rg.dataset.wired){ rg.dataset.wired="1"; rg.onclick=async()=>{ if(!fbDb && !fbInit()) return; const em=fbNormEmail($("set_fbEmail").value), pw=$("set_fbPass").value; if(!em||!pw){ toast("Isi username + password dulu"); return; } if(pw.length<6){ toast("Password minimal 6 karakter"); return; } try{ await fbAuth.createUserWithEmailAndPassword(em,pw); toast("Akun dibuat: "+em+" — langsung login"); }catch(e){ fbSetAuthStatus("Daftar gagal: "+e.message, "err"); } }; }
+    const cp=$("set_fbCopyRules"); if(cp && !cp.dataset.wired){ cp.dataset.wired="1"; cp.onclick=async()=>{ const txt=$("fbRulesTxt").value; try{ await navigator.clipboard.writeText(txt); toast("Rules tercopy, tinggal paste di Firebase"); }catch(e){ $("fbRulesTxt").select(); document.execCommand("copy"); toast("Rules tercopy"); } }; }
+    const lo=$("set_fbLogout"); if(lo && !lo.dataset.wired){ lo.dataset.wired="1"; lo.onclick=async()=>{ if(!fbAuth) return; await fbAuth.signOut(); toast("Logout"); }; }
+  }
+  // Auto-init kalau mode sudah Firebase
+  setTimeout(()=>{ if(SETTINGS.dbMode==="firebase"){ fbInit(); fbPull(false); } }, 800);
+
+  /* ---------- plant filter dropdown di header ---------- */
+  function renderPlantMenu(){
+    const menu=$("plantMenu"); if(!menu) return;
+    const all='<div class="pm-title">Filter Plant</div>';
+    const opts=['<button type="button" data-plant="" class="'+(plantFilter===""?"on":"")+'">Semua Plant</button>'].concat(PLANTS.map(p=>'<button type="button" data-plant="'+esc(p)+'" class="'+(plantFilter===p?"on":"")+'">'+esc(p)+'</button>'));
+    menu.innerHTML=all+opts.join("");
+    $("plantLabel").textContent=plantFilter||"Semua Plant";
+  }
+  $("plantBtn").onclick=(e)=>{ e.stopPropagation(); if(typeof renderPlantMenu==="function") renderPlantMenu(); const m=$("plantMenu"); m.hidden=!m.hidden; $("plantBtn").setAttribute("aria-expanded", String(!m.hidden)); };
+  $("plantMenu").addEventListener("click",e=>{
+    const b=e.target.closest("[data-plant]"); if(!b) return;
+    plantFilter=b.dataset.plant; renderPlantMenu(); $("plantMenu").hidden=true; $("plantBtn").setAttribute("aria-expanded","false");
+    renderAll(); if(view==="analysis") renderAnalysis();
+  });
+  document.addEventListener("click",e=>{ const m=$("plantMenu"); if(m&&!m.hidden&&!e.target.closest("#plantBtn")&&!e.target.closest("#plantMenu")){ m.hidden=true; $("plantBtn").setAttribute("aria-expanded","false"); } });
+
+  /* ---------- navigasi ---------- */
+  const vD=$("viewDash"), vB=$("viewBuyers"), vR=$("viewReport"), vA=$("viewAnalysis"), vDir=$("viewDirectory"), vS=$("viewSettings"), crumbs=$("crumbs");
+  function dev(name){ $("mp").textContent=name+" masih dalam tahap pengembangan."; $("modal").classList.add("show"); $("mok").focus(); }
+  $("mok").onclick=()=>$("modal").classList.remove("show");
+  $("modal").addEventListener("click",e=>{ if(e.target===$("modal")) $("modal").classList.remove("show"); });
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ $("modal").classList.remove("show"); closeForm(); closeAsk(); } });
+  function setCrumbs(){
+    let h='<button type="button" id="crHome">Home</button><span class="sep">/</span>';
+    if(view==="dash") h+='<b>Dashboard</b>';
+    else if(view==="buyers") h+='<b>Test Reports</b>';
+    else if(view==="analysis") h+='<b>Lab Analysis</b>';
+    else if(view==="directory") h+='<b>Buyer Directory</b>';
+    else if(view==="settings") h+='<b>Settings</b>';
+    else { const r=linkId&&R.find(x=>x.id===linkId); h+=r?'<button type="button" id="cr">Dashboard</button><span class="sep">/</span><b>Report #'+esc(r.no)+'</b>':'<button type="button" id="cr">Test Reports</button><span class="sep">/</span><b>LL Bean</b>'; }
+    crumbs.innerHTML=h; $("crHome").onclick=showDash; const cr=$("cr"); if(cr) cr.onclick=()=>linkId?showDash():showBuyers();
+  }
+  function go(v){
+    if(v!=="report") linkId=null; view=v; vD.hidden=v!=="dash"; vB.hidden=v!=="buyers"; vR.hidden=v!=="report"; if(vA) vA.hidden=v!=="analysis"; if(vDir) vDir.hidden=v!=="directory"; if(vS) vS.hidden=v!=="settings";
+    document.querySelectorAll(".nav [data-nav]").forEach(b=>b.classList.toggle("on",b.dataset.nav===(v==="dash"||(v==="report"&&linkId)?"dashboard":v==="buyers"||v==="report"?"reports":v==="analysis"?"Lab Analysis":v==="directory"?"Buyer Directory":v==="settings"?"Settings":"")));
+    $("backt").textContent=linkId?"Dashboard":"All Buyers"; renderLink(); setCrumbs(); window.scrollTo(0,0);
+  }
+  const showDash=()=>go("dash"), showBuyers=()=>go("buyers"), showReport=()=>go("report"), showAnalysis=()=>{ renderAnalysis(); go("analysis"); }, showDirectory=()=>{ renderDirectory(); go("directory"); }, showSettings=()=>{ renderSettings(); go("settings"); };
+  const closeMenu=()=>document.body.classList.remove("menu");
+  $("burger").onclick=()=>document.body.classList.toggle("menu");
+  $("scrim").onclick=closeMenu;
+  document.querySelectorAll("[data-nav]").forEach(b=>{
+    b.onclick=()=>{ closeMenu(); const k=b.dataset.nav; k==="dashboard"?showDash():k==="reports"?showBuyers():k==="Lab Analysis"?showAnalysis():k==="Buyer Directory"?showDirectory():k==="Settings"?showSettings():dev(k); };
+  });
+  $("grid").addEventListener("click",e=>{
+    const c=e.target.closest(".bc"); if(!c) return;
+    c.dataset.buyer==="LL Bean"?(linkId=null,showReport()):dev("Test report "+c.dataset.buyer);
+  });
+  $("back").onclick=()=>linkId?showDash():showBuyers();
+  function applyBuyers(){
+    let n=0;
+    document.querySelectorAll(".bc").forEach(c=>{
+      const ok=bfilter!=="pending"&&c.dataset.buyer.toLowerCase().includes(q); c.style.display=ok?"":"none"; if(ok) n++;
+    });
+    $("empty").style.display=n?"none":"block";
+    $("empty").textContent=bfilter==="pending"?"Belum ada test report yang menunggu review.":"Tidak ada buyer yang cocok dengan pencarian.";
+  }
+  $("q").addEventListener("input",()=>{ q=$("q").value.trim().toLowerCase(); if(view==="report") (linkId?showDash():showBuyers()); applyBuyers(); showAll=false; renderTable(); });
+  $("flt").addEventListener("click",e=>{
+    const b=e.target.closest("button"); if(!b) return;
+    bfilter=b.dataset.f; $("flt").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b)); applyBuyers();
+  });
+
+
+  
+/* ---------- lab analysis ---------- */
+  let anPeriod=180;
+  function anFiltered(){
+    let base = plantFilter ? R.filter(r=>(r.plant||"PT. Ungaran Sari Garments Ungaran")===plantFilter) : R.slice();
+    if(!anPeriod) return base;
+    const cut=Date.now()-anPeriod*DAY;
+    return base.filter(r=> (r.updated&&r.updated>=cut) || (r.doneAt&&r.doneAt>=cut) || (r.history&&r.history.some(h=>h.t>=cut)));
+  }
+  function renderAnalysis(){
+    if(!$("an_total")) return;
+    const list=anFiltered();
+    const selesai=list.filter(r=>r.status==="selesai");
+    const pass=selesai.filter(r=>r.result!=="fail").length;
+    const fail=selesai.filter(r=>r.result==="fail").length;
+    const passRate=selesai.length?Math.round(pass/selesai.length*1000)/10:0;
+    let sum=0,cnt=0;
+    selesai.forEach(r=>{
+      if(!r.doneAt||!r.history||!r.history.length) return;
+      const start=r.history[0].t;
+      if(start&&r.doneAt>start){ sum+=(r.doneAt-start)/DAY; cnt++; }
+    });
+    const avgTurn=cnt?Math.round(sum/cnt*10)/10:0;
+    let retest=0;
+    list.forEach(r=>{
+      const h=r.history||[];
+      const prosesCount=h.filter(x=>x.s==="proses").length;
+      const hasReopen=h.some((x,i)=> i>0 && x.s==="proses" && (h[i-1].s==="pass"||h[i-1].s==="fail"));
+      if(prosesCount>=2||hasReopen) retest++;
+    });
+    const retestRate=list.length?Math.round(retest/list.length*1000)/10:0;
+    $("an_total").textContent=list.length;
+    $("an_total_sub").textContent=selesai.length+" selesai \u00b7 "+(list.length-selesai.length)+" masih jalan";
+    $("an_passrate").textContent=passRate+"%";
+    $("an_passrate_sub").textContent=pass+" pass \u00b7 "+fail+" fail dari "+selesai.length+" selesai";
+    $("an_turn").textContent=cnt?avgTurn+" Days":"-";
+    $("an_turn_sub").textContent=cnt?"dari "+cnt+" report selesai":"belum ada report selesai";
+    $("an_retest").textContent=retestRate+"%";
+    $("an_retest_sub").textContent=retest+" report dites ulang / dibuka lagi";
+    const byType={};
+    selesai.filter(r=>r.result==="fail").forEach(r=>{ const k=r.type||"Tanpa Test Type"; byType[k]=(byType[k]||0)+1; });
+    const entries=Object.entries(byType).sort((a,b)=>b[1]-a[1]).slice(0,6);
+    const maxFail=entries.length?entries[0][1]:0;
+    $("anFailBars").innerHTML=entries.length?entries.map(([k,v])=>'<div class="an-row"><span class="lbl">'+esc(k)+'</span><div class="an-track"><div class="an-fill" style="width:'+(maxFail?Math.round(v/maxFail*100):0)+'%"></div></div><span class="an-val">'+v+'</span></div>').join(""):'<div class="none">Belum ada Fail di periode ini.</div>';
+    $("an_fail_sub").textContent=fail?fail+" Fail total":"";
+    const byBuyer={};
+    list.forEach(r=>{ if(!byBuyer[r.buyer]) byBuyer[r.buyer]={tests:0,pass:0,fail:0,selesai:0}; const b=byBuyer[r.buyer]; b.tests++; if(r.status==="selesai"){ b.selesai++; if(r.result==="fail") b.fail++; else b.pass++; } });
+    const rows=Object.entries(byBuyer).sort((a,b)=>b[1].tests-a[1].tests);
+    $("anBuyerBody").innerHTML=rows.length?rows.map(([buyer,b])=>{
+      const rate=b.selesai?Math.round(b.pass/b.selesai*1000)/10:0;
+      let badge='<span class="an-badge neutral">Belum selesai</span>';
+      if(b.selesai){
+        if(rate>=90) badge='<span class="an-badge good">Excellent</span>';
+        else if(rate>=80) badge='<span class="an-badge good">Good</span>';
+        else if(rate>=70) badge='<span class="an-badge warn">Watch</span>';
+        else badge='<span class="an-badge bad">Needs Attention</span>';
+      }
+      return '<tr><td>'+esc(buyer)+'</td><td>'+b.tests+'</td><td>'+b.pass+'</td><td>'+b.fail+'</td><td>'+(b.selesai?rate+"%":"-")+'</td><td>'+badge+'</td></tr>';
+    }).join(""):'<tr><td colspan="6"><div class="none">Belum ada data di periode ini.</div></td></tr>';
+    $("anNote").textContent=list.length+" report di periode ini";
+    let insights=[];
+    if(fail&&entries.length) insights.push('Test type <b>'+esc(entries[0][0])+'</b> paling banyak Fail: <b>'+entries[0][1]+' Fail</b>. Cek SOP dan mesin untuk test ini dulu.');
+    if(rows.length){
+      const worst=rows.slice().sort((a,b)=> (b[1].fail/(b[1].selesai||1)) - (a[1].fail/(a[1].selesai||1)))[0];
+      if(worst&&worst[1].fail>0) insights.push('Buyer <b>'+esc(worst[0])+'</b> punya Fail rate tertinggi: <b>'+worst[1].fail+' Fail dari '+worst[1].selesai+' selesai</b>.');
+    }
+    if(cnt) insights.push('Rata-rata turnaround <b>'+avgTurn+' hari</b> dari Masuk sampai Selesai.');
+    if(retest) insights.push('<b>'+retest+' report ('+retestRate+'%)</b> pernah dites ulang / dibuka lagi. Kalau retest naik terus, cek apakah Fail awalnya karena sampel atau metode.');
+    if(!insights.length) insights.push('Belum ada pola Fail yang menonjol di periode ini. Pertahankan.');
+    $("anInsight").innerHTML=insights.map(s=>'<div>\u2022 '+s+'</div>').join("");
+  }
+  $("anPeriod").onchange=()=>{ anPeriod=+ $("anPeriod").value; renderAnalysis(); };
+  $("anExport").onclick=()=>{
+    const list=anFiltered();
+    let csv="Buyer,Tests,Pass,Fail,Pass Rate\n";
+    const byBuyer={};
+    list.forEach(r=>{ if(!byBuyer[r.buyer]) byBuyer[r.buyer]={tests:0,pass:0,fail:0,selesai:0}; const b=byBuyer[r.buyer]; b.tests++; if(r.status==="selesai"){ b.selesai++; if(r.result==="fail") b.fail++; else b.pass++; } });
+    Object.entries(byBuyer).forEach(([buyer,b])=>{ const rate=b.selesai?Math.round(b.pass/b.selesai*1000)/10:0; csv+= '"'+buyer+'",'+b.tests+','+b.pass+','+b.fail+','+rate+'%\n'; });
+    const blob=new Blob([csv],{type:"text/csv"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download="Lab_Analysis_"+(anPeriod||"All")+".csv"; a.click(); setTimeout(()=>URL.revokeObjectURL(url),2000);
+  };
+
+
+  /* ---------- buyer directory ---------- */
+  const DIR_KEY="trp_buyers_v1";
+  const DIR_DEFAULTS={
+    "Hugo Boss":{hq:"",contact:"",email:"",cat:"",est:"",color:"#111827",std:[],notes:"",logoUrl:"https://i.postimg.cc/Wb6RGTbt/images.png"},
+    "American Eagle Outfitters":{hq:"",contact:"",email:"",cat:"",est:"",color:"#1e3a8a",std:[],notes:"",logoUrl:"https://i.postimg.cc/VLByqmLv/images-(1).png"},
+    "Polo Ralph Lauren":{hq:"",contact:"",email:"",cat:"",est:"",color:"#0f172a",std:[],notes:"",logoUrl:"https://i.postimg.cc/8PB8RNPC/c354e2fb10eff981c580d43ef2fc41d4.jpg"},
+    "Ann Taylor":{hq:"",contact:"",email:"",cat:"",est:"",color:"#7c2d12",std:[],notes:"",logoUrl:"https://i.postimg.cc/3JCMXYJK/images-(2).png"},
+    "Target":{hq:"",contact:"",email:"",cat:"",est:"",color:"#dc2626",std:[],notes:"",logoUrl:"https://i.postimg.cc/3JCMXYJ3/images-(1)-(1).jpg"},
+    "PVH":{hq:"",contact:"",email:"",cat:"",est:"",color:"#0e7490",std:[],notes:"",logoUrl:"https://i.postimg.cc/vHdFxcM4/PVH-logo-svg.png"},
+    "LL Bean":{hq:"",contact:"",email:"",cat:"",est:"",color:"#166534",std:[],notes:"",logoUrl:"https://i.postimg.cc/CLVTnzYZ/seo-logo.jpg"},
+    "Macy's":{hq:"",contact:"",email:"",cat:"",est:"",color:"#b91c1c",std:[],notes:"",logoUrl:"https://i.postimg.cc/gkPFLndn/images-(3).png"},
+    "Eileen Fisher":{hq:"",contact:"",email:"",cat:"",est:"",color:"#57534e",std:[],notes:"",logoUrl:"https://i.postimg.cc/tCHQnYyT/images-(4).png"},
+    "Brooks Brothers":{hq:"",contact:"",email:"",cat:"",est:"",color:"#1e3a8a",std:[],notes:"",logoUrl:"https://i.postimg.cc/ZKhtvCZn/images-(1)-(2).jpg"},
+    "Bonobos":{hq:"",contact:"",email:"",cat:"",est:"",color:"#0f766e",std:[],notes:"",logoUrl:"https://i.postimg.cc/HsCD8VHL/images-(1)-(3).jpg"},
+    "Carhartt":{hq:"",contact:"",email:"",cat:"",est:"",color:"#92400e",std:[],notes:"",logoUrl:"https://i.postimg.cc/dtKPZLvs/images-(1)-(4).jpg"},
+    "GU":{hq:"",contact:"",email:"",cat:"",est:"",color:"#111827",std:[],notes:"",logoUrl:"https://i.postimg.cc/MK82fvxq/images-(5).png"},
+    "Tailored Brand, Inc":{hq:"",contact:"",email:"",cat:"",est:"",color:"#334155",std:[],notes:"",logoUrl:"https://i.postimg.cc/8PVQfjDD/images-(6).png"},
+    "Lululemon":{hq:"",contact:"",email:"",cat:"",est:"",color:"#dc2626",std:[],notes:"",logoUrl:"https://i.postimg.cc/DyKk48Fh/images-(7).png"},
+    "J.Jill":{hq:"",contact:"",email:"",cat:"",est:"",color:"#0f766e",std:[],notes:"",logoUrl:"https://i.postimg.cc/4NTkHmZg/images-(8).png"},
+    "J-Jill":{hq:"",contact:"",email:"",cat:"",est:"",color:"#0f766e",std:[],notes:"",logoUrl:"https://i.postimg.cc/4NTkHmZg/images-(8).png"}
+  };
+  let BDIR={}; try{ BDIR=JSON.parse(localStorage.getItem(DIR_KEY)||"{}")||{}; }catch(e){ BDIR={}; }
+  function saveDir(){ try{ localStorage.setItem(DIR_KEY, JSON.stringify(BDIR)); }catch(e){} }
+  function normBuyer(n){ return String(n||"").toLowerCase().replace(/[^a-z0-9]/g,""); }
+  function getBuyerProfile(name){
+    let key=name;
+    if(!DIR_DEFAULTS[key]){
+      const found=Object.keys(DIR_DEFAULTS).find(k=>normBuyer(k)===normBuyer(name));
+      if(found) key=found;
+    }
+    const d=DIR_DEFAULTS[key]||{};
+    const c=BDIR[name]||BDIR[key]||{};
+    const cleanC={};
+    Object.entries(c).forEach(([k,v])=>{ if(v===""||v==null) return; if(Array.isArray(v)&&v.length===0) return; cleanC[k]=v; });
+    const merged={...d, ...cleanC, name:key};
+    if(!merged.color) merged.color="#2563eb";
+    if(!merged.std) merged.std=[];
+    if(typeof merged.std==="string") merged.std=merged.std.split(",").map(s=>s.trim()).filter(Boolean);
+    return merged;
+  }
+  function dirInitials(name){ return name.split(/[^A-Za-z0-9]+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join("")||name.slice(0,2).toUpperCase(); }
+  function buyerStats(name){
+    const nk=normBuyer(name);
+    const list=R.filter(r=>normBuyer(r.buyer)===nk);
+    const selesai=list.filter(r=>r.status==="selesai");
+    const pass=selesai.filter(r=>r.result!=="fail").length;
+    const fail=selesai.filter(r=>r.result==="fail").length;
+    const active=list.filter(r=>r.status!=="selesai").length;
+    const rate=selesai.length?Math.round(pass/selesai.length*1000)/10:0;
+    return {total:list.length, selesai:selesai.length, pass, fail, active, rate};
+  }
+  let dirQuery="", dirFilter="all";
+  function renderDirectory(){
+    if(!$("dirGrid")) return;
+    const allNames=[...new Set([...BUYERS, ...Object.keys(BDIR), ...Object.keys(DIR_DEFAULTS)])];
+    const seenMap=new Map();
+    allNames.forEach(n=>{ const nk=normBuyer(n); if(!seenMap.has(nk)){ const canon=Object.keys(DIR_DEFAULTS).find(k=>normBuyer(k)===nk)||n; seenMap.set(nk, canon); } });
+    const names=[...seenMap.values()];
+    const q=dirQuery.toLowerCase();
+    const filtered=names.filter(name=>{
+      const p=getBuyerProfile(name), st=buyerStats(name);
+      if(dirFilter==="active" && st.active===0) return false;
+      if(dirFilter==="attention" && !(st.selesai>0 && st.rate<80)) return false;
+      if(!q) return true;
+      return (name+" "+(p.hq||"")+" "+(p.cat||"")+" "+(p.std||[]).join(" ")).toLowerCase().includes(q);
+    }).sort((a,b)=>a.localeCompare(b));
+    $("dirGrid").innerHTML=filtered.map(name=>{
+      const p=getBuyerProfile(name), st=buyerStats(name);
+      const logoSrc=p.logo||p.logoUrl||"";
+      const logo=logoSrc?'<img src="'+logoSrc+'" alt="'+esc(name)+'" onerror="this.style.display=\'none\';this.parentElement.textContent=\''+esc(dirInitials(name))+'\';this.parentElement.style.background=\''+esc(p.color)+'\'">':esc(dirInitials(name));
+      const logoStyle=logoSrc?'background:#fff;':'background:'+esc(p.color)+';';
+      const rateBadge=st.selesai? (st.rate>=90?'<span class="dir-stat green">Pass '+st.rate+'%</span>':st.rate>=80?'<span class="dir-stat">Pass '+st.rate+'%</span>':'<span class="dir-stat red">Pass '+st.rate+'%</span>') : '<span class="dir-stat">Belum ada hasil</span>';
+      return '<button type="button" class="dir-card" data-dir="'+esc(name)+'"><div class="dir-top"><span class="dir-logo" style="'+logoStyle+'">'+logo+'</span><span><span class="dir-name">'+esc(name)+'</span><br><span class="dir-cat">'+esc(p.cat||"")+' · Est. '+esc(p.est||"-")+'</span></span></div><div class="dir-meta"><b>HQ:</b> '+esc(p.hq||"Belum diisi")+'<br><b>Contact:</b> '+esc(p.contact||"Belum diisi")+'<br><b>Standar:</b> '+(p.std||[]).slice(0,2).join(", ")+(p.std&&p.std.length>2?" +"+(p.std.length-2):"")+'</div><div class="dir-stats"><span class="dir-stat">'+st.total+' Tests</span><span class="dir-stat">'+st.active+' Aktif</span>'+rateBadge+'</div><div class="dir-std">'+(p.std||[]).slice(0,3).map(s=>'<span>'+esc(s)+'</span>').join("")+'</div><span class="dir-view">View Buyer Profile</span></button>';
+    }).join("");
+    $("dirEmpty").style.display=filtered.length?"none":"block";
+  }
+  function openDirProfile(name){
+    const p=getBuyerProfile(name), st=buyerStats(name);
+    const logoSrcP=p.logo||p.logoUrl||"";
+    const logo=logoSrcP?'<img src="'+logoSrcP+'" alt="'+esc(name)+'" onerror="this.style.display=\'none\';this.parentElement.textContent=\''+esc(dirInitials(name))+'\';this.parentElement.style.background=\''+esc(p.color)+'\'">':esc(dirInitials(name));
+    const logoStyleP=logoSrcP?'background:#fff;':'background:'+esc(p.color)+';';
+    const recent=R.filter(r=>r.buyer===name).sort((a,b)=>b.updated-a.updated).slice(0,3);
+    $("dbody").innerHTML='<h4>'+esc(name)+'</h4><p class="dsub">'+esc(p.cat||"")+' · Est. '+esc(p.est||"-")+'</p>'
+      +'<div class="d-prof"><span class="dir-logo" style="'+logoStyleP+'">'+logo+'</span><div><b style="font-size:15px">'+esc(name)+'</b><div style="font-size:12px;color:#64748b">'+esc(p.hq||"Belum diisi")+'</div><div style="font-size:12px;color:#64748b">'+esc(p.email||"")+'</div></div></div>'
+      +'<div class="d-grid"><div><span class="lbl">HQ</span>'+esc(p.hq||"Belum diisi")+'</div><div><span class="lbl">Contact</span>'+esc(p.contact||"Belum diisi")+'</div><div><span class="lbl">Email</span>'+esc(p.email||"Belum diisi")+'</div><div><span class="lbl">Category</span>'+esc(p.cat||"Belum diisi")+'</div><div><span class="lbl">Total Tests</span>'+st.total+' · '+st.active+' aktif</div><div><span class="lbl">Pass Rate</span>'+(st.selesai?st.rate+"% ("+st.pass+" Pass, "+st.fail+" Fail)":"Belum ada hasil")+'</div></div>'
+      +'<label>Testing Standards</label><div class="dir-std" style="margin:6px 0 12px">'+((p.std||[]).length?(p.std||[]).map(s=>'<span>'+esc(s)+'</span>').join(""):'<span style="color:#94a3b8">Belum diisi</span>')+'</div>'
+      +'<label>Catatan / Aturan Kualitas</label><p style="font-size:13px;color:#334155;line-height:1.5;margin:6px 0 12px">'+esc(p.notes||"Belum diisi - klik Edit Profil untuk mengisi.")+'</p>'
+      +'<label>Report Terakhir</label><ul class="d-recent">'+(recent.length?recent.map(r=>'<li>#'+esc(r.no)+' · '+esc(r.type||"-")+' · '+LBL[sel(r)]+'</li>').join(""):'<li>Belum ada report.</li>')+'</ul>'
+      +'<label for="d_logo">Ganti Logo (opsional, PNG/JPG)</label><input id="d_logo" type="file" accept="image/*"><div id="d_logo_preview" style="margin-top:8px;font-size:12px;color:#64748b">Logo dari link yang kamu kasih sudah dipakai. Kalau mau ganti, upload file baru di sini.</div>'
+      +'<div class="fbtns" style="margin-top:16px"><button type="button" class="sbtn" data-dir-close>Tutup</button><button type="button" class="sbtn" data-dir-reports="'+esc(name)+'">Lihat Reports</button><button type="button" class="pbtn" data-dir-edit="'+esc(name)+'">Edit Profil</button></div>';
+    $("dmodal").classList.add("show");
+    const fileEl=$("d_logo");
+    if(fileEl) fileEl.onchange=()=>{
+      const f=fileEl.files[0]; if(!f) return;
+      if(f.size>600*1024){ alert("Logo terlalu besar, maks 600KB."); return; }
+      const rd=new FileReader(); rd.onload=()=>{ const data=rd.result; BDIR[name]={...(BDIR[name]||{}), logo:data}; saveDir(); renderDirectory(); $("d_logo_preview").textContent="Logo tersimpan. Tutup dan buka lagi untuk lihat."; }; rd.readAsDataURL(f);
+    };
+  }
+  function openDirForm(name){
+    const p=name?getBuyerProfile(name):{name:"",hq:"",contact:"",email:"",cat:"",est:"",color:"#2563eb",std:[],notes:""};
+    const isNew=!name;
+    $("dbody").innerHTML='<h4>'+(isNew?"Tambah Buyer":"Edit Profil - "+esc(name))+'</h4><p class="dsub">Profil ini tampil di Buyer Directory. Logo bisa diganti dari halaman profil.</p>'
+      +'<label for="df_name">Nama Buyer</label><input id="df_name" value="'+esc(p.name)+'" '+(isNew?"":"readonly")+' placeholder="mis. LL Bean">'
+      +'<div class="row"><div><label for="df_hq">HQ</label><input id="df_hq" value="'+esc(p.hq||"")+'" placeholder="Kota, Negara"></div><div><label for="df_est">Established</label><input id="df_est" value="'+esc(p.est||"")+'" placeholder="1912"></div></div>'
+      +'<div class="row"><div><label for="df_contact">Contact Person</label><input id="df_contact" value="'+esc(p.contact||"")+'"></div><div><label for="df_email">Email</label><input id="df_email" value="'+esc(p.email||"")+'"></div></div>'
+      +'<div class="row"><div><label for="df_cat">Category</label><input id="df_cat" value="'+esc(p.cat||"")+'" placeholder="Outdoor / Fashion"></div><div><label for="df_color">Warna Logo</label><input id="df_color" type="color" value="'+esc(p.color||"#2563eb")+'" style="height:36px;padding:4px"></div></div>'
+      +'<label for="df_std">Testing Standards (pisah koma)</label><input id="df_std" value="'+esc((p.std||[]).join(", "))+'" placeholder="AATCC 150, ASTM D1683">'
+      +'<label for="df_notes">Catatan / Aturan Kualitas</label><textarea id="df_notes">'+esc(p.notes||"")+'</textarea>'
+      +'<div class="fbtns" style="margin-top:16px"><button type="button" class="sbtn" data-dir-close>Batal</button><button type="button" class="pbtn" data-dir-save="'+(isNew?"__new__":esc(name))+'">Simpan</button></div>';
+    $("dmodal").classList.add("show");
+  }
+  // events
+  $("dirSearch").addEventListener("input",()=>{ dirQuery=$("dirSearch").value.trim(); renderDirectory(); });
+  $("dirFilter").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b) return; dirFilter=b.dataset.df; $("dirFilter").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b)); renderDirectory(); });
+  $("dirAdd").onclick=()=>openDirForm(null);
+  $("dirGrid").addEventListener("click",e=>{ const c=e.target.closest("[data-dir]"); if(c) openDirProfile(c.dataset.dir); });
+  $("dmodal").addEventListener("mousedown",e=>{ if(e.target===$("dmodal")) $("dmodal").classList.remove("show"); });
+  $("dbody").addEventListener("click",e=>{
+    const b=e.target.closest("button"); if(!b) return;
+    if(b.dataset.dirClose!=null){ $("dmodal").classList.remove("show"); return; }
+    if(b.dataset.dirReports){ const nm=b.dataset.dirReports; $("dmodal").classList.remove("show"); buyerFilter=nm; showAll=false; renderChips(); renderTable(); showDash(); return; }
+    if(b.dataset.dirEdit){ const nm=b.dataset.dirEdit; openDirForm(nm); return; }
+    if(b.dataset.dirSave!=null){
+      const isNew=b.dataset.dirSave==="__new__";
+      const nm=isNew?$("df_name").value.trim():b.dataset.dirSave;
+      if(!nm){ alert("Nama buyer wajib diisi."); return; }
+      const rec={hq:$("df_hq").value.trim(), contact:$("df_contact").value.trim(), email:$("df_email").value.trim(), cat:$("df_cat").value.trim(), est:$("df_est").value.trim(), color:$("df_color").value, std:$("df_std").value.split(",").map(s=>s.trim()).filter(Boolean), notes:$("df_notes").value.trim()};
+      if(isNew && !BUYERS.includes(nm)){ BUYERS.push(nm); $("f_buyer").innerHTML=BUYERS.map(bb=>'<option>'+esc(bb)+'</option>').join(""); }
+      BDIR[nm]={...(BDIR[nm]||{}), ...rec}; saveDir(); $("dmodal").classList.remove("show"); renderDirectory(); if(isNew) showDirectory(); return;
+    }
+  });
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ $("dmodal").classList.remove("show"); } });
+
+
+  /* ---------- settings v2 ---------- */
+  const SET_KEY="trp_settings_v1";
+  const TEST_TYPES_KEY="trp_test_types_v1";
+  const PLANTS_KEY="trp_plants_v1";
+  let SETTINGS={labName:"",labAddr:"",labPhone:"",labEmail:"",pic:"",target:7,plantName:"",plantAddr:"",plantContact:"",plantPhone:"",wfMasuk:1,wfProses:3,wfPending:2,dbMode:"local",fbApiKey:"AIzaSyDNhtxw21z2zkQ5v1LolTmUE2rv3rEjqbA",fbAuthDomain:"texlab-ba76c.firebaseapp.com",fbProjectId:"texlab-ba76c",fbStorage:"texlab-ba76c.firebasestorage.app",fbSender:"1014354282478",fbAppId:"1:1014354282478:web:2ac4d1c96e10d5e77670ff"};
+  try{ const s=JSON.parse(localStorage.getItem(SET_KEY)||"{}"); if(s&&typeof s==="object") SETTINGS={...SETTINGS, ...s}; }catch(e){}
+  function saveSettings(){ try{ localStorage.setItem(SET_KEY, JSON.stringify(SETTINGS)); }catch(e){} if(typeof fbAutoSave==="function") fbAutoSave(); if(typeof fbWireButtons==="function") fbWireButtons(); }
+  let TEST_TYPES=["Full Package Test","Seam Strength","Dimensional Change","Wash and Wear","Appearance After Laundering","Attachment Strength","Colorfastness","Fabric Shrinkage","Shrinkage","Pilling"];
+  let PLANTS=["PT. Ungaran Sari Garments Ungaran","PT. Ungaran Sari Garments Pringapus","PT. Ungaran Sari Garments Congol","PT. Citra Abadi Sejati","PT. Eratex Djaja"];
+  try{ const pp=JSON.parse(localStorage.getItem(PLANTS_KEY)||"[]"); if(Array.isArray(pp)&&pp.length){ if(pp.length===1&&pp[0]==="PT. Ungaran Sari Garments Ungaran"){ PLANTS=["PT. Ungaran Sari Garments Ungaran","PT. Ungaran Sari Garments Pringapus","PT. Ungaran Sari Garments Congol","PT. Citra Abadi Sejati","PT. Eratex Djaja"]; try{ localStorage.setItem(PLANTS_KEY, JSON.stringify(PLANTS)); }catch(e){} } else { PLANTS=pp; } } }catch(e){}
+  try{ const tt=JSON.parse(localStorage.getItem(TEST_TYPES_KEY)||"[]"); if(Array.isArray(tt)&&tt.length) TEST_TYPES=tt; }catch(e){}
+  function saveTestTypes(){ try{ localStorage.setItem(TEST_TYPES_KEY, JSON.stringify(TEST_TYPES)); }catch(e){} const dl=$("testtypes"); if(dl) dl.innerHTML=TEST_TYPES.map(v=>'<option value="'+esc(v)+'">').join(""); }
+  function refreshBuyerSelect(){ const sel=$("f_buyer"); if(sel) sel.innerHTML=BUYERS.map(bb=>'<option>'+esc(bb)+'</option>').join(""); }
+  function savePlants(){ try{ localStorage.setItem(PLANTS_KEY, JSON.stringify(PLANTS)); }catch(e){} }
+  function refreshPlantSelect(){ const sel=$("f_plant"); if(sel) sel.innerHTML=PLANTS.map(bb=>'<option>'+esc(bb)+'</option>').join(""); }
+  function renderMasterPlants(){
+    if(!$("set_plantList")) return;
+    $("set_plantList").innerHTML=PLANTS.map((v,i)=>{ const cnt=R.filter(r=>(r.plant||"PT. Ungaran Sari Garments Ungaran")===v).length; return '<div class="set-item"><span>'+esc(v)+'</span><span class="cnt">'+cnt+' report</span><button type="button" data-edit-plant="'+i+'">Edit</button><button type="button" class="danger" data-del-plant="'+i+'">Hapus</button></div>'; }).join("")||'<div class="none">Belum ada plant.</div>';
+  }
+  function renderMasterBuyers(){
+    if(!$("set_buyerList")) return;
+    $("set_buyerList").innerHTML=BUYERS.map((b,i)=>{
+      const cnt=R.filter(r=>r.buyer===b).length;
+      return '<div class="set-item"><span>'+esc(b)+'</span><span class="cnt">'+cnt+' report</span><button type="button" data-edit-buyer="'+i+'">Edit</button><button type="button" class="danger" data-del-buyer="'+i+'">Hapus</button></div>';
+    }).join("")||'<div class="none">Belum ada buyer. Tambah di atas.</div>';
+  }
+  function renderMasterTests(){
+    if(!$("set_testList")) return;
+    $("set_testList").innerHTML=TEST_TYPES.map((v,i)=>{
+      const cnt=R.filter(r=>r.type===v).length;
+      return '<div class="set-item"><span>'+esc(v)+'</span><span class="cnt">'+cnt+' report</span><button type="button" data-edit-test="'+i+'">Edit</button><button type="button" class="danger" data-del-test="'+i+'">Hapus</button></div>';
+    }).join("")||'<div class="none">Belum ada test type.</div>';
+  }
+  function renderSettings(){
+    if(!$("set_labName")) return;
+    $("set_labName").value=SETTINGS.labName||"";
+    $("set_labAddr").value=SETTINGS.labAddr||"";
+    $("set_labPhone").value=SETTINGS.labPhone||"";
+    $("set_labEmail").value=SETTINGS.labEmail||"";
+    $("set_pic").value=SETTINGS.pic||"";
+    $("set_target").value=SETTINGS.target||7;
+    $("set_plantName").value=SETTINGS.plantName||"";
+    $("set_plantAddr").value=SETTINGS.plantAddr||"";
+    $("set_plantContact").value=SETTINGS.plantContact||"";
+    $("set_plantPhone").value=SETTINGS.plantPhone||"";
+    $("set_wfMasuk").value=SETTINGS.wfMasuk??1;
+    $("set_wfProses").value=SETTINGS.wfProses??3;
+    $("set_wfPending").value=SETTINGS.wfPending??2;
+    $("set_dbMode").value=SETTINGS.dbMode||"local";
+    $("set_fbApiKey").value=SETTINGS.fbApiKey||"";
+    $("set_fbAuthDomain").value=SETTINGS.fbAuthDomain||"";
+    $("set_fbProjectId").value=SETTINGS.fbProjectId||"";
+    $("set_fbStorage").value=SETTINGS.fbStorage||"";
+    $("set_fbSender").value=SETTINGS.fbSender||"";
+    $("set_fbAppId").value=SETTINGS.fbAppId||"";
+    $("set_firebaseFields").hidden=SETTINGS.dbMode!=="firebase";
+    if(typeof fbUpdateStatus==="function") fbUpdateStatus();
+    $("set_stat").textContent=R.length+" report · "+BUYERS.length+" buyer · "+TEST_TYPES.length+" test type · "+PLANTS.length+" plant · "+(SETTINGS.plantName||SETTINGS.labName||"Plant / Lab belum diisi");
+    const sub=$("dsub"); if(sub) sub.textContent=(SETTINGS.labName||SETTINGS.plantName||"Pusat Laporan Pengujian")+(SETTINGS.pic?" · PIC: "+SETTINGS.pic:"");
+    $("setSaved").style.display="none";
+    renderMasterBuyers(); renderMasterTests(); renderMasterPlants(); refreshPlantSelect();
+  }
+  function collectSettings(){
+    SETTINGS={...SETTINGS, labName:$("set_labName").value.trim(), labAddr:$("set_labAddr").value.trim(), labPhone:$("set_labPhone").value.trim(), labEmail:$("set_labEmail").value.trim(), pic:$("set_pic").value.trim(), target:+$("set_target").value||7, plantName:$("set_plantName").value.trim(), plantAddr:$("set_plantAddr").value.trim(), plantContact:$("set_plantContact").value.trim(), plantPhone:$("set_plantPhone").value.trim(), wfMasuk:+$("set_wfMasuk").value||0, wfProses:+$("set_wfProses").value||0, wfPending:+$("set_wfPending").value||0, dbMode:$("set_dbMode").value, fbApiKey:$("set_fbApiKey").value.trim(), fbAuthDomain:$("set_fbAuthDomain").value.trim(), fbProjectId:$("set_fbProjectId").value.trim(), fbStorage:$("set_fbStorage").value.trim(), fbSender:$("set_fbSender").value.trim(), fbAppId:$("set_fbAppId").value.trim()};
+    saveSettings(); renderSettings(); $("setSaved").style.display="block"; setTimeout(()=>{ $("setSaved").style.display="none"; },2000);
+  }
+  $("setSave").onclick=collectSettings;
+  $("setMasterTab").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b) return; $("setMasterTab").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b)); const tab=b.dataset.mtab; $("setMasterBuyers").hidden=tab!=="buyers"; $("setMasterTests").hidden=tab!=="tests"; if($("setMasterPlants")) $("setMasterPlants").hidden=tab!=="plants"; });
+  $("set_addBuyer").onclick=()=>{ const v=$("set_newBuyer").value.trim(); if(!v) return; if(BUYERS.includes(v)){ alert("Buyer sudah ada."); return; } BUYERS.push(v); refreshBuyerSelect(); renderMasterBuyers(); renderDirectory(); renderSettings(); $("set_newBuyer").value=""; };
+  $("set_addTest").onclick=()=>{ const v=$("set_newTest").value.trim(); if(!v) return; if(TEST_TYPES.includes(v)){ alert("Test type sudah ada."); return; } TEST_TYPES.push(v); saveTestTypes(); renderMasterTests(); renderSettings(); $("set_newTest").value=""; };
+  $("set_addPlant").onclick=()=>{ const v=$("set_newPlant").value.trim(); if(!v) return; if(PLANTS.includes(v)){ alert("Plant sudah ada."); return; } PLANTS.push(v); savePlants(); renderMasterPlants(); renderSettings(); $("set_newPlant").value=""; };
+  $("set_buyerList").addEventListener("click",e=>{
+    const eb=e.target.closest("[data-edit-buyer]"); const db=e.target.closest("[data-del-buyer]");
+    if(eb){ const i=+eb.dataset.editBuyer; const nv=prompt("Edit nama buyer:", BUYERS[i]); if(!nv) return; const nn=nv.trim(); if(!nn||nn===BUYERS[i]) return; const old=BUYERS[i]; BUYERS[i]=nn; R.forEach(r=>{ if(r.buyer===old) r.buyer=nn; }); save(); refreshBuyerSelect(); renderMasterBuyers(); renderDirectory(); renderAll(); return; }
+    if(db){ const i=+db.dataset.delBuyer; const nm=BUYERS[i]; if(!confirm("Hapus buyer "+nm+"? Report-nya tidak dihapus, tapi buyer tidak lagi di pilihan.")) return; BUYERS.splice(i,1); refreshBuyerSelect(); renderMasterBuyers(); renderDirectory(); renderAll(); return; }
+  });
+  $("set_testList").addEventListener("click",e=>{
+    const et=e.target.closest("[data-edit-test]"); const dt=e.target.closest("[data-del-test]");
+    if(et){ const i=+et.dataset.editTest; const nv=prompt("Edit test type:", TEST_TYPES[i]); if(!nv) return; const nn=nv.trim(); if(!nn) return; TEST_TYPES[i]=nn; saveTestTypes(); renderMasterTests(); renderSettings(); return; }
+    if(dt){ const i=+dt.dataset.delTest; if(!confirm("Hapus test type "+TEST_TYPES[i]+"?")) return; TEST_TYPES.splice(i,1); saveTestTypes(); renderMasterTests(); renderSettings(); return; }
+  });
+  $("set_plantList").addEventListener("click",e=>{
+    const et=e.target.closest("[data-edit-plant]"); const dt=e.target.closest("[data-del-plant]");
+    if(et){ const i=+et.dataset.editPlant; const nv=prompt("Edit plant:", PLANTS[i]); if(!nv) return; const nn=nv.trim(); if(!nn) return; const old=PLANTS[i]; PLANTS[i]=nn; R.forEach(r=>{ if((r.plant||"PT. Ungaran Sari Garments Ungaran")===old) r.plant=nn; }); save(); savePlants(); renderMasterPlants(); renderSettings(); renderAll(); return; }
+    if(dt){ const i=+dt.dataset.delPlant; if(!confirm("Hapus plant "+PLANTS[i]+"?")) return; PLANTS.splice(i,1); if(!PLANTS.length) PLANTS=["PT. Ungaran Sari Garments Ungaran"]; savePlants(); renderMasterPlants(); renderSettings(); renderAll(); return; }
+  });
+  $("set_dbMode").onchange=()=>{ $("set_firebaseFields").hidden=$("set_dbMode").value!=="firebase"; if($("set_dbMode").value==="firebase" && typeof fbInit==="function") fbInit(); };
+  $("set_export").onclick=()=>{
+    let csv="No,Buyer,Plant,Style,Test Type,Status,Target,Updated\n";
+    R.forEach(r=>{ csv+='"'+r.no+'","' +r.buyer+'","' +(r.plant||"PT. Ungaran Sari Garments Ungaran")+'","' +(r.style||"")+'","' +(r.type||"")+'","' +r.status+'","' +(r.due?new Date(r.due).toLocaleDateString("id-ID"):"")+'","' +new Date(r.updated).toLocaleDateString("id-ID")+'"\n'; });
+    const blob=new Blob([csv],{type:"text/csv"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download="Test_Report_All.csv"; a.click(); setTimeout(()=>URL.revokeObjectURL(url),2000);
+  };
+  $("set_exportJson").onclick=()=>{
+    const data={settings:SETTINGS, buyers:BUYERS, testTypes:TEST_TYPES, plants:PLANTS, reports:R, exportedAt:new Date().toISOString()};
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download="Test_Report_Backup.json"; a.click(); setTimeout(()=>URL.revokeObjectURL(url),2000);
+  };
+  $("set_sample").onclick=()=>{ const b=$("seedBtn"); if(b){ b.click(); } else { alert("Buka Dashboard dulu, lalu klik Muat data contoh."); showDash(); } };
+  $("set_clear").onclick=()=>{ if(!confirm("Hapus semua report? Data tidak bisa dikembalikan. Export dulu kalau perlu.")) return; R.length=0; save(); renderAll(); };
+  $("set_reset_buyers").onclick=()=>{ if(!confirm("Reset semua profil buyer ke kosong + logo?")) return; try{ localStorage.removeItem(DIR_KEY); }catch(e){} BDIR={}; renderDirectory(); renderSettings(); alert("Buyer Directory sudah di-reset ke kosong."); };
+
+  load(); if(typeof saveTestTypes==="function") saveTestTypes(); if(typeof savePlants==="function") savePlants(); renderAll(); applyBuyers(); go("dash");
+})();
+</script>
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
 </html>
