@@ -513,6 +513,24 @@ body.locked .topbar, body.locked .main, body.locked #toast, body.locked #amodal,
 #pg4 .pg4-top button.green{background:#16a34a;color:#fff;border-color:#16a34a}
 #pg4 .empty-group{font-size:12px;color:#64748b;background:#fff7ed;border:1px solid #fed7aa;padding:8px 10px;border-radius:8px;margin:8px 0}
 
+
+/* ---------- Summary Of Test Result: tambah / hapus baris ---------- */
+#pg3 .sum-row{position:relative;border:1px dashed #cbd5e1;border-radius:10px;padding:10px 10px 8px;margin:10px 0;background:#f8fafc}
+#pg3 .sum-row .tr{grid-template-columns:1fr 140px 1fr auto !important}
+#pg3 .sum-del{width:32px;height:32px;border-radius:999px;border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;cursor:pointer;font-size:16px;line-height:1;align-self:end}
+#pg3 .sum-del:hover{background:#fee2e2}
+#pg3 .sum-add{font-size:12.5px;padding:7px 14px;border-radius:999px;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-weight:700;cursor:pointer}
+#pg3 .sum-add:hover{background:#dbeafe}
+#pg3 .sum-top{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px}
+#pg3 .sum-top span{font-size:11.5px;color:#64748b}
+
+
+#pg3 .sum-quick{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+#pg3 .sum-quick button{font-size:11.5px;padding:5px 10px;border-radius:999px;border:1px solid #e2e8f0;background:#fff;cursor:pointer}
+#pg3 .sum-quick button:hover{border-color:#93c5fd}
+#pg3 .sum-count{font-size:12px;font-weight:700;color:#1e293b}
+#pg3 .sum-count.over{color:#b45309}
+
 </style>
 <!-- Firebase (compat) untuk sinkronisasi Firestore + Auth -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -1051,8 +1069,46 @@ function setNum(xml, ref, n) {
 
 // ---------- Halaman 3–5 (dibangun dari konfigurasi) ----------
 const CFG = [{"p": 3, "t": "Summary Of Test Result", "rows": [[{"c": "A9", "l": "Test Requested", "d": "Attachment Strength", "k": "t"}, {"c": "E9", "l": "Hasil", "d": "Pass", "k": "xs"}, {"c": "H9", "l": "Comments", "d": "", "k": "t"}], [{"c": "A10", "l": "Test Requested", "d": "Seam Strength", "k": "t"}, {"c": "E10", "l": "Hasil", "d": "Pass", "k": "xs"}, {"c": "H10", "l": "Comments", "d": "", "k": "t"}], [{"c": "A11", "l": "Test Requested", "d": "Dimensional Change to Home Laundering", "k": "t"}, {"c": "E11", "l": "Hasil", "d": "Pass", "k": "xs"}, {"c": "H11", "l": "Comments", "d": "", "k": "t"}], [{"c": "A12", "l": "Test Requested", "d": "Appearance After Laundering", "k": "t"}, {"c": "E12", "l": "Hasil", "d": "Pass", "k": "xs"}, {"c": "H12", "l": "Comments", "d": "", "k": "t"}], [{"c": "A13", "l": "Test Requested", "d": "Wash and Wear", "k": "t"}, {"c": "E13", "l": "Hasil", "d": "Pass", "k": "xs"}, {"c": "H13", "l": "Comments", "d": "", "k": "t"}]]}, {"p": 3, "t": "Contact Information", "rows": [[{"c": "C20", "l": "Primary Contact", "d": "Faroh Sabila", "k": "t"}, {"c": "G20", "l": "Email", "d": "faroh.sabila@texlab.id", "k": "t"}], [{"c": "C21", "l": "Back Up", "d": "Rahmat Hidayat", "k": "t"}, {"c": "G21", "l": "Email", "d": "rahmat.hidayat@texlab.id", "k": "t"}]]}, {"p": 3, "t": "Remarks (di luar area cetak, seperti contoh)", "rows": [[{"c": "L24", "l": "Remark 1", "d": "The sample does not meet the requirement of Seam Strength outlined in ASTM D1683-22. The actual result of Zipper Stress Area is 18.8 lbs, whereas the minimum requirement is 35 lbs.", "k": "ta"}], [{"c": "L28", "l": "Remark 2", "d": "The sample does not meet the requirement of Appearance After Laundering outlined in LL Bean Method. There is seam puckering at the outseam. The failure photo exists in the Page 6. ", "k": "ta"}], [{"c": "L32", "l": "Remark 3", "d": "The sample does not meet the requirement of After Wash Appearance-Garment outlined in AATCC 143-2018t. The actual result of outseam is Grade 2.0 whereas the requirement is a minimum of Grade 3.0. The failure photo exists in the Page 6. ", "k": "ta"}]]}];
+
+// ---------- Summary Of Test Result: dinamis tambah / hapus baris ----------
+let SUMMARY = [
+  { test: "Attachment Strength", hasil: "Pass", comments: "" },
+  { test: "Seam Strength", hasil: "Pass", comments: "" },
+  { test: "Dimensional Change to Home Laundering", hasil: "Pass", comments: "" },
+  { test: "Appearance After Laundering", hasil: "Pass", comments: "" },
+  { test: "Wash and Wear", hasil: "Pass", comments: "" },
+];
+function renderSummary(){
+  const pg3 = $("pg3"); if(!pg3) return;
+  const old = pg3.querySelector('[data-sumwrap="1"]'); if(old) old.remove();
+  const wrap = document.createElement("div"); wrap.setAttribute("data-sumwrap","1");
+  const over = SUMMARY.length > 11;
+  let h = '<fieldset><legend>Summary Of Test Result</legend>';
+  h += '<div class="sum-top"><button type="button" class="sum-add" id="sumAddBtn">+ Tambah Baris</button><span class="sum-count'+(over?' over':'')+'">Total: '+SUMMARY.length+' baris'+(over?' — di Excel halaman Summary otomatis memanjang (Contact & Remarks kegeser ke bawah), aman sampai 30 baris.':' — muat 1 halaman (sampai 11).')+'</span></div>';
+  h += '<div class="sum-quick"><button type="button" data-quick="1">+ Tambah 1</button><button type="button" data-quick="5">+ Tambah 5 Sekaligus</button><button type="button" data-quick="10">+ Tambah 10 Sekaligus</button><button type="button" id="sumFill20">Isi Contoh 20 Metode</button><button type="button" id="sumClear">Kosongkan Semua</button></div>';
+  h += '<p style="font-size:11.5px;color:#475569;margin:6px 0 10px;line-height:1.6">Kadang buyer minta sampai <b>20 metode</b>? Tinggal klik <b>+ Tambah 5 / 10 Sekaligus</b> atau <b>Isi Contoh 20 Metode</b>, isi nama tes-nya. Nggak mentok di 11 lagi, Excel-nya otomatis nambah baris.</p>';
+  if(!SUMMARY.length) h += '<p style="font-size:12px;color:#64748b;background:#fff7ed;border:1px solid #fed7aa;padding:8px 10px;border-radius:8px">Summary lagi kosong (0 baris). Klik <b>+ Tambah Baris</b> buat nambah lagi.</p>';
+  SUMMARY.forEach((r, i)=>{
+    h += '<div class="sum-row"><div class="tr" style="grid-template-columns:1fr 140px 1fr auto">';
+    h += '<div><label>Test Requested #'+(i+1)+'</label><input data-sum="test" data-i="'+i+'" value="'+esc(r.test)+'" placeholder="mis. Colorfastness to Washing"></div>';
+    h += '<div><label>Hasil</label><select data-sum="hasil" data-i="'+i+'"><option'+(r.hasil==="Pass"?' selected':'')+'>Pass</option><option'+(r.hasil==="Fail"?' selected':'')+'>Fail</option><option'+(r.hasil==="Data"?' selected':'')+'>Data</option></select></div>';
+    h += '<div><label>Comments</label><input data-sum="comments" data-i="'+i+'" value="'+esc(r.comments)+'" placeholder="Catatan"></div>';
+    h += '<button type="button" class="sum-del" data-sumdel="'+i+'" title="Hapus baris ini">×</button>';
+    h += '</div></div>';
+  });
+  h += '<button type="button" class="sum-add" data-sumadd="1">+ Tambah Baris</button></fieldset>';
+  wrap.innerHTML = h;
+  pg3.insertBefore(wrap, pg3.firstChild);
+  wrap.querySelectorAll("[data-sum]").forEach(inp=>{ inp.oninput=()=>{ const ii=+inp.dataset.i; SUMMARY[ii][inp.dataset.sum]=inp.value; }; inp.onchange=()=>{ const ii=+inp.dataset.i; SUMMARY[ii][inp.dataset.sum]=inp.value; }; });
+  wrap.querySelectorAll("[data-sumdel]").forEach(btn=>{ btn.onclick=()=>{ const ii=+btn.dataset.sumdel; SUMMARY.splice(ii,1); renderSummary(); }; });
+  wrap.querySelectorAll("[data-sumadd], #sumAddBtn").forEach(btn=>{ btn.onclick=()=>{ SUMMARY.push({ test: "", hasil: "Pass", comments: "" }); renderSummary(); setTimeout(()=>{ const inputs = wrap.querySelectorAll('[data-sum="test"]'); const lastInp = inputs[inputs.length-1]; if(lastInp) lastInp.focus(); }, 50); }; });
+  wrap.querySelectorAll("[data-quick]").forEach(btn=>{ btn.onclick=()=>{ const n=+btn.dataset.quick; for(let k=0;k<n;k++) SUMMARY.push({ test: "", hasil: "Pass", comments: "" }); renderSummary(); }; });
+  const fill20 = wrap.querySelector("#sumFill20"); if(fill20) fill20.onclick=()=>{ if(!confirm("Isi Summary dengan contoh 20 metode? Data Summary yang sekarang bakal keganti.")) return; SUMMARY = ["Attachment Strength","Seam Strength","Dimensional Change to Home Laundering","Appearance After Laundering","Wash and Wear","Colorfastness to Washing","Colorfastness to Perspiration","Colorfastness to Light","Colorfastness to Dry Cleaning","Pilling Resistance","Fabric Weight","Stretch & Recovery","Seam Slippage","Button / Snap Pull Strength","Zipper Strength","Fiber Content","Flammability","pH Value","Formaldehyde","Azo Dyes"].map(nm=>({test:nm, hasil:"Pass", comments:""})); renderSummary(); };
+  const clr = wrap.querySelector("#sumClear"); if(clr) clr.onclick=()=>{ if(!confirm("Kosongkan semua baris Summary?")) return; SUMMARY=[]; renderSummary(); };
+}
 const FLD = []; // {p, c, k, el}
 CFG.forEach((blk, bi) => {
+  if(blk.t === "Summary Of Test Result") return; // di-render dinamis via renderSummary()
   let h = '<fieldset><legend>' + blk.t + '</legend>';
   blk.rows.forEach((row, ri) => {
     h += '<div class="tr" style="grid-template-columns:repeat(' + row.length + ',minmax(0,1fr))">';
@@ -1069,6 +1125,7 @@ CFG.forEach((blk, bi) => {
   $("pg" + blk.p).insertAdjacentHTML("beforeend", h + "</fieldset>");
   blk.rows.forEach(row => row.forEach(fl => { const el = $("f" + blk.p + "_" + fl.c); el.value = fl.d; FLD.push({ p: blk.p, c: fl.c, k: fl.k, el }); }));
 });
+renderSummary();
 // teks atau angka: angka disimpan sebagai angka agar format sel (0.0) tetap bekerja
 function setAuto(xml, ref, val) {
   val = String(val);
@@ -1583,14 +1640,69 @@ async function exportXlsx(mode) {
   // --- Halaman 3–5 ---
   for (const p of [3]) {
     let sx = await zip.file(P + p + ".xml").async("string");
+    // --- Summary Of Test Result (dinamis, sampai 30 baris) ---
+    // Template asli: Summary di baris 9-19 (11 baris), Contact di 20+. Kalau SUMMARY > 11, geser semua baris 20+ ke bawah biar nggak ketimpa.
+    const sumDelta = Math.max(0, SUMMARY.length - 11);
+    if(sumDelta > 0){
+      // 1) Geser <row r="N"> dan <c r="COL N"> untuk N >= 20
+      sx = sx.replace(/<row r="(\d+)"/g, (m, n)=>{ const v=+n; return v>=20 ? '<row r="'+(v+sumDelta)+'"' : m; });
+      sx = sx.replace(/<c r="([A-Z]+)(\d+)"/g, (m, col, n)=>{ const v=+n; return v>=20 ? '<c r="'+col+(v+sumDelta)+'"' : m; });
+      // 2) Geser merges: ref="A20:B20" -> A(20+delta):B(20+delta)
+      sx = sx.replace(/<mergeCell ref="([A-Z]+)(\d+):([A-Z]+)(\d+)"/g, (m, c1, r1, c2, r2)=>{ const a=+r1, b=+r2; const na = a>=20 ? a+sumDelta : a; const nb = b>=20 ? b+sumDelta : b; return '<mergeCell ref="'+c1+na+':'+c2+nb+'"'; });
+      // 3) Geser dimension & conditional formatting sqref
+      sx = sx.replace(/<dimension ref="([A-Z]+\d+):([A-Z]+)(\d+)"/, (m, a, c, r)=> '<dimension ref="'+a+':'+c+(+r+sumDelta)+'"');
+      // 4) Bikin baris kosong untuk Summary ekstra (baris 20 .. 20+delta-1) dengan nyontek struktur baris 13
+      const row13 = (sx.match(/<row r="13"[^>]*>[\s\S]*?<\/row>/)||[""])[0];
+      if(row13){
+        let extra = "";
+        for(let si=11; si<SUMMARY.length; si++){
+          const rNo = 9+si;
+          let nr = row13.replace('<row r="13"', '<row r="'+rNo+'"');
+          nr = nr.replace(/<c r="([A-Z]+)13"/g, '<c r="$1'+rNo+'"');
+          // Kosongkan isi sel-nya, nanti diisi di bawah via setAuto/setCell
+          nr = nr.replace(/<v>[^<]*<\/v>/g, "<v></v>").replace(/<is>[\s\S]*?<\/is>/g, "<is><t></t></is>");
+          extra += nr;
+        }
+        // Sisipkan sebelum baris Contact yang udah kegeser (baris 20+delta)
+        const contactRow = 20+sumDelta;
+        const marker = '<row r="'+contactRow+'"';
+        const pos = sx.indexOf(marker);
+        if(pos>=0) sx = sx.slice(0,pos) + extra + sx.slice(pos);
+        else sx = sx.replace("</sheetData>", extra + "</sheetData>");
+      }
+      // 5) Update dimension & footer Page 3 of TOT (sekarang di 51+delta)
+      // Footer udah kegeser otomatis di langkah 1, tapi setCell di bawah butuh ref baru, jadi handle di loop bawah.
+    }
+    const sumMaxRow = 9 + Math.max(SUMMARY.length, 11) - 1;
+    for(let si=0; si<Math.max(SUMMARY.length, 11); si++){
+      const rNo = 9 + si;
+      if(si < SUMMARY.length){
+        const sr = SUMMARY[si];
+        sx = setAuto(sx, "A"+rNo, sr.test);
+        const col = { Pass: "E", Fail: "F", Data: "G" }[sr.hasil] || "E";
+        ["E","F","G"].forEach(cc => { sx = setCell(sx, cc + rNo, cc === col ? "X" : ""); });
+        sx = setAuto(sx, "H"+rNo, sr.comments);
+      } else {
+        try{ sx = setCell(sx, "A"+rNo, ""); }catch(e){}
+        ["E","F","G"].forEach(cc => { try{ sx = setCell(sx, cc + rNo, ""); }catch(e){} });
+        try{ sx = setCell(sx, "H"+rNo, ""); }catch(e){}
+      }
+    }
+    // Update footer Page 3 (kalau kegeser)
+    try{ sx = setCell(sx, "A"+(51+sumDelta), "Page 3 of " + TOT); }catch(e){}
     for (const fl of FLD.filter(x => x.p === p)) {
       const v = fl.el.value;
+      let flC = fl.c;
+      if(sumDelta>0){
+        const mm = flC.match(/^([A-Z]+)(\d+)$/);
+        if(mm && +mm[2]>=20) flC = mm[1] + (+mm[2]+sumDelta);
+      }
       if (fl.k === "xs") {
-        const r = fl.c.slice(1), col = { Pass: "E", Fail: "F", Data: "G" }[v];
+        const r = flC.slice(1), col = { Pass: "E", Fail: "F", Data: "G" }[v];
         ["E", "F", "G"].forEach(cc => { sx = setCell(sx, cc + r, cc === col ? "X" : ""); });
-      } else sx = setAuto(sx, fl.c, v);
+      } else sx = setAuto(sx, flC, v);
     }
-    sx = setCell(sx, "A51", "Page 3 of " + TOT);
+    sx = setCell(sx, "A"+(51+sumDelta), "Page 3 of " + TOT);
     zip.file(P + p + ".xml", sx);
   }
   { // tautan email halaman 3 ikut diperbarui
