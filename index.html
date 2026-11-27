@@ -1821,12 +1821,16 @@ async function exportXlsx(mode) {
   if (!rno || !client) throw new Error("Report No. dan Nama Klien wajib diisi.");
   const zip = await JSZip.loadAsync(TEMPLATE_B64, { base64: true });
   const P = "xl/worksheets/sheet";
-  const o4 = await zip.file(P + "4.xml").async("string");
+  // GESER KANAN SEMUA HALAMAN: Template asli left 0.708" right 0.197" -> isi masih jauh dari garis kanan di PDF (lihat revisi atasan).
+  // Baru: left 0.95" right 0.08" -> isi kegeser ke kanan ~0.24" (~6mm) mepet ke garis, berlaku untuk Excel + PDF (PDF baca pageMargins dari Excel).
+  const shiftMargins = (xml) => xml.replace(/<pageMargins[^>]*\/>/, '<pageMargins left="0.95" right="0.08" top="0.23622047244094491" bottom="0.74803149606299213" header="0" footer="0"/>');
+  let o4 = await zip.file(P + "4.xml").async("string");
+  o4 = shiftMargins(o4);
   syncHasilUjiFromSummary(true); const pages = layoutPages(o4), TOT = 3 + pages.length;
   await buildContentPages(zip, o4, pages, TOT);
 
   // --- Halaman 1 ---
-  let s1 = await zip.file(P + "1.xml").async("string");
+  let s1 = shiftMargins(await zip.file(P + "1.xml").async("string"));
   const [y, m, d] = $("date").value.split("-");
   const dateTxt = "Date :  " + String(+d).padStart(2,"0") + " " + MONTHS[+m-1] + " " + y;
   s1 = setCell(s1, "F2", "Report No. : " + rno);
@@ -1841,7 +1845,7 @@ async function exportXlsx(mode) {
 
   // --- Halaman 2-5: Report No. & klien diambil dari halaman 1 lewat rumus; perbarui nilai cache ---
   for (let i = 2; i <= TOT; i++) {
-    let t = await zip.file(P + i + ".xml").async("string");
+    let t = shiftMargins(await zip.file(P + i + ".xml").async("string"));
     t = t.split("<v>" + OLD_REPORT + "</v>").join("<v>" + esc("Report No. : " + rno) + "</v>")
          .split("<v>" + OLD_CLIENT + "</v>").join("<v>" + esc(client) + "</v>");
     zip.file(P + i + ".xml", t);
@@ -1849,7 +1853,7 @@ async function exportXlsx(mode) {
 
 
   // --- Halaman 2 ---
-  let s2 = await zip.file(P + "2.xml").async("string");
+  let s2 = shiftMargins(await zip.file(P + "2.xml").async("string"));
   P2.forEach((f, i) => {
     const v = $("p2_" + i).value;
     if (f[2] === "d") { if (!v) throw new Error(f[0] + " wajib diisi."); s2 = setNum(s2, f[1], serial(v)); }
@@ -1861,7 +1865,7 @@ async function exportXlsx(mode) {
 
   // --- Halaman 3–5 ---
   for (const p of [3]) {
-    let sx = await zip.file(P + p + ".xml").async("string");
+    let sx = shiftMargins(await zip.file(P + p + ".xml").async("string"));
     // --- Summary Of Test Result (dinamis, sampai 30 baris) ---
     // FIX E14: Template asli LL Bean cuma muat 5 tes di Summary (baris 9-13). Baris 14 itu baris kosong pemisah (cuma ada A14,B14), bukan baris tes.
     // Jadi kalau SUMMARY > 5, geser semua baris >=14 ke bawah, bukan >=20.
