@@ -1360,7 +1360,7 @@ function renderDyn() {
   h += '<div class="pg4-top"><button type="button" class="primary" data-act="addsec:NEW">+ Tambah Jenis Tes Baru</button><button type="button" class="green" data-act="addsec:CUSTOM">+ Tambah Group Hasil Uji (Custom)</button><button type="button" data-act="resetall:ALL">Reset ke Template LL Bean</button></div>';
   h += '<p style="font-size:12px;color:#475569;margin:0 0 12px;line-height:1.6">Per buyer beda tes? Di sini semua kolom udah bisa <b>+ Grup / Hapus Grup</b>. Kalau tes-nya nggak ada sama sekali, klik <b>+ Tambah Jenis Tes Baru</b>. Kalau tes-nya nggak kepake buat buyer ini, klik <b>Hapus Grup</b> sampai 0 grup, atau <b>Hapus Section</b> — nanti di Excel / PDF tes itu otomatis nggak muncul.</p>';
   SEC.forEach(sc => {
-    const s = S[sc.k];
+    const s = S[sc.k]; if(!s) return;
     h += "<fieldset><legend>" + sc.t + "</legend>";
     if(s.isGeneric){ h += '<div style="font-size:12px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;padding:8px 10px;border-radius:8px;margin:0 0 10px;line-height:1.5"><b>Template masih dalam pengerjaan</b> — belum ada template Excel persis-nya dari sampean. Hapus tes ini dari Summary & pilih yang Template Sudah Ada aja, atau <b>kirim Excel aslinya</b> biar tak bikinin persis kayak Weight kemarin.</div>'; }
     h += '<div class="sec-tools"><button type="button" class="mini add" data-act="addg:' + sc.k + '">+ Grup</button><button type="button" class="mini" data-act="dupsec:' + sc.k + '">Duplikat Tes Ini</button><button type="button" class="mini del" data-act="delsec:' + sc.k + '">Hapus Section Ini</button><span style="font-size:11px;color:#64748b;align-self:center">Total grup: ' + s.groups.length + ' — kalau 0, tes ini nggak ikut ke-export</span></div>';
@@ -1418,14 +1418,14 @@ $("pg4").addEventListener("click", e => {
   }
   if(a.startsWith("dupg:")){
     const p = a.slice(5); const parts = p.split("."); const gi = +parts[parts.length-1]; const secKey = parts[0];
-    const gs = S[secKey].groups; if(!gs || gi<0 || gi>=gs.length) return;
+    const gs = S[secKey]?.groups; if(!gs || gi<0 || gi>=gs.length) return;
     const c = JSON.parse(JSON.stringify(gs[gi])); c.name = (c.name||"") + " (Copy)"; gs.splice(gi+1, 0, c); renderDyn(); return;
   }
   const [op, p] = [a.slice(0, 4), a.slice(5)], parts = p.split("."), idx = +parts[parts.length - 1];
   if (op === "addr") { const arr = getP(p); arr.push(arr.length ? arr[0].map(() => "") : ["","","",""]); }
   else if (op === "delr") { const arr = getP(parts.slice(0, -1).join(".")); arr.splice(idx, 1); }
   else if (op === "addg") {
-    const gs = S[p].groups;
+    const gs = S[p]?.groups; if(!gs) return;
     if(!gs.length){
       const sc = SEC.find(x=>x.k===p);
       const gfKeys = (sc && sc.gf ? sc.gf.map(f=>f[0]) : ["name"]);
@@ -1468,7 +1468,7 @@ function makeUnits(o4) {
     return n;
   };
   // Seam
-  if (S.seam.groups.length) U.push({ first: 1, build(n0, hd) {
+  if (S.seam?.groups?.length) U.push({ first: 1, build(n0, hd) {
     const s = S.seam, x = [], m = []; let n = n0;
     if (hd) n = head(s, 1)(n, x, m);
     const t = n;
@@ -1491,7 +1491,7 @@ function makeUnits(o4) {
     return { xml: x.join(""), merges: m, h: n - n0 };
   }});
   // Dimensional (satu tabel per grup)
-  S.dim.groups.forEach((g, gi) => U.push({ first: !gi, build(n0, hd) {
+  (S.dim?.groups||[]).forEach((g, gi) => U.push({ first: !gi, build(n0, hd) {
     const s = S.dim, x = [], m = []; let n = n0;
     if (hd) n = head(s)(n, x, m);
     if (g.name) { x.push(row(n, fill(106), { A: g.name })); m.push("A" + n + ":J" + n); n++; }
@@ -1509,7 +1509,7 @@ function makeUnits(o4) {
     return { xml: x.join(""), merges: m, h: n - n0 };
   }}));
   // Wash and Wear (satu tabel per grup)
-  S.ww.groups.forEach((g, gi) => U.push({ first: !gi, build(n0, hd) {
+  (S.ww?.groups||[]).forEach((g, gi) => U.push({ first: !gi, build(n0, hd) {
     const s = S.ww, x = [], m = []; let n = n0;
     if (hd) n = head(s)(n, x, m);
     x.push(row(n, [140,136,136,140,140,140,140,140,140,135], { A: "Assessment Point:\n" + s.garment, D: "Test Result (Grade)" + (g.name ? " " + g.name : ""), H: "Min. (Grade)", J: "Rating" }));
@@ -1525,7 +1525,7 @@ function makeUnits(o4) {
     return { xml: x.join(""), merges: m, h: n - n0 };
   }}));
   // Appearance
-  S.app.groups.forEach((gApp, giApp) => { if(!gApp.rows.length) return; U.push({ first: !giApp, build(n0, hd) {
+  (S.app?.groups||[]).forEach((gApp, giApp) => { if(!gApp.rows.length) return; U.push({ first: !giApp, build(n0, hd) {
     const s = S.app, x = [], m = []; let n = n0;
     if (hd) n = head(s)(n, x, m);
     if(gApp.name){ x.push(row(n, fill(106), { A: gApp.name })); m.push("A" + n + ":J" + n); n++; }
@@ -1537,7 +1537,7 @@ function makeUnits(o4) {
     });
     return { xml: x.join(""), merges: m, h: n - n0 }; }}); });
   // Attachment
-  S.att.groups.forEach((gAtt, giAtt) => { if(!gAtt.rows.length) return; U.push({ first: !giAtt, build(n0, hd) {
+  (S.att?.groups||[]).forEach((gAtt, giAtt) => { if(!gAtt.rows.length) return; U.push({ first: !giAtt, build(n0, hd) {
     const s = S.att, g = gAtt, x = [], m = []; let n = n0;
     n = head(s, 0, 1)(n, x, m);
     if(g.name){ x.push(row(n, fill(106), { A: g.name })); m.push("A" + n + ":J" + n); n++; }
@@ -1551,7 +1551,7 @@ function makeUnits(o4) {
     m.push("H" + f + ":I" + (n - 1), "J" + f + ":J" + (n - 1));
     return { xml: x.join(""), merges: m, h: n - n0 }; }}); });
   // Weight (ASTM D3776) - dari Excel sampean: g/m.Sq -> Oz/Sq.Yd = g/m.Sq / 33.906
-  S.weight.groups.forEach((g, gi) => U.push({ first: !gi, build(n0, hd) {
+  (S.weight?.groups||[]).forEach((g, gi) => U.push({ first: !gi, build(n0, hd) {
     const s = S.weight, x = [], m = []; let n = n0;
     if (hd) n = head(s)(n, x, m);
     if (g.name) { x.push(row(n, fill(106), { A: g.name })); m.push("A" + n + ":J" + n); n++; }
