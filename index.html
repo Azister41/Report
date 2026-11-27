@@ -1572,7 +1572,7 @@ function makeUnits(o4) {
     return { xml: x.join(""), merges: m, h: n - n0 };
   }}));
   // --- Custom sections ---
-  SEC.filter(sc=>!["seam","dim","ww","app","att"].includes(sc.k)).forEach((sc, giC) => {
+  SEC.filter(sc=>!["seam","dim","ww","app","att","weight"].includes(sc.k)).forEach((sc, giC) => {
     const sC = S[sc.k]; if(!sC || !sC.groups || !sC.groups.length) return;
     sC.groups.forEach((gC, gi) => {
       if(!gC.rows.length) return;
