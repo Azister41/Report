@@ -753,11 +753,11 @@ body.locked .topbar, body.locked .main, body.locked #toast, body.locked #amodal,
          <div class="panel" id="panelSecurity"><div class="ph"><h2>Cek Keamanan</h2><span class="an-sub" style="font-size:11px;color:#991b1b">Admin only</span><span class="an-sub">Audit 26 Nov 2026 — Fix Allowlist, BUKAN Verifikasi Email</span></div><div style="padding:4px 18px 16px">
            <div style="font-size:12.5px;line-height:1.6;color:#334155">
              <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:8px 10px;margin-bottom:8px"><b>Kenapa verifikasi email DIBATALKAN?</b><br>Karena login-mu pake <b>@texlab.com</b> yang <b>bukan email beneran</b>. Firebase ngirim link verifikasi ke inbox <b>fahim@texlab.com</b>. Kalau inbox itu nggak ada (nggak ada Google Workspace / cPanel / mailbox Texlab), email-nya <b>nggak akan pernah nyampe, mental / bounce</b>. Jadi kalau tak wajibin verifikasi, sampean sendiri nggak bisa login. Makanya tak ganti cara.</div>
-             <div>✅ <b>Rules sekarang pake ALLOWLIST:</b> cuma <b>azis@texlab.com, fahim@texlab.com, riski@texlab.com</b> yang boleh baca/tulis. Orang luar bikin akun <b>hacker@texlab.com</b> bakal <b>DITOLAK</b> Firestore, karena namanya nggak ada di daftar.</div>
-             <div>✅ <b>Login Gate:</b> nggak login nggak bisa liat data. Password tetep wajib, salah password ditolak.</div>
-             <div>✅ <b>Daftar Akun:</b> cuma admin yang bisa bikin akun di portal. Abis bikin, <b>wajib tambahin email-nya ke Allowlist di Rules</b>, baru bisa baca data.</div>
-             <div>✅ <b>Riwayat:</b> boleh baca + bikin baru, tapi <b>nggak boleh edit / hapus</b>.</div>
-             <div>✅ <b>XSS:</b> semua input di-render pake <b>esc()</b>.</div>
+             <div><b>Rules sekarang pake ALLOWLIST:</b> cuma <b>azis@texlab.com, fahim@texlab.com, riski@texlab.com</b> yang boleh baca/tulis. Orang luar bikin akun <b>hacker@texlab.com</b> bakal <b>DITOLAK</b> Firestore, karena namanya nggak ada di daftar.</div>
+             <div><b>Login Gate:</b> nggak login nggak bisa liat data. Password tetep wajib, salah password ditolak.</div>
+             <div><b>Daftar Akun:</b> cuma admin yang bisa bikin akun di portal. Abis bikin, <b>wajib tambahin email-nya ke Allowlist di Rules</b>, baru bisa baca data.</div>
+             <div><b>Riwayat:</b> boleh baca + bikin baru, tapi <b>nggak boleh edit / hapus</b>.</div>
+             <div><b>XSS:</b> semua input di-render pake <b>esc()</b>.</div>
              <div>⚠️ <b>API Key di file HTML:</b> bukan bocor, API Key Firebase web emang boleh keliatan. Yang ngamanin itu Rules Allowlist, bukan nyembunyiin key. Tapi jangan upload file ini ke GitHub publik.</div>
              <div>⚠️ <b>Kalau @texlab.com-mu ternyata email beneran:</b> misal sampean punya mailbox di Google Workspace / hosting buat <b>fahim@texlab.com</b> dan bisa buka inbox-nya, bilang aja, tak balikin ke mode verifikasi email. Tapi kalau inbox-nya nggak ada, jangan pake verifikasi.</div>
              <div style="margin-top:8px;background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:8px 10px"><b>Wajib lakuin di Console (1x aja):</b><br>1. Copy Rules baru di atas (yang ada <b>allowlist</b>) → Firestore → Rules → Publish. Ini yang paling penting, karena Rules lama masih ngebolehin semua @texlab.com.<br>2. Authentication → Users → pastikan cuma ada 3 akun itu. Kalau ada akun aneh yang sampean nggak kenal, hapus.<br>3. Kalau mau nambah orang baru, misal <b>andi@texlab.com</b>: bikin akunnya di Authentication → Add user, terus tambahin <b>'andi@texlab.com'</b> ke daftar di Rules, Publish lagi.</div>
@@ -1085,20 +1085,75 @@ let SUMMARY = [
   { test: "Appearance After Laundering", hasil: "Pass", comments: "" },
   { test: "Wash and Wear", hasil: "Pass", comments: "" },
 ];
+const TEST_OPTIONS = [
+  "Attachment Strength",
+  "Seam Strength",
+  "Dimensional Change to Home Laundering",
+  "Appearance After Laundering",
+  "Wash and Wear",
+  "Fabric Weight",
+  "Colorfastness to Washing",
+  "Colorfastness to Perspiration",
+  "Colorfastness to Light",
+  "Colorfastness to Dry Cleaning",
+  "Colorfastness to Water",
+  "Colorfastness to Crocking (Rubbing)",
+  "Pilling Resistance",
+  "Stretch & Recovery",
+  "Seam Slippage",
+  "Button / Snap Pull Strength",
+  "Zipper Strength",
+  "Fiber Content",
+  "Flammability",
+  "pH Value",
+  "Formaldehyde",
+  "Azo Dyes",
+  "Dimensional Change to Dry Cleaning",
+  "Appearance After Dry Cleaning"
+];
+const READY_TESTS = [
+  "Attachment Strength",
+  "Seam Strength",
+  "Dimensional Change to Home Laundering",
+  "Appearance After Laundering",
+  "Wash and Wear",
+  "Fabric Weight"
+];
+// Tes yang udah punya template Excel persis (6). Sisanya di dropdown masih generic.
+
 function renderSummary(){
   const pg3 = $("pg3"); if(!pg3) return;
   const old = pg3.querySelector('[data-sumwrap="1"]'); if(old) old.remove();
   const wrap = document.createElement("div"); wrap.setAttribute("data-sumwrap","1");
   const over = SUMMARY.length > 11;
   let h = '<fieldset><legend>Summary Of Test Result</legend>';
-  h += '<div class="sum-sync-note">✨ <b>Auto Template — Ketik nama tes di Summary, template Hasil Uji-nya otomatis muncul.</b><br>Cara baru: Tulis aja nama tes-nya di bawah (mis. <i>Colorfastness to Washing</i>), nanti di tab <b>Hasil Uji</b> langsung muncul tabelnya + method-nya udah keisi saran. Tes yang nggak ditulis di Summary, otomatis nggak ikut ke-export — jadi Hasil Uji nggak kebanyakan lagi. <button type="button" class="sum-add" id="sumSyncBtn" style="margin-left:6px">↻ Sync Hasil Uji Sekarang</button></div>';
+  h += '<div class="sum-sync-note"><b>Dropdown Tes — Pilih Tes Dari Daftar.</b><br>Cuma yang <b>Template Sudah Ada (6 tes)</b> yang bisa dipilih — dijamin Excel-nya persis kayak Excel sampean. Yang <b>Template Masih Dalam Pengerjaan</b> warnanya lebih gelap dan nggak bisa dipilih biar nggak salah pencet. Kalau diklik, muncul tulisan Template masih dalam pengerjaan. Kalau ada template baru, <b>kirim Excel-nya</b> kayak Weight kemarin, nanti tak bikinin persis terus tak aktifin. Tes yang nggak dipilih di Summary, otomatis nggak ikut ke-export. <button type="button" class="sum-add" id="sumSyncBtn" style="margin-left:6px">↻ Sync Hasil Uji Sekarang</button></div>';
   h += '<div class="sum-top"><button type="button" class="sum-add" id="sumAddBtn">+ Tambah Baris</button><span class="sum-count'+(over?' over':'')+'">Total: '+SUMMARY.length+' baris'+(over?' — di Excel halaman Summary otomatis memanjang (Contact & Remarks kegeser ke bawah), aman sampai 30 baris.':' — muat 1 halaman (sampai 11).')+'</span></div>';
-  h += '<div class="sum-quick"><button type="button" data-quick="1">+ Tambah 1</button><button type="button" data-quick="5">+ Tambah 5 Sekaligus</button><button type="button" data-quick="10">+ Tambah 10 Sekaligus</button><button type="button" id="sumFill20">Isi Contoh 20 Metode</button><button type="button" id="sumClear">Kosongkan Semua</button></div>';
-  h += '<p style="font-size:11.5px;color:#475569;margin:6px 0 10px;line-height:1.6">Kadang buyer minta sampai <b>20 metode</b>? Tinggal klik <b>+ Tambah 5 / 10 Sekaligus</b> atau <b>Isi Contoh 20 Metode</b>, isi nama tes-nya. Nggak mentok di 11 lagi, Excel-nya otomatis nambah baris.</p>';
+  h += '<div class="sum-quick"><button type="button" data-quick="1">+ Tambah 1</button><button type="button" data-quick="5">+ Tambah 5 Sekaligus</button><button type="button" data-quick="10">+ Tambah 10 Sekaligus</button><button type="button" id="sumFill20">Isi Template Ready (6)</button><button type="button" id="sumClear">Kosongkan Semua</button></div>';
+  h += '<p style="font-size:11.5px;color:#475569;margin:6px 0 10px;line-height:1.6">Kadang buyer minta sampai <b>20 metode</b>? Sekarang yang bisa dipilih cuma yang udah ada template-nya (6 tes). Nanti kalau sampean kirim 19 template lagi, satu-satu tak bukain kuncinya, jadi dropdown-nya nambah terus. Excel-nya otomatis nambah baris, nggak mentok di 11 lagi.</p>';
   if(!SUMMARY.length) h += '<p style="font-size:12px;color:#64748b;background:#fff7ed;border:1px solid #fed7aa;padding:8px 10px;border-radius:8px">Summary lagi kosong (0 baris). Klik <b>+ Tambah Baris</b> buat nambah lagi.</p>';
   SUMMARY.forEach((r, i)=>{
+    let cur = (r.test||"").trim();
+    if(cur==="Weight"){ cur="Fabric Weight"; r.test="Fabric Weight"; }
+    const isKnown = TEST_OPTIONS.includes(cur);
+    const selVal = !cur ? "" : (isKnown ? cur : "__custom__");
+    const isReady = READY_TESTS.includes(cur);
+    const isGenericOpt = cur && !isReady && TEST_OPTIONS.includes(cur);
+    let opts = '<option value="">— Pilih Tes —</option>';
+    opts += '<optgroup label="Template Sudah Ada — Excel Persis (6)">';
+    READY_TESTS.forEach(nm=>{ opts += '<option value="'+esc(nm)+'"'+(selVal===nm?' selected':'')+'>'+esc(nm)+'</option>'; });
+    opts += '</optgroup>';
+    opts += '<optgroup label="Template Masih Dalam Pengerjaan">';
+    TEST_OPTIONS.filter(nm=>!READY_TESTS.includes(nm)).forEach(nm=>{ opts += '<option value="'+esc(nm)+'" data-locked="1" style="color:#64748b;background:#e2e8f0"'+(selVal===nm?' selected':'')+'>'+esc(nm)+' — Template masih dalam pengerjaan</option>'; });
+    opts += '</optgroup>';
+    opts += '<option value="__custom__" data-locked="1" style="color:#64748b;background:#e2e8f0"'+(selVal==="__custom__"?' selected':'')+'>Tes Lainnya — Template masih dalam pengerjaan</option>';
+    let hintHtml = '';
+    if(!cur) hintHtml = '';
+    else if(isReady) hintHtml = '<div data-sum-hint="'+i+'" style="font-size:11px;color:#15803d;margin-top:4px">Template Excel persis — Hasil Uji langsung bener.</div>';
+    else if(isGenericOpt) hintHtml = '<div data-sum-hint="'+i+'" style="font-size:11px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;padding:4px 6px;border-radius:6px;margin-top:4px">Template masih dalam pengerjaan — Hapus baris ini & pilih yang Template Sudah Ada aja, atau kirim Excel aslinya biar tak bikinin.</div>';
+    else if(selVal==="__custom__") hintHtml = '<div data-sum-hint="'+i+'" style="font-size:11px;color:#475569;margin-top:4px">Template masih dalam pengerjaan — kirim Excel aslinya dulu biar tak bikinin template-nya.</div>';
     h += '<div class="sum-row"><div class="tr" style="grid-template-columns:1fr 140px 1fr auto">';
-    h += '<div><label>Test Requested #'+(i+1)+'</label><input data-sum="test" data-i="'+i+'" value="'+esc(r.test)+'" placeholder="mis. Colorfastness to Washing"></div>';
+    h += '<div><label>Test Requested #'+(i+1)+'</label><select data-sum="test" data-i="'+i+'">'+opts+'</select><input data-sum="test_custom" data-i="'+i+'" value="'+(selVal==="__custom__"?esc(cur):"")+'" placeholder="Ketik nama tes baru, mis. Colorfastness to Water" style="margin-top:6px;'+(selVal==="__custom__"?'':'display:none')+'">'+hintHtml+'</div>';
     h += '<div><label>Hasil</label><select data-sum="hasil" data-i="'+i+'"><option'+(r.hasil==="Pass"?' selected':'')+'>Pass</option><option'+(r.hasil==="Fail"?' selected':'')+'>Fail</option><option'+(r.hasil==="Data"?' selected':'')+'>Data</option></select></div>';
     h += '<div><label>Comments</label><input data-sum="comments" data-i="'+i+'" value="'+esc(r.comments)+'" placeholder="Catatan"></div>';
     h += '<button type="button" class="sum-del" data-sumdel="'+i+'" title="Hapus baris ini">×</button>';
@@ -1107,12 +1162,50 @@ function renderSummary(){
   h += '<button type="button" class="sum-add" data-sumadd="1">+ Tambah Baris</button></fieldset>';
   wrap.innerHTML = h;
   pg3.insertBefore(wrap, pg3.firstChild);
-  wrap.querySelectorAll("[data-sum]").forEach(inp=>{ inp.oninput=()=>{ const ii=+inp.dataset.i; SUMMARY[ii][inp.dataset.sum]=inp.value; if(inp.dataset.sum==="test") scheduleSyncFromSummary(); }; inp.onchange=()=>{ const ii=+inp.dataset.i; SUMMARY[ii][inp.dataset.sum]=inp.value; if(inp.dataset.sum==="test") syncHasilUjiFromSummary(false); }; });
+  wrap.querySelectorAll("[data-sum]").forEach(inp=>{
+    if(inp.dataset.sum==="test"){
+      const onPick = ()=>{
+        const ii=+inp.dataset.i;
+        const v = inp.value;
+        const customInp = wrap.querySelector('[data-sum="test_custom"][data-i="'+ii+'"]');
+        const hintEl = wrap.querySelector('[data-sum-hint="'+ii+'"]');
+        const setHint = (txt, color, bg)=>{
+          if(hintEl){ hintEl.style.display=""; hintEl.style.color=color; if(bg){ hintEl.style.background=bg; hintEl.style.border="1px solid #fde68a"; hintEl.style.padding="4px 6px"; hintEl.style.borderRadius="6px"; } else { hintEl.style.background=""; hintEl.style.border=""; hintEl.style.padding=""; } hintEl.textContent=txt; }
+          else {
+            const holder = inp.parentNode; const d=document.createElement("div"); d.setAttribute("data-sum-hint", ii); d.style.cssText="font-size:11px;margin-top:4px;color:"+color; d.textContent=txt; holder.appendChild(d);
+          }
+        };
+        // Yang belum ada template-nya: tampilkan tulisan & balikin ke pilihan sebelumnya (nggak bisa dipilih)
+        const opt = inp.options[inp.selectedIndex];
+        const isLocked = v==="__custom__" || (opt && opt.dataset && opt.dataset.locked==="1") || (v && !READY_TESTS.includes(v) && TEST_OPTIONS.includes(v));
+        if(isLocked){
+          if(customInp) customInp.style.display="none";
+          // Balikin dropdown ke nilai SUMMARY sebelumnya (atau kosong kalau baris baru)
+          inp.value = SUMMARY[ii].test && READY_TESTS.includes(SUMMARY[ii].test) ? SUMMARY[ii].test : "";
+          setHint("Template masih dalam pengerjaan", "#b45309", "#fffbeb");
+          return;
+        }
+        if(customInp){ customInp.style.display="none"; customInp.value=""; }
+        SUMMARY[ii].test = v;
+        if(!v){ if(hintEl) hintEl.style.display="none"; }
+        else if(READY_TESTS.includes(v)) setHint("Template Excel persis — Hasil Uji langsung bener.", "#15803d", "");
+        scheduleSyncFromSummary();
+        syncHasilUjiFromSummary(false);
+      };
+      inp.oninput = onPick; inp.onchange = onPick;
+    } else if(inp.dataset.sum==="test_custom"){
+      inp.oninput=()=>{ const ii=+inp.dataset.i; SUMMARY[ii].test=inp.value; scheduleSyncFromSummary(); };
+      inp.onchange=()=>{ const ii=+inp.dataset.i; SUMMARY[ii].test=inp.value; syncHasilUjiFromSummary(false); };
+    } else {
+      inp.oninput=()=>{ const ii=+inp.dataset.i; SUMMARY[ii][inp.dataset.sum]=inp.value; };
+      inp.onchange=()=>{ const ii=+inp.dataset.i; SUMMARY[ii][inp.dataset.sum]=inp.value; };
+    }
+  });
   wrap.querySelectorAll("[data-sumdel]").forEach(btn=>{ btn.onclick=()=>{ const ii=+btn.dataset.sumdel; SUMMARY.splice(ii,1); renderSummary(); syncHasilUjiFromSummary(false); }; });
   const syncBtn = wrap.querySelector("#sumSyncBtn"); if(syncBtn) syncBtn.onclick=()=>{ syncHasilUjiFromSummary(false); alert("Hasil Uji udah di-sync dari Summary! Cek tab Hasil Uji — cuma tes yang ada di Summary yang muncul."); };
-  wrap.querySelectorAll("[data-sumadd], #sumAddBtn").forEach(btn=>{ btn.onclick=()=>{ SUMMARY.push({ test: "", hasil: "Pass", comments: "" }); renderSummary(); setTimeout(()=>{ const inputs = wrap.querySelectorAll('[data-sum="test"]'); const lastInp = inputs[inputs.length-1]; if(lastInp) lastInp.focus(); }, 50); }; });
+  wrap.querySelectorAll("[data-sumadd], #sumAddBtn").forEach(btn=>{ btn.onclick=()=>{ SUMMARY.push({ test: "", hasil: "Pass", comments: "" }); renderSummary(); setTimeout(()=>{ const sels = wrap.querySelectorAll('[data-sum="test"]'); const lastSel = sels[sels.length-1]; if(lastSel) lastSel.focus(); }, 50); }; });
   wrap.querySelectorAll("[data-quick]").forEach(btn=>{ btn.onclick=()=>{ const n=+btn.dataset.quick; for(let k=0;k<n;k++) SUMMARY.push({ test: "", hasil: "Pass", comments: "" }); renderSummary(); }; });
-  const fill20 = wrap.querySelector("#sumFill20"); if(fill20) fill20.onclick=()=>{ if(!confirm("Isi Summary dengan contoh 20 metode? Data Summary yang sekarang bakal keganti.")) return; SUMMARY = ["Attachment Strength","Seam Strength","Dimensional Change to Home Laundering","Appearance After Laundering","Wash and Wear","Colorfastness to Washing","Colorfastness to Perspiration","Colorfastness to Light","Colorfastness to Dry Cleaning","Pilling Resistance","Fabric Weight","Stretch & Recovery","Seam Slippage","Button / Snap Pull Strength","Zipper Strength","Fiber Content","Flammability","pH Value","Formaldehyde","Azo Dyes"].map(nm=>({test:nm, hasil:"Pass", comments:""})); renderSummary(); };
+  const fill20 = wrap.querySelector("#sumFill20"); if(fill20) fill20.onclick=()=>{ if(!confirm("Isi Summary dengan 6 tes yang udah ada template persis-nya? Data Summary yang sekarang bakal keganti.")) return; SUMMARY = ["Attachment Strength","Seam Strength","Dimensional Change to Home Laundering","Appearance After Laundering","Wash and Wear","Fabric Weight"].map(nm=>({test:nm, hasil:"Pass", comments:""})); renderSummary(); syncHasilUjiFromSummary(false); };
   const clr = wrap.querySelector("#sumClear"); if(clr) clr.onclick=()=>{ if(!confirm("Kosongkan semua baris Summary?")) return; SUMMARY=[]; renderSummary(); };
 }
 const FLD = []; // {p, c, k, el}
@@ -1148,7 +1241,7 @@ function setCache(xml, ref, n) {
 
 
 // ---------- Hasil Uji (dinamis) ----------
-const S = {"seam": {"title": "Seam Strength", "method": "ASTM D1683/D1683M-22 (Speed: 305 mm/min, Gauge Length: 75 mm)", "garment": "Bottom", "groups": [{"name": "", "rs": "25", "rt": "35", "rows": [["Front Seam", "NSS", "11", "STB", "PASS"], ["Inseam", "NSS", "67", "STB", "PASS"], ["Outseam", "NSS", "59.2", "FR", "PASS"], ["Back Seam", "NSS", "116", "STB", "PASS"], ["Waist", "NSS", "158", "STB", "PASS"], ["Yoke", "NSS", "40.9", "STB", "PASS"], ["Crotch", "NSS", "84.1", "STB", "PASS"]]}]}, "dim": {"title": "Dimensional Change to Home Laundering", "method": "AATCC 150-2025 Modified (Tide Original, Machine Wash at 30°C, Normal Cycle, Tumble Dry Low, With 1.8 lbs Load, After 3 Washes)", "garment": "Bottom", "groups": [{"name": "", "range": "-4 to +4%", "rating": "PASS", "rows": [["Body Length", "14", "13.7"], ["Front Rise", "10.8", "10.6"], ["Back Rise", "16.1", "15.8"], ["Inseam", "4.1", "4"], ["Outseam", "14.5", "14.2"], ["Waist : Relaxed", "16", "15.8"], ["Waist : Stretch", "19.5", "19.5"], ["Thigh", "12", "11.8"], ["Leg Opening", "11.8", "11.6"]]}]}, "ww": {"title": "Wash and Wear", "method": "AATCC 143-2018t (Tide Original, Machine Wash at 30°C, Normal Cycle, Tumble Dry Low, With 1.8 lbs Load, After 3 Washes)", "garment": "Bottom", "groups": [{"name": "", "min": "3", "rating": "PASS", "rows": [["Waist", "4.5", "4"], ["Front Rise", "5", "4"], ["Out Seam", "4.5", "4"], ["In Seam", "5", "4.5"], ["Yoke", "4.5", "4"], ["Pocket", "4", "3.5"], ["Back Rise", "4.5", "3.5"], ["Hem", "5", "4"], ["Fabric Smoothness", "5", "4"]]}]}, "app": {"title": "Appearance After Laundering", "method": "LL Bean Method (Tide Original, Machine Wash at 30°C, Normal Cycle, Tumble Dry Low, With 1.8 lbs Load, After 3 Washes)", "groups": [{"rows": [["Color Change ", "4.5", "3.5", "PASS"], ["Self Staining/Cross Staining", "/", "/", "/"], ["Surface Change", "4.5 (Slight Change)", "3", "PASS"], ["General Observation", "Satisfactory", "Satisfactory", "PASS"]]}]}, "att": {"title": "Attachment Strength Test", "std": "(ASTM F963)", "groups": [{"min": "15 lbf for 10 seconds", "rating": "PASS", "rows": [["1 Pcs Zipper Puller", " > 15 lbf for 10 seconds"]]}]}};
+const S = {"seam": {"title": "Seam Strength", "method": "ASTM D1683/D1683M-22 (Speed: 305 mm/min, Gauge Length: 75 mm)", "garment": "Bottom", "groups": [{"name": "", "rs": "25", "rt": "35", "rows": [["Front Seam", "NSS", "11", "STB", "PASS"], ["Inseam", "NSS", "67", "STB", "PASS"], ["Outseam", "NSS", "59.2", "FR", "PASS"], ["Back Seam", "NSS", "116", "STB", "PASS"], ["Waist", "NSS", "158", "STB", "PASS"], ["Yoke", "NSS", "40.9", "STB", "PASS"], ["Crotch", "NSS", "84.1", "STB", "PASS"]]}]}, "dim": {"title": "Dimensional Change to Home Laundering", "method": "AATCC 150-2025 Modified (Tide Original, Machine Wash at 30°C, Normal Cycle, Tumble Dry Low, With 1.8 lbs Load, After 3 Washes)", "garment": "Bottom", "groups": [{"name": "", "range": "-4 to +4%", "rating": "PASS", "rows": [["Body Length", "14", "13.7"], ["Front Rise", "10.8", "10.6"], ["Back Rise", "16.1", "15.8"], ["Inseam", "4.1", "4"], ["Outseam", "14.5", "14.2"], ["Waist : Relaxed", "16", "15.8"], ["Waist : Stretch", "19.5", "19.5"], ["Thigh", "12", "11.8"], ["Leg Opening", "11.8", "11.6"]]}]}, "ww": {"title": "Wash and Wear", "method": "AATCC 143-2018t (Tide Original, Machine Wash at 30°C, Normal Cycle, Tumble Dry Low, With 1.8 lbs Load, After 3 Washes)", "garment": "Bottom", "groups": [{"name": "", "min": "3", "rating": "PASS", "rows": [["Waist", "4.5", "4"], ["Front Rise", "5", "4"], ["Out Seam", "4.5", "4"], ["In Seam", "5", "4.5"], ["Yoke", "4.5", "4"], ["Pocket", "4", "3.5"], ["Back Rise", "4.5", "3.5"], ["Hem", "5", "4"], ["Fabric Smoothness", "5", "4"]]}]}, "app": {"title": "Appearance After Laundering", "method": "LL Bean Method (Tide Original, Machine Wash at 30°C, Normal Cycle, Tumble Dry Low, With 1.8 lbs Load, After 3 Washes)", "groups": [{"rows": [["Color Change ", "4.5", "3.5", "PASS"], ["Self Staining/Cross Staining", "/", "/", "/"], ["Surface Change", "4.5 (Slight Change)", "3", "PASS"], ["General Observation", "Satisfactory", "Satisfactory", "PASS"]]}]}, "att": {"title": "Attachment Strength Test", "std": "(ASTM F963)", "groups": [{"min": "15 lbf for 10 seconds", "rating": "PASS", "rows": [["1 Pcs Zipper Puller", " > 15 lbf for 10 seconds"]]}]}, "weight": {"title": "Weight", "method": "ASTM D3776/D3776M-20(2025)", "garment": "Bottom", "groups": [{"name": "", "range": "/", "rating": "DATA", "rows": [["g/m.Sq", "122"]]}]}};
 
 // ---------- Summary -> Hasil Uji: Auto Template ----------
 const DEFAULT_S = JSON.parse(JSON.stringify(S));
@@ -1157,7 +1250,8 @@ const DEFAULT_SEC = [
   { k: "dim", t: "Dimensional Change to Home Laundering", head: [["title","Judul"],["method","Metode","ta"],["garment","Label Garment"]], gf: [["name","Nama grup (Shell/Lining)"],["range","Range"],["rating","Rating",1]], rl: ["Titik ukur","Original (in.)","After Washed (in.)"], rr: [] },
   { k: "ww", t: "Wash and Wear", head: [["title","Judul"],["method","Metode","ta"],["garment","Label Garment"]], gf: [["name","Nama grup (Shell/Lining)"],["min","Min. (Grade)"],["rating","Rating",1]], rl: ["Titik","Before Wash","After 3 Washes"], rr: [] },
   { k: "app", t: "Appearance After Laundering", solo: 1, head: [["title","Judul"],["method","Metode","ta"]], gf: [], rl: ["Assessment","Test Result","Min.","Rating"], rr: [3] },
-  { k: "att", t: "Attachment Strength Test", solo: 1, head: [["title","Judul"],["std","Standar"]], gf: [["min","Min. (Lbf)"],["rating","Rating",1]], rl: ["Component","Test Result"], rr: [] }
+  { k: "att", t: "Attachment Strength Test", solo: 1, head: [["title","Judul"],["std","Standar"]], gf: [["min","Min. (Lbf)"],["rating","Rating",1]], rl: ["Component","Test Result"], rr: [] },
+  { k: "weight", t: "Weight", head: [["title","Judul"],["method","Metode","ta"],["garment","Label Garment"]], gf: [["name","Nama grup (Shell/Lining)"],["range","Range"],["rating","Rating",1]], rl: ["Unit","Test Result (g/m.Sq)"], rr: [] }
 ];
 const S_BACKUP = {}; const SEC_BACKUP = {};
 function slugTest(n){ return String(n||"").toLowerCase().trim().replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"") || "tes"; }
@@ -1170,7 +1264,7 @@ function suggestMethod(name){
   if(n.includes("water")) return "AATCC 107-2013 (Colorfastness to Water)";
   if(n.includes("crocking") || n.includes("rubbing")) return "AATCC 8-2016 (Colorfastness to Crocking)";
   if(n.includes("pilling")) return "ASTM D3512-22 / ISO 12945-2 (Pilling Resistance)";
-  if(n.includes("fabric weight") || n.includes("gsm")) return "ASTM D3776-20 (Fabric Weight)";
+  if(n.includes("fabric weight") || n.includes("gsm") || n.includes("weight")) return "ASTM D3776/D3776M-20(2025)";
   if(n.includes("stretch")) return "ASTM D2594-21 (Stretch & Recovery)";
   if(n.includes("seam slippage")) return "ASTM D1683/D1683M-22 (Seam Slippage)";
   if(n.includes("button") || n.includes("snap")) return "ASTM F963 (Attachment Strength - Button / Snap)";
@@ -1192,6 +1286,7 @@ function getKeyForSummary(name){
   if(n.includes("wash and wear") || n.includes("wash & wear")) return "ww";
   if(n.includes("appearance after")) return "app";
   if(n.includes("attachment")) return "att";
+  if(n.includes("weight") || n.includes("fabric weight") || n.includes("gsm") || n.trim()==="weight") return "weight";
   return "auto_" + slugTest(name);
 }
 let syncTimer = null;
@@ -1225,12 +1320,12 @@ function syncHasilUjiFromSummary(silent){
       const sc = JSON.parse(JSON.stringify(SEC_BACKUP[d.key])); sc.t = d.name; SEC.push(sc); return;
     }
     if(DEFAULT_S[d.key]){
-      S[d.key] = JSON.parse(JSON.stringify(DEFAULT_S[d.key])); S[d.key].title = d.name;
+      S[d.key] = JSON.parse(JSON.stringify(DEFAULT_S[d.key])); S[d.key].title = d.name; S[d.key].isGeneric = false;
       const def = DEFAULT_SEC.find(x=>x.k===d.key); if(def){ const sc = JSON.parse(JSON.stringify(def)); sc.t = d.name; SEC.push(sc); } return;
     }
     // Tes baru yang belum pernah ada -> bikin template generic otomatis, method-nya udah disaranin
     const method = suggestMethod(d.name);
-    S[d.key] = { title: d.name, method: method, garment: "Bottom", groups: [{ name: "", rows: [["", "", "", "PASS"]] }] };
+    S[d.key] = { title: d.name, method: method, garment: "Bottom", isGeneric: true, groups: [{ name: "", rows: [["", "", "", "PASS"]] }] };
     SEC.push({ k: d.key, t: d.name, head: [["title","Judul"],["method","Metode","ta"],["garment","Label Garment"]], gf: [["name","Nama grup (Shell/Lining, boleh kosong)"]], rl: ["Item / Bagian","Hasil","Req.","Rating"], rr: [3] });
   });
   // 3) Urutin SEC sesuai urutan Summary
@@ -1253,7 +1348,7 @@ const SEC = [
   { k: "app", t: "Appearance After Laundering", solo: 1, head: [["title","Judul"],["method","Metode","ta"]], gf: [], rl: ["Assessment","Test Result","Min.","Rating"], rr: [3] },
   { k: "att", t: "Attachment Strength Test", solo: 1, head: [["title","Judul"],["std","Standar"]],
     gf: [["min","Min. (Lbf)"],["rating","Rating",1]], rl: ["Component","Test Result"], rr: [] }
-];
+, { k: "weight", t: "Weight", head: [["title","Judul"],["method","Metode","ta"],["garment","Label Garment"]], gf: [["name","Nama grup (Shell/Lining)"],["range","Range"],["rating","Rating",1]], rl: ["Unit","Test Result (g/m.Sq)"], rr: [] }];
 const ea = s => esc(String(s == null ? "" : s)).replace(/"/g, "&quot;");
 const getP = p => p.split(".").reduce((o, k) => o[k], S);
 const setP = (p, v) => { const a = p.split("."), l = a.pop(); a.reduce((o, k) => o[k], S)[l] = v; };
@@ -1267,6 +1362,7 @@ function renderDyn() {
   SEC.forEach(sc => {
     const s = S[sc.k];
     h += "<fieldset><legend>" + sc.t + "</legend>";
+    if(s.isGeneric){ h += '<div style="font-size:12px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;padding:8px 10px;border-radius:8px;margin:0 0 10px;line-height:1.5"><b>Template masih dalam pengerjaan</b> — belum ada template Excel persis-nya dari sampean. Hapus tes ini dari Summary & pilih yang Template Sudah Ada aja, atau <b>kirim Excel aslinya</b> biar tak bikinin persis kayak Weight kemarin.</div>'; }
     h += '<div class="sec-tools"><button type="button" class="mini add" data-act="addg:' + sc.k + '">+ Grup</button><button type="button" class="mini" data-act="dupsec:' + sc.k + '">Duplikat Tes Ini</button><button type="button" class="mini del" data-act="delsec:' + sc.k + '">Hapus Section Ini</button><span style="font-size:11px;color:#64748b;align-self:center">Total grup: ' + s.groups.length + ' — kalau 0, tes ini nggak ikut ke-export</span></div>';
     sc.head.forEach(f => { h += fin(sc.k + "." + f[0], f[1], f[2]); });
     if(!s.groups.length){
@@ -1344,6 +1440,7 @@ $("pg4").addEventListener("click", e => {
   else if (op === "delg") { const arr = getP(parts.slice(0, -1).join(".")); arr.splice(idx, 1); }
   renderDyn();
 });
+syncHasilUjiFromSummary(true);
 renderDyn();
 
 // ---------- pembuat halaman Hasil Uji ----------
@@ -1453,6 +1550,27 @@ function makeUnits(o4) {
     });
     m.push("H" + f + ":I" + (n - 1), "J" + f + ":J" + (n - 1));
     return { xml: x.join(""), merges: m, h: n - n0 }; }}); });
+  // Weight (ASTM D3776) - dari Excel sampean: g/m.Sq -> Oz/Sq.Yd = g/m.Sq / 33.906
+  S.weight.groups.forEach((g, gi) => U.push({ first: !gi, build(n0, hd) {
+    const s = S.weight, x = [], m = []; let n = n0;
+    if (hd) n = head(s)(n, x, m);
+    if (g.name) { x.push(row(n, fill(106), { A: g.name })); m.push("A" + n + ":J" + n); n++; }
+    x.push(row(n, [119,120,119,120,121,122,123,123,44,45], { A: "Unit", D: "Test Result", H: "Range", J: "Rating" }));
+    m.push("A" + n + ":C" + n, "D" + n + ":G" + n, "H" + n + ":I" + n); n++;
+    const f = n;
+    g.rows.forEach((r, i) => {
+      // Baris 1: g/m.Sq (input user)
+      x.push(row(n, [107,108,109,109,109,109,110,110,116,133], { A: r[0]||"g/m.Sq", D: r[1]||"", H: i ? "" : g.range, J: i ? "" : g.rating }));
+      m.push("A" + n + ":C" + n, "D" + n + ":G" + n, "H" + n + ":I" + n); n++;
+      // Baris 2: Oz/Sq.Yd (rumus = g/m.Sq / 33.906, persis Excel sampean)
+      const prevRow = n - 1;
+      const ozFormula = { f: "D" + prevRow + "/33.906", v: (parseFloat(r[1])||0)/33.906 };
+      x.push(row(n, [107,108,109,109,109,109,110,110,116,133], { A: "Oz/Sq.Yd", D: ozFormula, H: "", J: "" }));
+      m.push("A" + n + ":C" + n, "D" + n + ":G" + n, "H" + n + ":I" + n); n++;
+    });
+    if (n - 1 > f) m.push("H" + f + ":H" + (n - 1), "J" + f + ":J" + (n - 1));
+    return { xml: x.join(""), merges: m, h: n - n0 };
+  }}));
   // --- Custom sections ---
   SEC.filter(sc=>!["seam","dim","ww","app","att"].includes(sc.k)).forEach((sc, giC) => {
     const sC = S[sc.k]; if(!sC || !sC.groups || !sC.groups.length) return;
