@@ -475,6 +475,44 @@ body.locked .topbar, body.locked .main, body.locked #toast, body.locked #amodal,
 .flow span{background:#eff6ff;border:1px solid #dbeafe;padding:6px 10px;border-radius:999px;white-space:nowrap}
 .flow i{color:#94a3b8;font-style:normal}
 
+
+/* ---------- Generic Buyer Form ---------- */
+.generic-wrap{max-width:920px;margin:0 auto}
+.generic-head{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;margin-bottom:12px}
+.generic-head h2{margin:0 0 4px;font-size:18px}
+.generic-head p{margin:0;font-size:12.5px;color:#475569;line-height:1.6}
+.generic-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:700px){.generic-grid{grid-template-columns:1fr}}
+.gpanel{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.gpanel h3{margin:0 0 10px;font-size:14px}
+.gpanel label{font-size:12px;font-weight:700;color:#334155;display:block;margin:8px 0 4px}
+.gpanel input,.gpanel select,.gpanel textarea{width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box}
+.gtable{width:100%;border-collapse:collapse;font-size:12.5px}
+.gtable th{background:#f8fafc;text-align:left;padding:8px;border-bottom:1px solid #e2e8f0}
+.gtable td{padding:8px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+.gtable input,.gtable select{width:100%;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:12.5px;box-sizing:border-box}
+.gbadge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800}
+.gbadge.pass{background:#dcfce7;color:#166534}
+.gbadge.fail{background:#fee2e2;color:#991b1b}
+.gbadge.wait{background:#fef9c3;color:#854d0e}
+
+
+/* ---------- Hasil Uji: Group controls ---------- */
+#pg4 .grp{border:1px dashed #cbd5e1;border-radius:10px;padding:10px;margin:10px 0;background:#f8fafc}
+#pg4 .gh{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px}
+#pg4 .gh b{font-size:12.5px}
+#pg4 .mini{font-size:12px;padding:4px 10px;border:1px solid #e2e8f0;background:#fff;border-radius:999px;cursor:pointer}
+#pg4 .mini:hover{border-color:#93c5fd}
+#pg4 .mini.del{color:#b91c1c;border-color:#fecaca;background:#fef2f2}
+#pg4 .mini.add{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8;font-weight:700}
+#pg4 .sec-tools{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px;align-items:center}
+#pg4 .sec-tools .mini{font-size:11.5px}
+#pg4 .pg4-top{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+#pg4 .pg4-top button{font-size:12.5px;padding:7px 12px;border-radius:999px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-weight:700}
+#pg4 .pg4-top button.primary{background:#2563eb;color:#fff;border-color:#2563eb}
+#pg4 .pg4-top button.green{background:#16a34a;color:#fff;border-color:#16a34a}
+#pg4 .empty-group{font-size:12px;color:#64748b;background:#fff7ed;border:1px solid #fed7aa;padding:8px 10px;border-radius:8px;margin:8px 0}
+
 </style>
 <!-- Firebase (compat) untuk sinkronisasi Firestore + Auth -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -585,7 +623,7 @@ body.locked .topbar, body.locked .main, body.locked #toast, body.locked #amodal,
       <div id="setAdminOnlyNotice" hidden style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;margin:0 0 12px;font-size:13px;line-height:1.5;color:#92400e"><b>Kamu login sebagai anggota, bukan admin.</b><br>Bagian <b>Master Data, Data &amp; Storage (API Key, Rules), Backup &amp; Restore, dan Cek Keamanan</b> disembunyikan. Cuma admin (<b id="setAdminOnlyName">-</b>) yang bisa lihat / ubah itu. Kamu tetap bisa pakai Test Reports, Lab Analysis, Buyer Directory, dan Riwayat seperti biasa.</div>
       <div class="panel" id="panelMaster"><div class="ph"><h2>Master Data Management</h2><span class="an-sub" style="font-size:11px;color:#991b1b">Admin only</span><span class="an-sub">Atur daftar buyer & jenis tes biar input nggak salah ketik / beda penulisan</span></div>
         <div style="padding:4px 18px 16px">
-          <div class="seg" id="setMasterTab"><button type="button" data-mtab="buyers" class="on">Buyers</button><button type="button" data-mtab="tests">Test Types</button><button type="button" data-mtab="plants">Plants</button></div>
+          <div class="seg" id="setMasterTab"><button type="button" data-mtab="buyers" class="on">Buyers</button><button type="button" data-mtab="tests">Test Types</button><button type="button" data-mtab="plants">Plants</button><button type="button" data-mtab="templates">Template Form</button></div>
           <div id="setMasterBuyers">
             <div style="display:flex;gap:8px;margin:12px 0"><input id="set_newBuyer" placeholder="Nama buyer baru, mis. Hugo Boss" style="flex:1"><button type="button" class="pbtn" id="set_addBuyer">+ Add New Buyer</button></div>
             <div id="set_buyerList" class="set-list"></div>
@@ -600,6 +638,13 @@ body.locked .topbar, body.locked .main, body.locked #toast, body.locked #amodal,
             <div style="display:flex;gap:8px;margin:12px 0"><input id="set_newPlant" placeholder="PT. baru, mis. PT. Contoh Garments" style="flex:1"><button type="button" class="pbtn" id="set_addPlant">+ Add Plant</button></div>
             <div id="set_plantList" class="set-list"></div>
             <p class="set-note">Plant ini yang muncul di pilihan Plant pas Input SGR. Pakai nama PT lengkap, mis. PT. Ungaran Sari Garments Ungaran, biar nggak salah ketik.</p>
+          </div>
+          <div id="setMasterTemplates" hidden>
+            <p class="set-note" style="margin:12px 0">Di sini sampean atur <b>tes apa aja yang muncul di form per buyer</b>. Misal Lululemon tes-nya beda sama Hugo Boss. Ubah di sini, form-nya langsung ikut berubah. Ini template-nya, bukan hasil test-nya.</p>
+            <div style="display:flex;gap:8px;margin:8px 0;flex-wrap:wrap"><label style="font-size:12px;font-weight:700">Pilih Buyer untuk edit template-nya:</label><select id="tplBuyer" style="flex:1;min-width:180px"></select><button type="button" class="pbtn" id="tplReset">Reset Template Buyer Ini</button></div>
+            <div id="tplList" class="set-list"></div>
+            <div style="display:flex;gap:8px;margin:12px 0;flex-wrap:wrap"><input id="tplNewName" placeholder="Nama tes baru, mis. Seam Strength" style="flex:2;min-width:160px"><input id="tplNewMethod" placeholder="Method, mis. ASTM D1683" style="flex:1;min-width:120px"><input id="tplNewReq" placeholder="Requirement, mis. Min 30 lbs" style="flex:1;min-width:120px"><button type="button" class="pbtn" id="tplAdd">+ Tambah Tes</button></div>
+            <p class="set-note">Contoh: Lululemon fokus ke Stretch & Recovery + Pilling, Hugo Boss fokus ke Appearance + Button Pull, J-Jill fokus ke Colorfastness + Shrinkage. Kalau buyer baru, template-nya otomatis pakai Generic dulu, tinggal edit di sini.</p>
           </div>
         </div>
       </div>
@@ -775,7 +820,58 @@ body.locked .topbar, body.locked .main, body.locked #toast, body.locked #amodal,
         <div id="syncNote" style="font-size:12px;color:#475569;margin-top:6px">Tombol hijau ini nyambungin form ini ke Dashboard. Pilih Overall Rating PASS / FAIL di atas, klik ini, status report di Test Reports langsung jadi <b>Selesai · Pass / Fail</b>, diagram QA + Lab Analysis langsung ke-update. Export Excel / PDF juga otomatis nyambung.</div>
         <div id="msg"></div>
       </div>
-    </section>
+    
+        <!-- ===== GENERIC FORM untuk buyer selain LL Bean ===== -->
+        <div id="genericFormWrap" hidden>
+          <div class="generic-wrap">
+            <div class="generic-head">
+              <h2 id="genTitle">Lululemon - Test Report</h2>
+              <p id="genSub">Template Texlab untuk buyer ini. Tes-nya udah disesuaikan per buyer, tapi cara pakainya sama kayak LL Bean: isi, pilih PASS / FAIL per tes, klik Simpan Hasil ke Dashboard, terus Export. Kalau ada tes yang beda, ubah di <b>Settings - Master Data - Template Form</b>.</p>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+                <button type="button" class="pbtn" id="genBackList">Lihat Semua Report Buyer Ini</button>
+                <button type="button" class="pbtn" id="genNewReport">+ Report Baru Buyer Ini</button>
+              </div>
+              <div id="genList" style="margin-top:12px"></div>
+            </div>
+            <div class="generic-grid">
+              <div class="gpanel">
+                <h3>Header</h3>
+                <label>Report No.</label><input id="genRno" placeholder="mis. SGR-1211263155">
+                <label>Nama Klien / Buyer</label><input id="genClient" readonly>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                  <div><label>Tanggal</label><input id="genDate" type="date"></div>
+                  <div><label>Overall Rating (otomatis)</label><div id="genOverall" style="padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc"><span class="gbadge wait" id="genOverallBadge">Belum dinilai</span></div></div>
+                </div>
+                <label>Style / Code</label><input id="genStyle" placeholder="mis. LU-310">
+                <label>Plant (pabrik pengirim)</label><input id="genPlant" placeholder="mis. PT. Ungaran Sari Garments Ungaran">
+              </div>
+              <div class="gpanel">
+                <h3>Applicant & Lab</h3>
+                <label>Applicant (pabrik)</label><input id="genApplicant" placeholder="Nama PT pengirim">
+                <label>Attn</label><input id="genAttn" placeholder="Nama PIC pabrik">
+                <label>Lab</label><input id="genLab" value="Texlab - PT. Sinar Garmindo Raya, Semarang">
+                <label>Komentar / Catatan</label><textarea id="genComment" rows="2" placeholder="mis. 1 tes fail di Seam Strength, perlu re-test"></textarea>
+              </div>
+            </div>
+            <div class="gpanel">
+              <h3 id="genTestTitle">Daftar Tes - Template Lululemon</h3>
+              <p style="margin:0 0 10px;font-size:12px;color:#64748b">Ubah hasil per tes di kolom Result. Overall Rating otomatis jadi FAIL kalau ada 1 aja yang FAIL. Tambah / hapus tes lewat Settings - Template Form.</p>
+              <div style="overflow-x:auto"><table class="gtable"><thead><tr><th style="width:22%">Test</th><th style="width:18%">Method</th><th style="width:18%">Requirement</th><th style="width:10%">Result</th><th>Remark</th><th style="width:14%">Group</th><th style="width:28px"></th></tr></thead><tbody id="genTestBody"></tbody></table></div>
+              <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+                <button type="button" class="pbtn" id="genAddTest">+ Tambah Baris Tes</button>
+                <button type="button" class="pbtn" id="genResetTemplate">Reset ke Template Buyer</button>
+              </div>
+            </div>
+            <div class="gpanel" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <button type="button" class="pbtn" id="genSync" style="background:#16a34a;color:#fff;border-color:#16a34a">Simpan Hasil ke Dashboard</button>
+              <button type="button" class="pbtn" id="genExcel">Export ke Excel</button>
+              <button type="button" class="pbtn" id="genPdf">Export ke PDF / Print</button>
+              <span id="genMsg" style="font-size:12.5px;color:#475569"></span>
+            </div>
+          </div>
+        </div>
+
+</section>
   
     <section id="viewPanduan" hidden>
       <div class="panduan-wrap">
@@ -790,7 +886,7 @@ body.locked .topbar, body.locked .main, body.locked #toast, body.locked #amodal,
         </div>
         <div class="pflow">
           <h3>Alur 1 Report, dari awal sampai selesai</h3>
-          <div class="flow"><span>1. Login</span><i>→</i><span>2. Input Report</span><i>→</i><span>3. Isi Form sesuai Buyer</span><i>→</i><span>4. PASS / FAIL</span><i>→</i><span>5. Simpan ke Dashboard</span><i>→</i><span>6. Export Excel / PDF</span><i>→</i><span>7. Kirim</span></div>
+          <div class="flow"><span>1. Login</span><i>→</i><span>2. Input Report</span><i>→</i><span>3. Isi Form LL Bean</span><i>→</i><span>4. PASS / FAIL</span><i>→</i><span>5. Simpan ke Dashboard</span><i>→</i><span>6. Export Excel / PDF</span><i>→</i><span>7. Kirim</span></div>
           <p style="margin:10px 0 0;font-size:12.5px;color:#475569;line-height:1.6">Intinya: <b>Test Reports itu database-nya</b>. Form Excel / PDF itu alat bikin file-nya. Dashboard + Lab Analysis itu baca dari Test Reports, bukan dari file Excel-nya. Makanya harus <b>Simpan Hasil ke Dashboard</b> biar nyambung.</p>
         </div>
         <div class="panduan-steps" id="panduanSteps">
@@ -1006,23 +1102,29 @@ const fin = (p, l, ta, rt) => '<div><label>' + l + '</label>' + (ta === "ta"
   : '<input data-p="' + p + '" value="' + ea(getP(p)) + '"' + (rt ? ' list="rt"' : "") + ">") + "</div>";
 function renderDyn() {
   let h = "";
+  h += '<div class="pg4-top"><button type="button" class="primary" data-act="addsec:NEW">+ Tambah Jenis Tes Baru</button><button type="button" class="green" data-act="addsec:CUSTOM">+ Tambah Group Hasil Uji (Custom)</button><button type="button" data-act="resetall:ALL">Reset ke Template LL Bean</button></div>';
+  h += '<p style="font-size:12px;color:#475569;margin:0 0 12px;line-height:1.6">Per buyer beda tes? Di sini semua kolom udah bisa <b>+ Grup / Hapus Grup</b>. Kalau tes-nya nggak ada sama sekali, klik <b>+ Tambah Jenis Tes Baru</b>. Kalau tes-nya nggak kepake buat buyer ini, klik <b>Hapus Grup</b> sampai 0 grup, atau <b>Hapus Section</b> — nanti di Excel / PDF tes itu otomatis nggak muncul.</p>';
   SEC.forEach(sc => {
     const s = S[sc.k];
     h += "<fieldset><legend>" + sc.t + "</legend>";
+    h += '<div class="sec-tools"><button type="button" class="mini add" data-act="addg:' + sc.k + '">+ Grup</button><button type="button" class="mini" data-act="dupsec:' + sc.k + '">Duplikat Tes Ini</button><button type="button" class="mini del" data-act="delsec:' + sc.k + '">Hapus Section Ini</button><span style="font-size:11px;color:#64748b;align-self:center">Total grup: ' + s.groups.length + ' — kalau 0, tes ini nggak ikut ke-export</span></div>';
     sc.head.forEach(f => { h += fin(sc.k + "." + f[0], f[1], f[2]); });
+    if(!s.groups.length){
+      h += '<div class="empty-group">Tes ini lagi disembunyikan (0 grup). Klik <b>+ Grup</b> di atas buat nampilin lagi. Cocok buat buyer yang nggak butuh tes ini.</div>';
+    }
     s.groups.forEach((g, gi) => {
       const gp = sc.k + ".groups." + gi;
       h += '<div class="grp">';
-      if (!sc.solo) h += '<div class="gh"><b>Grup ' + (gi + 1) + '</b><button type="button" class="mini" data-act="delg:' + gp + '">Hapus grup</button></div>';
+      h += '<div class="gh"><b>Grup ' + (gi + 1) + (g.name ? ' — ' + esc(g.name) : '') + '</b><span style="display:flex;gap:6px"><button type="button" class="mini" data-act="dupg:' + gp + '">Duplikat Grup</button><button type="button" class="mini del" data-act="delg:' + gp + '">Hapus grup</button></span></div>';
       if (sc.gf.length) h += '<div class="tr" style="grid-template-columns:repeat(' + sc.gf.length + ',minmax(0,1fr))">' + sc.gf.map(f => fin(gp + "." + f[0], f[1], 0, f[2])).join("") + "</div>";
       g.rows.forEach((r, ri) => {
         h += '<div class="tr" style="grid-template-columns:repeat(' + sc.rl.length + ',minmax(0,1fr)) auto">' +
           sc.rl.map((l, ci) => fin(gp + ".rows." + ri + "." + ci, l, 0, sc.rr.includes(ci))).join("") +
           '<button type="button" class="mini" data-act="delr:' + gp + ".rows." + ri + '">×</button></div>';
       });
-      h += '<button type="button" class="mini" data-act="addr:' + gp + '.rows">+ Baris</button></div>';
+      h += '<button type="button" class="mini add" data-act="addr:' + gp + '.rows">+ Baris</button></div>';
     });
-    if (!sc.solo) h += '<button type="button" class="mini" data-act="addg:' + sc.k + '">+ Grup (mis. Lining)</button>';
+    h += '<button type="button" class="mini add" data-act="addg:' + sc.k + '">+ Grup (mis. Shell / Lining / Warna lain)</button>';
     h += "</fieldset>";
   });
   $("pg4").innerHTML = h;
@@ -1030,11 +1132,55 @@ function renderDyn() {
 $("pg4").addEventListener("input", e => { if (e.target.dataset.p) setP(e.target.dataset.p, e.target.value); });
 $("pg4").addEventListener("click", e => {
   const a = e.target.dataset && e.target.dataset.act; if (!a) return;
+  if(a.startsWith("addsec:")){
+    const title = prompt("Nama Jenis Tes Baru (mis. Colorfastness to Washing / Pilling / Stretch):");
+    if(!title || !title.trim()) return;
+    const method = prompt("Method tes-nya (mis. AATCC 61 / ASTM D3512) — boleh kosong:");
+    const key = "custom" + Date.now().toString(36);
+    const tTitle = title.trim();
+    S[key] = { title: tTitle, method: method||"", garment: "Bottom", groups: [{ name: "", rows: [["", "", "", "PASS"]] }] };
+    SEC.push({ k: key, t: tTitle, head: [["title","Judul"],["method","Metode","ta"],["garment","Label Garment"]], gf: [[ "name","Nama grup (Shell/Lining, boleh kosong)"]], rl: ["Item / Bagian","Hasil","Req.","Rating"], rr: [3] });
+    renderDyn(); return;
+  }
+  if(a.startsWith("delsec:")){
+    const k = a.slice(7);
+    if(!confirm("Hapus section '"+ (SEC.find(x=>x.k===k)?.t||k) +"' beserta semua grup-nya? Di Excel nanti tes ini nggak muncul.")) return;
+    const si = SEC.findIndex(x=>x.k===k); if(si>=0) SEC.splice(si,1); delete S[k]; renderDyn(); return;
+  }
+  if(a.startsWith("dupsec:")){
+    const k = a.slice(7);
+    const sc = SEC.find(x=>x.k===k); if(!sc) return;
+    const nk = k + "_copy" + Date.now().toString(36);
+    S[nk] = JSON.parse(JSON.stringify(S[k])); S[nk].title = S[k].title + " (Copy)";
+    SEC.push({ ...JSON.parse(JSON.stringify(sc)), k: nk, t: sc.t + " (Copy)" });
+    renderDyn(); return;
+  }
+  if(a.startsWith("resetall:")){
+    if(!confirm("Reset semua Hasil Uji ke template awal LL Bean? Semua grup / tes custom yang sampean tambah bakal hilang.")) return;
+    location.reload(); return;
+  }
+  if(a.startsWith("dupg:")){
+    const p = a.slice(5); const parts = p.split("."); const gi = +parts[parts.length-1]; const secKey = parts[0];
+    const gs = S[secKey].groups; if(!gs || gi<0 || gi>=gs.length) return;
+    const c = JSON.parse(JSON.stringify(gs[gi])); c.name = (c.name||"") + " (Copy)"; gs.splice(gi+1, 0, c); renderDyn(); return;
+  }
   const [op, p] = [a.slice(0, 4), a.slice(5)], parts = p.split("."), idx = +parts[parts.length - 1];
-  if (op === "addr") { const arr = getP(p); arr.push(arr.length ? arr[0].map(() => "") : []); }
-  else if (op === "delr") { const arr = getP(parts.slice(0, -1).join(".")); if (arr.length > 1) arr.splice(idx, 1); }
-  else if (op === "addg") { const gs = S[p].groups, c = JSON.parse(JSON.stringify(gs[0])); Object.keys(c).forEach(k => { if (k !== "rows") c[k] = ""; }); c.rows = [c.rows[0].map(() => "")]; gs.push(c); }
-  else if (op === "delg") { const arr = getP(parts.slice(0, -1).join(".")); if (arr.length > 1) arr.splice(idx, 1); }
+  if (op === "addr") { const arr = getP(p); arr.push(arr.length ? arr[0].map(() => "") : ["","","",""]); }
+  else if (op === "delr") { const arr = getP(parts.slice(0, -1).join(".")); arr.splice(idx, 1); }
+  else if (op === "addg") {
+    const gs = S[p].groups;
+    if(!gs.length){
+      const sc = SEC.find(x=>x.k===p);
+      const gfKeys = (sc && sc.gf ? sc.gf.map(f=>f[0]) : ["name"]);
+      const ng = { rows: [Array((sc?sc.rl.length:4)).fill("")] };
+      gfKeys.forEach(k=>{ ng[k]=""; });
+      if("rs" in ng) ng.rs=""; if("rt" in ng) ng.rt=""; if("range" in ng) ng.range=""; if("rating" in ng) ng.rating="PASS"; if("min" in ng) ng.min="";
+      gs.push(ng);
+    } else {
+      const c = JSON.parse(JSON.stringify(gs[0])); Object.keys(c).forEach(k => { if (k !== "rows") c[k] = ""; }); c.rows = [c.rows[0] ? c.rows[0].map(() => "") : ["","","",""]]; gs.push(c);
+    }
+  }
+  else if (op === "delg") { const arr = getP(parts.slice(0, -1).join(".")); arr.splice(idx, 1); }
   renderDyn();
 });
 renderDyn();
@@ -1121,21 +1267,22 @@ function makeUnits(o4) {
     return { xml: x.join(""), merges: m, h: n - n0 };
   }}));
   // Appearance
-  if (S.app.groups[0].rows.length) U.push({ first: 1, build(n0, hd) {
+  S.app.groups.forEach((gApp, giApp) => { if(!gApp.rows.length) return; U.push({ first: !giApp, build(n0, hd) {
     const s = S.app, x = [], m = []; let n = n0;
     if (hd) n = head(s)(n, x, m);
+    if(gApp.name){ x.push(row(n, fill(106), { A: gApp.name })); m.push("A" + n + ":J" + n); n++; }
     x.push(row(n, [136,136,136,136,136,136,136,135,136,46], { A: "Assesment", D: "Test Result (Grade)", H: "Min. (Grade)", J: "Rating" }));
     m.push("A" + n + ":C" + n, "D" + n + ":G" + n, "H" + n + ":I" + n); n++;
-    s.groups[0].rows.forEach(r => {
+    gApp.rows.forEach(r => {
       x.push(row(n, [137,137,137,139,139,139,139,138,136,35], { A: r[0], D: r[1], H: r[2], J: r[3] }));
       m.push("A" + n + ":C" + n, "D" + n + ":G" + n, "H" + n + ":I" + n); n++;
     });
-    return { xml: x.join(""), merges: m, h: n - n0 };
-  }});
+    return { xml: x.join(""), merges: m, h: n - n0 }; }}); });
   // Attachment
-  if (S.att.groups[0].rows.length) U.push({ first: 1, build(n0, hd) {
-    const s = S.att, g = s.groups[0], x = [], m = []; let n = n0;
+  S.att.groups.forEach((gAtt, giAtt) => { if(!gAtt.rows.length) return; U.push({ first: !giAtt, build(n0, hd) {
+    const s = S.att, g = gAtt, x = [], m = []; let n = n0;
     n = head(s, 0, 1)(n, x, m);
+    if(g.name){ x.push(row(n, fill(106), { A: g.name })); m.push("A" + n + ":J" + n); n++; }
     x.push(row(n, [141,142,143,144,145,145,146,106,106,166], { A: "Garment Component", D: "Test Result", H: "Min. (Lbf)", J: "Rating" }));
     m.push("A" + n + ":C" + n, "D" + n + ":G" + n, "H" + n + ":I" + n); n++;
     const f = n;
@@ -1144,8 +1291,25 @@ function makeUnits(o4) {
       m.push("A" + n + ":C" + n, "D" + n + ":G" + n); n++;
     });
     m.push("H" + f + ":I" + (n - 1), "J" + f + ":J" + (n - 1));
-    return { xml: x.join(""), merges: m, h: n - n0 };
-  }});
+    return { xml: x.join(""), merges: m, h: n - n0 }; }}); });
+  // --- Custom sections ---
+  SEC.filter(sc=>!["seam","dim","ww","app","att"].includes(sc.k)).forEach((sc, giC) => {
+    const sC = S[sc.k]; if(!sC || !sC.groups || !sC.groups.length) return;
+    sC.groups.forEach((gC, gi) => {
+      if(!gC.rows.length) return;
+      U.push({ first: gi===0 && giC===0, build(n0, hd) {
+        const s = sC, x = [], m = []; let n = n0;
+        if(hd) n = head(s)(n, x, m);
+        if(gC.name){ x.push(row(n, fill(106), { A: gC.name })); m.push("A" + n + ":J" + n); n++; }
+        x.push(row(n, [119,120,119,120,121,122,123,123,44,45], { A: "Item", C: "Hasil", E: "Req.", G: "Rating", I: "Catatan", J: "Rating" }));
+        m.push("A" + n + ":B" + n, "C" + n + ":D" + n, "E" + n + ":F" + n, "G" + n + ":H" + n); n++;
+        gC.rows.forEach(r => {
+          x.push(row(n, [107,108,109,109,109,109,110,110,116,133], { A: r[0]||"", C: r[1]||"", E: r[2]||"", G: r[3]||"", I: "", J: r[3]||"" }));
+          m.push("A" + n + ":B" + n, "C" + n + ":D" + n, "E" + n + ":F" + n, "G" + n + ":H" + n); n++;
+        });
+        return { xml: x.join(""), merges: m, h: n - n0 }; }});
+    });
+  });
   return U;
 }
 
@@ -1654,6 +1818,23 @@ $("go").addEventListener("click", async () => {
      const pr=document.getElementById("panduanKeReports"); if(pr) pr.onclick=()=>showBuyers();
      const pf=document.getElementById("panduanKeForm"); if(pf) pf.onclick=()=>{ showBuyers(); setTimeout(()=>{ const b=document.querySelector('.bc[data-buyer="LL Bean"]'); if(b) b.click(); },100); };
    }catch(e){}
+   
+   // --- Generic form wiring ---
+   try{
+     const gSync=document.getElementById("genSync"); if(gSync) gSync.onclick=()=>genSyncToDashboard();
+     const gEx=document.getElementById("genExcel"); if(gEx) gEx.onclick=()=>genExportExcel();
+     const gPdf=document.getElementById("genPdf"); if(gPdf) gPdf.onclick=()=>genExportPdf();
+     const gAdd=document.getElementById("genAddTest"); if(gAdd) gAdd.onclick=()=>{ genTests.push({name:"Test Baru",method:"",req:"",result:"PASS",remark:"",group:"Umum"}); renderGenTests(); };
+     const gReset=document.getElementById("genResetTemplate"); if(gReset) gReset.onclick=()=>{ genTests=getTemplate(genBuyer).map(x=>({...x,result:"PASS",remark:""})); renderGenTests(); };
+     const gBack=document.getElementById("genBackList"); if(gBack) gBack.onclick=()=>{ buyerFilter=genBuyer; showAll=false; renderChips(); renderTable(); go("dash"); };
+     const gNew=document.getElementById("genNewReport"); if(gNew) gNew.onclick=()=>{ openGenericReport(null, genBuyer); document.getElementById("genRno").value=""; document.getElementById("genRno").focus(); };
+     const tplSel=document.getElementById("tplBuyer"); if(tplSel) tplSel.onchange=()=>renderTemplateManager();
+     const tplAdd=document.getElementById("tplAdd"); if(tplAdd) tplAdd.onclick=()=>{ const b=document.getElementById("tplBuyer").value; const nm=document.getElementById("tplNewName").value.trim(); if(!nm){ alert("Isi nama tes dulu"); return; } const arr=getTemplate(b).slice(); arr.push({name:nm, method:document.getElementById("tplNewMethod").value.trim(), req:document.getElementById("tplNewReq").value.trim()}); TEMPLATES[b]=arr; saveTemplates(); document.getElementById("tplNewName").value=""; document.getElementById("tplNewMethod").value=""; document.getElementById("tplNewReq").value=""; renderTemplateManager(); };
+     const tplR=document.getElementById("tplReset"); if(tplR) tplR.onclick=()=>{ const b=document.getElementById("tplBuyer").value; if(confirm("Reset template "+b+" ke bawaan?")) resetTemplate(b); };
+     // Master tab: tambah templates
+     const mtab=document.getElementById("setMasterTab"); if(mtab && !mtab.dataset.tplWired){ mtab.dataset.tplWired="1"; mtab.addEventListener("click",e=>{ const btn=e.target.closest("[data-mtab]"); if(!btn) return; const k=btn.dataset.mtab; ["setMasterBuyers","setMasterTests","setMasterPlants","setMasterTemplates"].forEach(id=>{ const el=document.getElementById(id); if(el) el.hidden = (id!=="setMaster"+k.charAt(0).toUpperCase()+k.slice(1)+"s" && id!=="setMasterTemplates" || (k==="templates" && id!=="setMasterTemplates") || (k!=="templates" && id==="setMasterTemplates")); }); if(k==="templates") renderTemplateManager(); }); }
+     renderTemplateManager();
+   }catch(e){ console.error(e); }
    if(typeof gateWire==="function") gateWire(); if(typeof fbUpdateAdminUI==="function") fbUpdateAdminUI(); updSub(); }
   const ICON_FILE='<svg class="i" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>';
   const ICON_EDIT='<svg class="i" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
@@ -1725,9 +1906,147 @@ $("go").addEventListener("click", async () => {
       if(typeof toast==="function") toast("Dashboard ke-update: "+r.no+" -> Selesai "+(rating==="PASS"?"Pass":"Fail"));
     }catch(e){ console.error(e); }
   });
+  
+  /* ---------- TEMPLATE FORM per Buyer (selain LL Bean) ---------- */
+  const TPL_KEY="trp_templates_v1";
+  const TPL_DEFAULT={
+    "Lululemon":[
+      {name:"Dimensional Stability / Shrinkage",method:"AATCC 135",req:"Max 3%"},
+      {name:"Colorfastness to Washing",method:"AATCC 61-2A",req:"Min Grade 4"},
+      {name:"Colorfastness to Perspiration",method:"AATCC 15",req:"Min Grade 4"},
+      {name:"Seam Strength",method:"ASTM D1683",req:"Min 30 lbs"},
+      {name:"Pilling Resistance",method:"ASTM D3512",req:"Min Grade 3-4"},
+      {name:"Stretch & Recovery",method:"ASTM D2594",req:"Sesuai spec buyer"},
+      {name:"Fabric Weight",method:"ASTM D3776",req:"Sesuai spec buyer"},
+      {name:"Appearance After Wash",method:"AATCC 124",req:"Min Grade 3-4"}
+    ],
+    "Hugo Boss":[
+      {name:"Appearance After Wash",method:"AATCC 124",req:"Min Grade 4"},
+      {name:"Dimensional Change",method:"ISO 3759",req:"Max 2%"},
+      {name:"Colorfastness to Washing",method:"ISO 105-C06",req:"Min Grade 4-5"},
+      {name:"Colorfastness to Dry Cleaning",method:"ISO 105-D01",req:"Min Grade 4"},
+      {name:"Seam Strength",method:"ISO 13935-2",req:"Min 120 N"},
+      {name:"Button / Snap Pull Strength",method:"ASTM D4846",req:"Min 90 N, 10 detik"},
+      {name:"Pilling",method:"ISO 12945-2",req:"Min Grade 4"}
+    ],
+    "J-Jill":[
+      {name:"Dimensional Stability",method:"AATCC 135",req:"Max 3%"},
+      {name:"Colorfastness to Washing",method:"AATCC 61",req:"Min Grade 4"},
+      {name:"Colorfastness to Light",method:"AATCC 16",req:"Min Grade 4"},
+      {name:"Seam Strength",method:"ASTM D1683",req:"Min 25 lbs"},
+      {name:"Fabric Shrinkage",method:"AATCC 135",req:"Max 3%"},
+      {name:"Pilling",method:"ASTM D3512",req:"Min Grade 3"},
+      {name:"Appearance After Wash",method:"AATCC 124",req:"Min Grade 3-4"}
+    ],
+    "__GENERIC__":[
+      {name:"Dimensional Stability / Shrinkage",method:"AATCC 135",req:"Max 3%"},
+      {name:"Colorfastness to Washing",method:"AATCC 61",req:"Min Grade 4"},
+      {name:"Seam Strength",method:"ASTM D1683",req:"Min 30 lbs"},
+      {name:"Appearance After Wash",method:"AATCC 124",req:"Min Grade 3-4"},
+      {name:"Pilling",method:"ASTM D3512",req:"Min Grade 3-4"}
+    ]
+  };
+  let TEMPLATES={};
+  try{ TEMPLATES=JSON.parse(localStorage.getItem(TPL_KEY)||"{}")||{}; }catch(e){ TEMPLATES={}; }
+  function getTemplate(buyer){ if(TEMPLATES[buyer] && Array.isArray(TEMPLATES[buyer]) && TEMPLATES[buyer].length) return TEMPLATES[buyer]; if(TPL_DEFAULT[buyer]) return TPL_DEFAULT[buyer]; return TPL_DEFAULT["__GENERIC__"]; }
+  function saveTemplates(){ try{ localStorage.setItem(TPL_KEY, JSON.stringify(TEMPLATES)); }catch(e){} }
+  function resetTemplate(buyer){ delete TEMPLATES[buyer]; saveTemplates(); renderTemplateManager(); }
+  let genBuyer="", genReportId=null, genTests=[];
+  function renderTemplateManager(){
+    const sel=document.getElementById("tplBuyer"); if(!sel) return;
+    const buyers = (typeof BUYERS!=="undefined" && BUYERS.length ? BUYERS : ["LL Bean","Lululemon","Hugo Boss","J-Jill"]);
+    const cur = sel.value || "Lululemon";
+    sel.innerHTML = buyers.filter(b=>b!=="LL Bean").map(b=>'<option value="'+esc(b)+'"'+(b===cur?' selected':'')+'>'+esc(b)+'</option>').join("");
+    const b = sel.value || "Lululemon";
+    const list = getTemplate(b);
+    const el=document.getElementById("tplList"); if(!el) return;
+    el.innerHTML = list.map((tt,i)=>'<div class="set-row"><span><b>'+esc(tt.name)+'</b> <small style="color:#64748b">'+esc(tt.method||"")+' - '+esc(tt.req||"")+'</small></span><button type="button" class="xbtn" data-tpldel="'+i+'">Hapus</button></div>').join("") || '<div style="font-size:12px;color:#64748b;padding:8px">Belum ada tes. Tambah di bawah.</div>';
+    el.querySelectorAll("[data-tpldel]").forEach(btn=>{ btn.onclick=()=>{ const arr=getTemplate(b).slice(); arr.splice(+btn.dataset.tpldel,1); TEMPLATES[b]=arr; saveTemplates(); renderTemplateManager(); if(genBuyer===b){ genTests=arr.map(x=>({...x,result:"PASS",remark:""})); renderGenTests(); } }; });
+  }
+  function openGenericForBuyer(buyer){
+    genBuyer=buyer; genReportId=null;
+    const list = R.filter(r=>r.buyer===buyer);
+    const target = list.find(r=>sel(r)==="proses"||sel(r)==="masuk") || list[0] || null;
+    if(target) openGenericReport(target.id); else openGenericReport(null, buyer);
+  }
+  function openGenericReport(id, buyerOverride){
+    const r = id ? R.find(x=>x.id===id) : null;
+    genReportId = r ? r.id : null;
+    genBuyer = r ? r.buyer : (buyerOverride || genBuyer || "Lululemon");
+    linkId = genReportId;
+    const tpl = getTemplate(genBuyer);
+    genTests = tpl.map(x=>({...x, result:"PASS", remark:"", group: x.group||"Umum"}));
+    document.getElementById("genTitle").textContent = genBuyer + " - Test Report";
+    document.getElementById("genSub").textContent = "Template Texlab untuk "+genBuyer+". Tes-nya udah disesuaikan per buyer, tapi cara pakainya sama kayak LL Bean: isi, pilih PASS / FAIL per tes, klik Simpan Hasil ke Dashboard, terus Export.";
+    document.getElementById("genTestTitle").textContent = "Daftar Tes - Template "+genBuyer;
+    document.getElementById("genRno").value = r ? r.no : "";
+    document.getElementById("genClient").value = genBuyer;
+    document.getElementById("genStyle").value = r ? (r.style||"") : "";
+    document.getElementById("genPlant").value = r ? (r.plant||"") : "";
+    document.getElementById("genComment").value = r ? (r.comment||"") : "";
+    document.getElementById("genApplicant").value = ""; document.getElementById("genAttn").value = "";
+    try{ document.getElementById("genDate").value = new Date().toISOString().slice(0,10); }catch(e){}
+    const list = R.filter(x=>x.buyer===genBuyer);
+    document.getElementById("genList").innerHTML = list.length ? '<div style="font-size:12px;color:#475569;margin-bottom:6px"><b>'+list.length+' report '+esc(genBuyer)+' di Test Reports:</b> klik salah satu buat buka form-nya.</div>' + list.map(x=>'<button type="button" class="pbtn" data-genopen="'+x.id+'" style="margin:0 6px 6px 0">'+esc(x.no)+' - '+esc(sel(x))+'</button>').join("") : '<div style="font-size:12px;color:#64748b">Belum ada report '+esc(genBuyer)+'. Input dulu di + Input Report, atau isi form ini lalu Simpan Hasil.</div>';
+    document.getElementById("genList").querySelectorAll("[data-genopen]").forEach(b=>{ b.onclick=()=>openGenericReport(b.dataset.genopen); });
+    renderGenTests();
+    document.querySelectorAll('#viewReport .doc > .phead, #viewReport .doc > .tabs, #viewReport .doc > #pg1, #viewReport .doc > #pg2, #viewReport .doc > #pg3, #viewReport .doc > #pg4, #viewReport .doc > .actions, #viewReport .doc > #syncNote, #viewReport .doc > #msg').forEach(el=>el.style.display="none");
+    const gf=document.getElementById("genericFormWrap"); if(gf) gf.hidden=false;
+    go("report");
+    const h1=document.querySelector('#viewReport .phead h1'); if(h1) h1.textContent = genBuyer + " - Test Report";
+  }
+  function renderGenTests(){
+    const body=document.getElementById("genTestBody"); if(!body) return;
+    const groups = {};
+    genTests.forEach((tt,i)=>{ const g = tt.group || "Umum"; if(!groups[g]) groups[g]=[]; groups[g].push({tt, i}); });
+    let html = "";
+    Object.keys(groups).forEach(gName=>{
+      html += '<tr><td colspan="7" style="background:#eff6ff;font-weight:700;font-size:12.5px;padding:8px">Group: <input data-ggroup="'+esc(gName)+'" value="'+esc(gName)+'" style="width:200px;padding:4px 8px;border:1px solid #bfdbfe;border-radius:6px"> <button type="button" class="xbtn" data-gdelgroup="'+esc(gName)+'" style="margin-left:6px">Hapus Group</button> <button type="button" class="pbtn" data-gaddrow="'+esc(gName)+'" style="padding:4px 10px;font-size:11.5px">+ Baris di Group Ini</button></td></tr>';
+      groups[gName].forEach(({tt,i})=>{
+        html += '<tr><td><input data-gt="name" data-i="'+i+'" value="'+esc(tt.name)+'"></td><td><input data-gt="method" data-i="'+i+'" value="'+esc(tt.method||"")+'"></td><td><input data-gt="req" data-i="'+i+'" value="'+esc(tt.req||"")+'"></td><td><select data-gt="result" data-i="'+i+'"><option value="PASS"'+(tt.result!=="FAIL"?' selected':'')+'>PASS</option><option value="FAIL"'+(tt.result==="FAIL"?' selected':'')+'>FAIL</option></select></td><td><input data-gt="remark" data-i="'+i+'" value="'+esc(tt.remark||"")+'" placeholder="Catatan"></td><td><input data-gt="group" data-i="'+i+'" value="'+esc(tt.group||"Umum")+'" placeholder="Group"></td><td><button type="button" class="xbtn" data-gtdel="'+i+'">x</button></td></tr>';
+      });
+    });
+    html += '<tr><td colspan="7" style="padding:10px 0"><button type="button" class="pbtn" id="genAddGroupBtn" style="background:#2563eb;color:#fff;border-color:#2563eb">+ Tambah Group Baru</button> <span style="font-size:11.5px;color:#64748b">Misal: Shell, Lining, Warna Hitam, dll. Tiap group bisa ditambah / dihapus sendiri.</span></td></tr>';
+    body.innerHTML = html;
+    body.querySelectorAll("[data-gt]").forEach(inp=>{ inp.onchange=()=>{ const ii=+inp.dataset.i; const k=inp.dataset.gt; genTests[ii][k]=inp.value; updateGenOverall(); renderGenTests(); }; });
+    body.querySelectorAll("[data-gtdel]").forEach(btn=>{ btn.onclick=()=>{ genTests.splice(+btn.dataset.gtdel,1); renderGenTests(); updateGenOverall(); }; });
+    body.querySelectorAll("[data-gdelgroup]").forEach(btn=>{ btn.onclick=()=>{ const gn=btn.dataset.gdelgroup; if(!confirm("Hapus group '"+gn+"' beserta semua tes-nya?")) return; genTests=genTests.filter(x=>(x.group||"Umum")!==gn); renderGenTests(); updateGenOverall(); }; });
+    body.querySelectorAll("[data-gaddrow]").forEach(btn=>{ btn.onclick=()=>{ genTests.push({name:"Test Baru",method:"",req:"",result:"PASS",remark:"",group:btn.dataset.gaddrow}); renderGenTests(); }; });
+    body.querySelectorAll("[data-ggroup]").forEach(inp=>{ inp.onchange=()=>{ const old=inp.dataset.ggroup; const nw=inp.value.trim()||"Umum"; genTests.forEach(x=>{ if((x.group||"Umum")===old) x.group=nw; }); renderGenTests(); }; });
+    const addG=document.getElementById("genAddGroupBtn"); if(addG) addG.onclick=()=>{ const nm=prompt("Nama Group baru (mis. Lining / Shell / Warna Hitam):"); if(!nm||!nm.trim()) return; genTests.push({name:"Test Baru di "+nm.trim(),method:"",req:"",result:"PASS",remark:"",group:nm.trim()}); renderGenTests(); };
+    updateGenOverall();
+  }
+  function updateGenOverall(){
+    const hasFail = genTests.some(x=>x.result==="FAIL");
+    const badge=document.getElementById("genOverallBadge"); if(!badge) return;
+    if(!genTests.length){ badge.className="gbadge wait"; badge.textContent="Belum dinilai"; return; }
+    if(hasFail){ badge.className="gbadge fail"; badge.textContent="FAIL"; } else { badge.className="gbadge pass"; badge.textContent="PASS"; }
+  }
+  function genOverallRating(){ return genTests.some(x=>x.result==="FAIL") ? "FAIL" : "PASS"; }
+  function genSyncToDashboard(){
+    const rno=document.getElementById("genRno").value.trim(); if(!rno){ document.getElementById("genMsg").textContent="Isi Report No. dulu."; return; }
+    const rating=genOverallRating();
+    window.dispatchEvent(new CustomEvent("llbean-export", {detail:{rating, rno}}));
+    document.getElementById("genMsg").textContent="Mengirim hasil "+rating+" ke Dashboard...";
+  }
+  function genExportExcel(){
+    const rno=document.getElementById("genRno").value.trim() || "SGR-XXXX";
+    const rows = genTests.map(tt=>'<tr><td>'+esc(tt.name)+'</td><td>'+esc(tt.method||"")+'</td><td>'+esc(tt.req||"")+'</td><td>'+esc(tt.result)+'</td><td>'+esc(tt.remark||"")+'</td></tr>').join("");
+    const html = '<html><head><meta charset="utf-8"></head><body><h2>Texlab - PT. Sinar Garmindo Raya</h2><p>Report No: '+esc(rno)+' | Buyer: '+esc(genBuyer)+' | Style: '+esc(document.getElementById("genStyle").value)+' | Plant: '+esc(document.getElementById("genPlant").value)+' | Date: '+esc(document.getElementById("genDate").value)+' | Overall: '+genOverallRating()+'</p><table border="1" cellpadding="6" cellspacing="0"><tr><th>Test</th><th>Method</th><th>Requirement</th><th>Result</th><th>Remark</th></tr>'+rows+'</table><p>Applicant: '+esc(document.getElementById("genApplicant").value)+' | Attn: '+esc(document.getElementById("genAttn").value)+' | Lab: '+esc(document.getElementById("genLab").value)+'</p><p>Comment: '+esc(document.getElementById("genComment").value)+'</p></body></html>';
+    const blob=new Blob([html],{type:"application/vnd.ms-excel"});
+    const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=rno+"_Report_"+genBuyer.replace(/[^A-Za-z0-9]/g,"_")+".xls"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),5000);
+    document.getElementById("genMsg").textContent="Excel ter-download: "+rno+" - "+genBuyer;
+    try{ window.dispatchEvent(new CustomEvent("llbean-export", {detail:{rating:genOverallRating(), rno}})); }catch(e){}
+  }
+  function genExportPdf(){
+    const rno=document.getElementById("genRno").value.trim() || "SGR-XXXX";
+    document.getElementById("genMsg").textContent="Membuka print / PDF untuk "+rno+"...";
+    try{ window.dispatchEvent(new CustomEvent("llbean-export", {detail:{rating:genOverallRating(), rno}})); }catch(e){}
+    setTimeout(()=>window.print(), 300);
+  }
   function openReport(id){
-    const r=R.find(x=>x.id===id); if(!r) return;
-    if(r.buyer!=="LL Bean"){ dev("Form report "+r.buyer); return; }
+
+    const r=R.find(x=>x.id===id); if(!r) return;     if(r.buyer!=="LL Bean"){ openGenericReport(id); return; }
     linkId=id; $("rno").value=r.no;
     const lb=[...document.querySelectorAll('label[for^="p2_"]')].find(l=>l.textContent.trim()==="Style");
     if(lb&&r.style) $(lb.htmlFor).value=r.style;
@@ -2140,7 +2459,7 @@ $("go").addEventListener("click", async () => {
   });
   $("grid").addEventListener("click",e=>{
     const c=e.target.closest(".bc"); if(!c) return;
-    c.dataset.buyer==="LL Bean"?(linkId=null,showReport()):dev("Test report "+c.dataset.buyer);
+    c.dataset.buyer==="LL Bean"?(linkId=null,(()=>{ document.querySelectorAll('#viewReport .doc > .phead, #viewReport .doc > .tabs, #viewReport .doc > #pg1, #viewReport .doc > #pg2, #viewReport .doc > #pg3, #viewReport .doc > #pg4, #viewReport .doc > .actions, #viewReport .doc > #syncNote, #viewReport .doc > #msg').forEach(el=>el.style.display=""); const gf2=document.getElementById("genericFormWrap"); if(gf2) gf2.hidden=true; showReport(); })()):openGenericForBuyer(c.dataset.buyer);
   });
   $("back").onclick=()=>linkId?showDash():showBuyers();
   function applyBuyers(){
