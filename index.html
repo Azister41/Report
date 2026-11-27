@@ -1125,10 +1125,10 @@ function renderSummary(){
   const pg3 = $("pg3"); if(!pg3) return;
   const old = pg3.querySelector('[data-sumwrap="1"]'); if(old) old.remove();
   const wrap = document.createElement("div"); wrap.setAttribute("data-sumwrap","1");
-  const over = SUMMARY.length > 11;
+  const over = SUMMARY.length > 5;
   let h = '<fieldset><legend>Summary Of Test Result</legend>';
   // Kotak ijo penjelasan dihapus sesuai revisi — biar polos
-  h += '<div class="sum-top"><button type="button" class="sum-add" id="sumAddBtn">+ Tambah Baris</button><button type="button" class="sum-add" id="sumSyncBtn" style="margin-left:6px">Sync Hasil Uji Sekarang</button><span class="sum-count'+(over?' over':'')+'">Total: '+SUMMARY.length+' baris'+(over?' — di Excel halaman Summary otomatis memanjang (Contact & Remarks kegeser ke bawah), aman sampai 30 baris.':' — muat 1 halaman (sampai 11).')+'</span></div>';
+  h += '<div class="sum-top"><button type="button" class="sum-add" id="sumAddBtn">+ Tambah Baris</button><button type="button" class="sum-add" id="sumSyncBtn" style="margin-left:6px">Sync Hasil Uji Sekarang</button><span class="sum-count'+(over?' over':'')+'">Total: '+SUMMARY.length+' baris'+(over?' — di Excel halaman Summary otomatis memanjang (Contact & Remarks kegeser ke bawah), aman sampai 30 baris.':' — muat 1 halaman (sampai 5, kalau lebih otomatis memanjang).')+'</span></div>';
   h += '<div class="sum-quick"><button type="button" data-quick="1">+ Tambah 1</button><button type="button" data-quick="5">+ Tambah 5 Sekaligus</button><button type="button" data-quick="10">+ Tambah 10 Sekaligus</button><button type="button" id="sumFill20">Isi Template Ready (6)</button><button type="button" id="sumClear">Kosongkan Semua</button></div>';
   h += '<p style="font-size:11.5px;color:#475569;margin:6px 0 10px;line-height:1.6">Kadang buyer minta sampai <b>20 metode</b>? Sekarang yang bisa dipilih cuma yang udah ada template-nya (6 tes). Nanti kalau sampean kirim 19 template lagi, satu-satu tak bukain kuncinya, jadi dropdown-nya nambah terus. Excel-nya otomatis nambah baris, nggak mentok di 11 lagi.</p>';
   if(!SUMMARY.length) h += '<p style="font-size:12px;color:#64748b;background:#fff7ed;border:1px solid #fed7aa;padding:8px 10px;border-radius:8px">Summary lagi kosong (0 baris). Klik <b>+ Tambah Baris</b> buat nambah lagi.</p>';
@@ -1863,40 +1863,46 @@ async function exportXlsx(mode) {
   for (const p of [3]) {
     let sx = await zip.file(P + p + ".xml").async("string");
     // --- Summary Of Test Result (dinamis, sampai 30 baris) ---
-    // Template asli: Summary di baris 9-19 (11 baris), Contact di 20+. Kalau SUMMARY > 11, geser semua baris 20+ ke bawah biar nggak ketimpa.
-    const sumDelta = Math.max(0, SUMMARY.length - 11);
+    // FIX E14: Template asli LL Bean cuma muat 5 tes di Summary (baris 9-13). Baris 14 itu baris kosong pemisah (cuma ada A14,B14), bukan baris tes.
+    // Jadi kalau SUMMARY > 5, geser semua baris >=14 ke bawah, bukan >=20.
+    const sumDelta = Math.max(0, SUMMARY.length - 5);
     if(sumDelta > 0){
-      // 1) Geser <row r="N"> dan <c r="COL N"> untuk N >= 20
-      sx = sx.replace(/<row r="(\d+)"/g, (m, n)=>{ const v=+n; return v>=20 ? '<row r="'+(v+sumDelta)+'"' : m; });
-      sx = sx.replace(/<c r="([A-Z]+)(\d+)"/g, (m, col, n)=>{ const v=+n; return v>=20 ? '<c r="'+col+(v+sumDelta)+'"' : m; });
-      // 2) Geser merges: ref="A20:B20" -> A(20+delta):B(20+delta)
-      sx = sx.replace(/<mergeCell ref="([A-Z]+)(\d+):([A-Z]+)(\d+)"/g, (m, c1, r1, c2, r2)=>{ const a=+r1, b=+r2; const na = a>=20 ? a+sumDelta : a; const nb = b>=20 ? b+sumDelta : b; return '<mergeCell ref="'+c1+na+':'+c2+nb+'"'; });
-      // 3) Geser dimension & conditional formatting sqref
+      // 1) Geser <row r="N"> dan <c r="COL N"> untuk N >= 14
+      sx = sx.replace(/<row r="(\d+)"/g, (m, n)=>{ const v=+n; return v>=14 ? '<row r="'+(v+sumDelta)+'"' : m; });
+      sx = sx.replace(/<c r="([A-Z]+)(\d+)"/g, (m, col, n)=>{ const v=+n; return v>=14 ? '<c r="'+col+(v+sumDelta)+'"' : m; });
+      // 2) Geser merges: ref="A14:B14" -> geser kalau baris >=14
+      sx = sx.replace(/<mergeCell ref="([A-Z]+)(\d+):([A-Z]+)(\d+)"/g, (m, c1, r1, c2, r2)=>{ const a=+r1, b=+r2; const na = a>=14 ? a+sumDelta : a; const nb = b>=14 ? b+sumDelta : b; return '<mergeCell ref="'+c1+na+':'+c2+nb+'"'; });
+      // 3) Geser dimension
       sx = sx.replace(/<dimension ref="([A-Z]+\d+):([A-Z]+)(\d+)"/, (m, a, c, r)=> '<dimension ref="'+a+':'+c+(+r+sumDelta)+'"');
-      // 4) Bikin baris kosong untuk Summary ekstra (baris 20 .. 20+delta-1) dengan nyontek struktur baris 13
+      // 4) Bikin baris baru untuk Summary ekstra (baris 14 .. 13+delta) dengan nyontek struktur baris 13
       const row13 = (sx.match(/<row r="13"[^>]*>[\s\S]*?<\/row>/)||[""])[0];
       if(row13){
         let extra = "";
-        for(let si=11; si<SUMMARY.length; si++){
+        let extraMerges = "";
+        for(let si=5; si<SUMMARY.length; si++){
           const rNo = 9+si;
           let nr = row13.replace('<row r="13"', '<row r="'+rNo+'"');
           nr = nr.replace(/<c r="([A-Z]+)13"/g, '<c r="$1'+rNo+'"');
-          // Kosongkan isi sel-nya, nanti diisi di bawah via setAuto/setCell
-          nr = nr.replace(/<v>[^<]*<\/v>/g, "<v></v>").replace(/<is>[\s\S]*?<\/is>/g, "<is><t></t></is>");
+          // Kosongkan isi sel-nya, nanti diisi di bawah via setAuto/setCell. Hapus shared-string biar nggak nyangkut teks lama.
+          nr = nr.replace(/ t="s"/g, "").replace(/<v>[^<]*<\/v>/g, "").replace(/<is>[\s\S]*?<\/is>/g, "");
           extra += nr;
+          extraMerges += '<mergeCell ref="A'+rNo+':D'+rNo+'"/><mergeCell ref="H'+rNo+':J'+rNo+'"/>';
         }
-        // Sisipkan sebelum baris Contact yang udah kegeser (baris 20+delta)
-        const contactRow = 20+sumDelta;
-        const marker = '<row r="'+contactRow+'"';
+        // Tambah merges untuk baris baru + update count
+        if(extraMerges){
+          sx = sx.replace(/<mergeCells count="(\d+)"/, (m, cnt)=> '<mergeCells count="'+(+cnt + (SUMMARY.length-5)*2)+'"');
+          sx = sx.replace('</mergeCells>', extraMerges + '</mergeCells>');
+        }
+        // Sisipkan sebelum baris pemisah yang udah kegeser (baris 14+delta)
+        const spacerRow = 14+sumDelta;
+        const marker = '<row r="'+spacerRow+'"';
         const pos = sx.indexOf(marker);
         if(pos>=0) sx = sx.slice(0,pos) + extra + sx.slice(pos);
         else sx = sx.replace("</sheetData>", extra + "</sheetData>");
       }
-      // 5) Update dimension & footer Page 3 of TOT (sekarang di 51+delta)
-      // Footer udah kegeser otomatis di langkah 1, tapi setCell di bawah butuh ref baru, jadi handle di loop bawah.
     }
-    const sumMaxRow = 9 + Math.max(SUMMARY.length, 11) - 1;
-    for(let si=0; si<Math.max(SUMMARY.length, 11); si++){
+    const sumMaxRow = 9 + Math.max(SUMMARY.length, 5) - 1;
+    for(let si=0; si<Math.max(SUMMARY.length, 5); si++){
       const rNo = 9 + si;
       if(si < SUMMARY.length){
         const sr = SUMMARY[si];
@@ -1917,7 +1923,7 @@ async function exportXlsx(mode) {
       let flC = fl.c;
       if(sumDelta>0){
         const mm = flC.match(/^([A-Z]+)(\d+)$/);
-        if(mm && +mm[2]>=20) flC = mm[1] + (+mm[2]+sumDelta);
+        if(mm && +mm[2]>=14) flC = mm[1] + (+mm[2]+sumDelta);
       }
       if (fl.k === "xs") {
         const r = flC.slice(1), col = { Pass: "E", Fail: "F", Data: "G" }[v];
