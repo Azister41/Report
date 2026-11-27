@@ -2154,7 +2154,7 @@ $("go").addEventListener("click", async () => {
     $("tbody").innerHTML=rows.length?rows.map(r=>
       '<tr><td>'+esc(r.no)+'</td><td>'+esc(r.buyer)+'</td><td>'+esc(r.plant||"PT. Ungaran Sari Garments Ungaran")+'</td><td>'+esc(r.style||"-")+'</td><td>'+esc(r.type||"-")+'</td>'+
       '<td>'+statusCell(r)+'</td><td>'+dueHtml(r)+'</td><td style="max-width:180px;font-size:12px;line-height:1.4">'+(r.comment?'<span title="'+esc(r.comment)+'">'+esc(r.comment.length>55?r.comment.slice(0,55)+"…":r.comment)+'</span>':'<span style="color:#94a3b8">-</span>')+'</td><td class="mut">'+ago(r.updated)+'</td>'+
-      '<td><div class="acts"><button type="button" class="act" data-open="'+r.id+'">'+ICON_FILE+'Buka Form</button><button type="button" class="act" data-print="'+r.id+'" title="Print / PDF report ini">Print</button><button type="button" class="act" data-edit="'+r.id+'" aria-label="Edit" title="Edit">'+ICON_EDIT+'</button><button type="button" class="act del" data-del="'+r.id+'" aria-label="Hapus">'+ICON_DEL+'</button></div></td></tr>'
+      '<td><div class="acts">'+(r.buyer==="PVH"?'<button type="button" class="act" data-pvh="'+r.id+'" style="background:#0f2a44;color:#fff;border-color:#0f2a44" title="Buka template khusus PVH (PVH.html)">PVH Template</button>':'')+'<button type="button" class="act" data-open="'+r.id+'">'+ICON_FILE+'Buka Form</button><button type="button" class="act" data-print="'+r.id+'" title="Print / PDF report ini">Print</button><button type="button" class="act" data-edit="'+r.id+'" aria-label="Edit" title="Edit">'+ICON_EDIT+'</button><button type="button" class="act del" data-del="'+r.id+'" aria-label="Hapus">'+ICON_DEL+'</button></div></td></tr>'
     ).join(""):'<tr><td colspan="10"><div class="none">'+(R.length?'Tidak ada report yang cocok dengan filter.':'Belum ada report. Klik <b>+ Input Report</b> untuk mulai, atau lihat tampilan dengan data contoh.<br><br><button type="button" class="act" id="seedBtn">Muat data contoh</button>')+'</div></td></tr>';
     const lc=R.filter(r=>lateDays(r)>0).length; let n="";
     if(lc||lateFilter) n+='<button type="button" class="act sm late'+(lateFilter?' on':'')+'" data-late>Telat ('+lc+')</button>';
@@ -2419,9 +2419,9 @@ $("go").addEventListener("click", async () => {
   }
 
   document.addEventListener("click",e=>{
-    const t=e.target.closest("[data-edit],[data-del],[data-clr],[data-b],[data-next],[data-hold],[data-reopen],[data-late],[data-open],[data-print],#seedBtn,#moreBtn,#clrAll"); if(!t) return;
+    const t=e.target.closest("[data-edit],[data-del],[data-clr],[data-b],[data-next],[data-hold],[data-reopen],[data-late],[data-open],[data-print],[data-pvh],#seedBtn,#moreBtn,#clrAll"); if(!t) return;
     const d=t.dataset;
-    if(d.print) printReport(d.print); else if(d.edit) openForm(d.edit);
+    if(d.pvh) openBuyerTemplate(d.pvh); else if(d.print) printReport(d.print); else if(d.edit) openForm(d.edit);
     else if(d.open) openReport(d.open);
     else if(d.del){ const r=R.find(x=>x.id===d.del); if(r&&confirm("Hapus report "+r.no+"?")){ R=R.filter(x=>x!==r); save(); renderAll(); } }
     else if(d.clr){ stFilter=""; renderKpis(); renderTable(); }
@@ -3182,6 +3182,20 @@ $("go").addEventListener("click", async () => {
   $("set_reset_buyers").onclick=()=>{ if(!confirm("Reset semua profil buyer ke kosong + logo?")) return; try{ localStorage.removeItem(DIR_KEY); }catch(e){} BDIR={}; renderDirectory(); renderSettings(); alert("Buyer Directory sudah di-reset ke kosong."); };
 
   
+  /* ---------- Template per Buyer (file misah) ---------- */
+  // Kalau buyer punya file sendiri (misal PVH.html), buka file itu dan kirim datanya lewat URL.
+  // File-nya harus di folder yang sama dengan file portal ini di GitHub.
+  // Cara nambah buyer baru: bikin file BARU.html, tambah 1 baris di bawah: if(r.buyer==="BARU") file="BARU.html";
+  function openBuyerTemplate(id){
+    const r=R.find(x=>x.id===id); if(!r) return;
+    let file=null;
+    if(r.buyer==="PVH") file="PVH.html";
+    // Tambah buyer lain di sini, contoh: if(r.buyer==="Hugo Boss") file="HugoBoss.html";
+    if(!file){ toast("Template khusus untuk "+r.buyer+" belum ada. Pakai Buka Form / Print."); return; }
+    const url=file+"?no="+encodeURIComponent(r.no||"")+"&buyer="+encodeURIComponent(r.buyer||"")+"&applicant="+encodeURIComponent(r.plant||"")+"&style="+encodeURIComponent(r.style||"")+"&due="+encodeURIComponent(r.due||"")+"&type="+encodeURIComponent(r.type||"");
+    window.open(url,"_blank");
+    logActivity("Buka Template "+r.buyer, "Buka "+file+" untuk report "+r.no, r.no, r.buyer);
+  }
   /* ---------- Print / PDF per SGR ---------- */
   function printReport(id){
     const r=R.find(x=>x.id===id); if(!r) return;

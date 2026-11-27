@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PVH - Test Report</title>
+<style>
+*{box-sizing:border-box} body{margin:0;font-family:Arial,Helvetica,sans-serif;color:#111;background:#eef2f7;font-size:13px}
+.toolbar{position:sticky;top:0;z-index:10;background:#0f2a44;color:#fff;padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toolbar b{font-size:15px}.toolbar span{opacity:.8;font-size:12px}.toolbar button{border:0;border-radius:8px;padding:9px 14px;font-weight:700;cursor:pointer}
+.btn-back{background:#fff;color:#0f2a44}.btn-print{background:#16a34a;color:#fff}.btn-excel{background:#f59e0b;color:#fff}.btn-save{background:#2563eb;color:#fff}
+.wrap{max-width:900px;margin:14px auto;padding:0 10px 30px}
+.page{background:#fff;border:1px solid #cbd5e1;border-radius:10px;padding:22px 26px;margin-bottom:16px;position:relative}
+@media print{body{background:#fff}.toolbar{display:none!important}.wrap{max-width:none;margin:0;padding:0}.page{border:0;border-radius:0;margin:0;padding:14mm 12mm;break-after:page;box-shadow:none}.page:last-child{break-after:auto} input,select,textarea{border:0!important;appearance:none;-webkit-appearance:none} .no-print{display:none!important} .photo-input{display:none!important}}
+.top{display:flex;justify-content:space-between;align-items:flex-start}
+.logo{font-weight:900;font-size:22px;letter-spacing:.5px;color:#0f2a44}.logo small{display:block;font-size:10px;letter-spacing:2px;color:#475569}
+.top-right{text-align:right}.top-right h1{margin:0;font-size:20px}.top-right .repno{margin-top:4px;font-weight:700}
+.pvh{margin:10px 0 14px;background:#e5e7eb;border:2px solid #111;text-align:center;font-weight:900;font-size:18px;padding:7px;letter-spacing:1px}
+.meta2{display:flex;justify-content:space-between;gap:10px;margin-bottom:12px}.meta2 div{font-size:13px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}.two h4{margin:0 0 4px}
+table{width:100%;border-collapse:collapse;margin:8px 0} th,td{border:1px solid #111;padding:6px 7px;vertical-align:top;text-align:left} th{background:#f1f5f9} .hdr th{background:#e2e8f0;text-align:center}
+input,select,textarea{width:100%;font:inherit;padding:6px 7px;border:1px solid #cbd5e1;border-radius:6px;background:#fff}
+input.small{padding:4px 6px} textarea{min-height:52px;resize:vertical}
+.lbl{font-size:12px;color:#475569;margin:2px 0 3px}
+.kv{display:grid;grid-template-columns:210px 1fr;gap:6px 10px;margin:6px 0}.kv label{font-weight:700;padding-top:6px}
+.note{font-size:11px;color:#475569;line-height:1.5;border:1px solid #e2e8f0;padding:8px;border-radius:8px;background:#f8fafc}
+.sig{margin-top:16px;text-align:center;line-height:1.5}.sig img{width:140px;display:block;margin:4px auto 0}
+.photos{display:grid;grid-template-columns:1fr 1fr;gap:14px}.ph{border:1px dashed #94a3b8;border-radius:10px;padding:10px;text-align:center}.ph img{max-width:100%;max-height:300px;display:none;margin:8px auto}.ph img.show{display:block}
+.center{text-align:center}.small{font-size:12px}.bold{font-weight:700}.underline{text-decoration:underline}
+.footer{margin-top:14px;text-align:center;font-size:12px;color:#334155}
+.badge{display:inline-block;padding:4px 10px;border-radius:999px;font-weight:800}.badge.pass{background:#dcfce7;color:#166534}.badge.fail{background:#fee2e2;color:#991b1b}
+</style>
+</head>
+<body>
+<div class="toolbar">
+<b>PVH — Test Report</b><span>File misah per buyer • taruh di folder yang sama dengan portal utama</span>
+<div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
+<button class="btn-back" onclick="goBack()">← Kembali ke Portal</button>
+<button class="btn-save" onclick="saveLocal()">Simpan</button>
+<button class="btn-excel" onclick="exportExcel()">Export ke Excel</button>
+<button class="btn-print" onclick="window.print()">Print / PDF</button>
+</div>
+</div>
+<div class="wrap">
+
+<!-- ================= PAGE 1 ================= -->
+<section class="page">
+<div class="top"><div class="logo">TEXLAB<small>PT. SINAR GARMINDO RAYA</small></div><div class="top-right"><h1>TEST REPORT</h1><div class="repno">Report No. : <input id="reportNo" value="SGR-2710262952" style="width:170px;display:inline-block"></div></div></div>
+<div class="pvh">PVH</div>
+<div class="meta2"><div>Date : <input id="reportDate" type="date" value="2026-10-29" style="width:150px;display:inline-block"></div><div>Overall Rating <select id="overall" style="width:110px;display:inline-block"><option>PASS</option><option>FAIL</option></select> <span id="overallBadge" class="badge pass">PASS</span></div></div>
+<div class="two">
+<div><h4>Applicant :</h4><textarea id="applicant">BUSANA APPAREL PTE LTD
+17 PHILIP STREET, # 05-01 GRAND BUILDING
+SINGAPORE</textarea><div class="lbl">Attn :</div><input id="attn" value="Novia Lusi Hapsari"></div>
+<div><h4>Texlab – PT. Sinar Garmindo Raya</h4><textarea>Jl. Letnan Jenderal S. Parman No. 41,
+Gajahmungkur, Kec. Gajahmungkur,
+Kota Semarang,
+Jawa Tengah, 50232</textarea></div>
+</div>
+<h3 class="center" style="margin:18px 0 8px"><u>Original Sample Photo</u></h3>
+<div class="ph"><div class="lbl">Klik untuk upload foto sample asli</div><input class="photo-input" type="file" accept="image/*" onchange="previewPhoto(event,'photo1')"><button class="no-print" onclick="this.previousElementSibling.click()">Upload Foto</button><img id="photo1"></div>
+<div class="note">This report shall not be duplicated, in part or in full, without prior written consent from the laboratory. Any distribution, reproduction, or use of our name or trademark by another party requires written authorization in advance. The findings in this report pertain solely to the specific test sample(s) evaluated, and do not represent an endorsement of any other materials or products.</div>
+<div class="footer">Page 1 of 11</div>
+</section>
+
+<!-- ================= PAGE 2 ================= -->
+<section class="page">
+<div class="top"><div class="logo">TEXLAB</div><div class="top-right"><h1>TEST REPORT</h1><div class="repno">Report No. : <span id="repNo2">SGR-2710262952</span></div></div></div>
+<div class="pvh">PVH</div>
+<h3>Sample Description As Declared :</h3>
+<div class="kv">
+<label>Buyer Name:</label><input value="PVH">
+<label>Submitter (Company Name)</label><input value="BUSANA APPAREL PTE LTD">
+<label>PVH Region</label><input value="PVH TH">
+<label>PVH Brand</label><input value="Tommy Hilfiger">
+<label>PVH Sourcing Office</label><input value="PVH FAR EAST LTD - INDONESIA REP OFFICE">
+<label>PVH Wholesale Customer</label><input value="/">
+<label>PVH Division</label><input value="TH Womenswear">
+<label>PVH Age Group</label><input value="Adults (14 years and Older)">
+<label>PVH Shipping Destination</label><input value="Mexico; Panama; USA">
+<label>Retest</label><select><option>No</option><option>Yes</option></select>
+<label>Finished Product Vendor</label><input value="BUSANA APPAREL PTE LTD">
+<label>Destination Code / Market Style Number</label><input value="/">
+<label>PVH Season &amp; Year</label><input value="SPRING 2027">
+<label>PVH Style Number</label><input id="styleNo" value="WW0WW52596">
+<label>PVH Style Reference Number(s)</label><input value="/">
+<label>PVH Style Name</label><input value="LINEN PANTT">
+<label>Sample Description</label><input value="COL. OFF WHITE">
+<label>Color(s) to be tested</label><input value="OFF WHITE">
+<label>Finished Product Type / Category</label><input value="Woven Bottoms">
+<label>Performance Claim</label><input value="/">
+<label>Material Weight</label><input value="170.00">
+<label>Weight Unit of Measure</label><input value="/">
+<label>Sample Status</label><input value="Bulk Production">
+<label>PVH PO Number</label><input value="4300230263">
+<label>PVH Standard Care Code</label><input value="UE-1">
+<label>PVH Variation Care Code</label><input value="UE-?G">
+<label>Care Instruction</label><textarea>/ US : / / / EU: / / machine wash cold, non-chlorine bleach only, remove promptly, do not tumble dry, line dry in shade, medium heat iron if necessary, dry clean</textarea>
+</div>
+<div class="footer">Page 2 of 11</div>
+</section>
+
+<!-- ================= PAGE 3 ================= -->
+<section class="page">
+<div class="top"><div class="logo">TEXLAB</div><div class="top-right"><h1>TEST REPORT</h1><div class="repno">Report No. : <span>SGR-2710262952</span></div></div></div>
+<div class="pvh">PVH</div>
+<h3>Sample Description As Declared (Cont.):</h3>
+<div class="kv">
+<label>Claimed Fiber Content</label><input value="body: 55% linen, 45% viscose">
+<label>Attachment Type</label><input value="Standard 100 by OEKO-TEX® (Product Class 1- / Childrens / Product Class 2- Adults)">
+<label>Attachment Document Number</label><input value="/">
+<label>Retest</label><input value="No">
+<label>Previous test report number(s)</label><input value="/">
+<label>Full Initial Test</label><input value="Yes">
+<label>Selective Testing (Yes / No)</label><input value="Yes">
+<label>Test Package for Apparel Product - Physical testing</label><textarea>Apparel – Woven (Garment dyed / Garment / washed. Or, WITHOUT passing or accepted / fabric test results)</textarea>
+<label>Sample Received Date</label><input type="date" value="2026-10-27">
+<label>Expected Date Out</label><input type="date" value="2026-10-29">
+<label>Report Delivered Date</label><input type="date" value="2026-10-29">
+<label>Report Prepared by</label><input value="Aniza Nafsin">
+</div>
+<h3>Oeko Tex Certificate Test Report Record</h3>
+<table><tr><th>Oeko Tex Certificate No</th><th>Item</th><th>Class</th><th>Validity</th></tr>
+<tr><td><input value="JK003 181728"></td><td><input value="Not Provided"></td><td><input value="1"></td><td><input value="30.04.2027"></td></tr>
+<tr><td><input value="HK001 135811"></td><td><input value="Not Provided"></td><td><input value="1"></td><td><input value="15.03.2027"></td></tr>
+<tr><td><input value="BD005 210673"></td><td><input value="Not Provided"></td><td><input value="1"></td><td><input value="31.01.2027"></td></tr></table>
+<div class="sig"><div>For and on behalf of</div><div class="bold">TexLab – PT Sinar Garmindo Raya</div><div style="margin-top:14px">Semarang, <input type="date" value="2026-10-29" style="width:150px;display:inline-block"></div><div>Paraf,</div><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIwAAABLCAYAAACiLW8yAAAVjElEQVR4nO2de7yd05nHv/tcEhK5yAXNjbjlkIggRUImiuoFdQmlVfcpo4b6oJQpkWFGJzJFR4eiGqGkirYuVaWGTqjWpZEadxXXSFwiCIJkzx+/9XQ9e+Xd++xzzt5n73Nyns9nf/Z+33fd3rWe+/OstXN0LWgAcuGzKnyKwWBgIJAH+gD9gX7ACGAzYEBo51NgnVDuDeBxYCGwNFy/nrTbGMqW6rtWkEPja21uOtRBPUND+M4n3wb9gGHAeIQIvYC1ge3D/UEIMXqhCVzLtbnK/V4ONLtyS4iI+ThwH/An4H+BDzLGlo6rFpCjE8ZRjwiTQ4uxitUnYDiwZfgeC3wVcZE3gdeAd4AVwFNocZuAz4YyjyNOMwJ4HiFBf2AM8HuETLuENhYC6wPbAeMQB5oAfAhcC/w89GFg460VGLIMB/YG/oIQvNtCA2Kljcn9YcA04L+A25CIMIp+GDgJ2Ano2wljHAmcDbwIvA38NPRt0ERtCNA44TrAnWhungM+E543FKnX5cA4STrJvRGlXwG8D3yCuMdChCRXAF9GoqdYm43Jd/q7Ibnv6zVm/PaTPgg4HXGiPPA7YItkDJ0JRmRfJxJTHnHfHKsTYZcCvzAexgNHAtcAj6IXvhU4CiHPQERBKdiCGpVVE2zsBqPQIl0NvAzMAoa6sp0FNpcnIrF4BnATcEMNxlIxyBI3fZC4uRl4D1gGXAj8Eb34pkXaMoqv1USkiANwChHJe9O542sK30eEMQwBvoE4oHG+LiOWsgY6HpgBvIBEzjzgTGTqAhyHXvxsNBm9iByknqilAY3PFuxANO7DwnVKIFnisBLvY/3sCXyEjIHNw1imh2dNGfXqCtLF3Qsprg8iv8bvgO8BOyT1GhEy5ZFSCV3gZYljPAlYgESon4NSFN5R6rc+1kXEt2O4vhe4qkJ9VA2M6gz+AVk3eWRdXAjsmtQxFt8crv8tlL+d2oqetoAplw3AY8A54b7X176GFvBC4EfAtxBiWbmOvKfVvQyYHH4fStRj6g5SS2Iw8Gu08G8D30RONoMcQixfxyb2/FDvTaIeU7cU4sAI5dvAXxEB2ELuj/Sy54EHgIeQOF4EHBvKdARpjJv9DNgn3PscIrqcK1NzSEXPOOA7yKm1APgX5EwySBHLgyHMdOSufwtZIf5ZPYPNw1CEEOPC9VeAj4GLKeS+WwLXI73jn8O99hKG1fsFcH/4vQ0yJjbsYNsVA7+Ik4CZyGfyFnAyshYMyqEea+8w4KXQ3j3UGYWUABtff2Rm742Q5y1keqflDPYDViJLC9pHHIYMF6OwBsjp+QYKk/gynQ6eS/RG8jiPKGUm0cMIbfN+Wpt7IQtqd8Sp1gv36x1hbPyTUOByK+AQNDfbhWdNSXnT264M5Q4M121FGuv7GISg64a+vBJcE4TxnU4G7gLeBeYAm7hn5j1tT9ubIsVxOPArZGZ3BY+lIcOlaNEA/htZK1l+KIjENwrN42JkFtuzcsHmegDwN+BL4fpKhLRtba8olNuIiRRzqF2GZOVyYCISI8+7citpe+TUyi8MnzwwH3EcSyeoVy5j79wXmIosIZD+sITigUlLQ3gJWU0vA9cR9b5y3zcfyi5DgVTzaX2CRKOV6RTwlHEskotLkULby5WplD8hhyLJpyNW/jSwQVKm3sA46heBPxMtwhuAG8PvUv4km7t+wJNEnac5u3jJNnZDHB9kgPwy/K763HkxMBy4BWHpjYiFGlRKNvoXeij004AQ1EzPehRL3lKcjwjJ4Jto/IbwpcZvyPEdNM8TwnVbpACIw72GQi/7Iidp1cFPwiTkdHsFOJ6YStAePaW1Pg3mIf0I5Mi7M2Nc9QA+4v49lFw11t3vjxbsSaKYKIYAVqcf0oNeAvZwz8oZC6HPPyOzuh8y3atKaLYoTSjy+T5y6W/kylRD4/aTcg9yfoF0mKXEdIZ6QhhbiHMRVzghXHtLchBCmCeQUgrFxZN/t7sQp+hP+YRiZf4VOC308xOqiDD2kjngx8REpUHhfrWThKz/q5C23xuZiH9AEVioH7Fki74rmqfvh2s/PnufYcAzSCEloxzJ/RzKDHwHuRdKlfdg3G4KUp7XBu5AwUg/noqAIcJaCCs/RYHAYdXorAhYHxOQ23ybcH0AyvHISi2oBdgYhiKl/HIKc3M82EJvAvwWidcd3bMsArT2T0Lctl+RtovV25goFRag1Ac/lg6D19JvRrL4q+55Z4kB38/twEHh3oaI09VD2qH13Qct5iKUg+KfFasDcAniSEe4eylXMuRrAp5FumOp9g1s/tZBIu3LyFg5M9yvSOTfU62JoSNcB529ODZ5pwJnhd8jkTNsSriuFcJYv2sD/4MsoPHJs1J1bUHPQsnqlxKto5T67fog5MuZUGY/Vu+7KNxwAjIcsvpoF9gAZiIl6xiiZ7IWCqZRwfFoUXJoUm8lUkot9Bibp7WAu5EVs03yrLXEKK+87ofExjyinpILv/dxZdcBXkU+ndZEsk802xlx5WuQyLTnFYFjUUTVYh61tEQMGXZHrvLB4Xo/FI1ti9VQKfDIchtSRk2RNMLK0l384uaSZ9buCSgsMCPcuxkRCkTH6FHIkzzK1UvB2rc645C0+AQhTcVgMMo9sQw3n8dRC/D+hL+gvF+QSXoLkao7i8v4XQVzUMqAJSmlOsEWaOvJYHevVDqHvevBaHFnoXyZ34T7FvH/DMor2plsLmPtHIO41hjkL1sQ2p2TlGsrmBM3B8o/ySNZmWbM1QL8S92BRKXd+zXyhELnIIzv4wcoxjXRPbNxDUHxtU8RJ3gKRfG3cGWN8tP2G0Kby4lbRB5yfRsBX4t0TCicI/s9GomuPDH4eFG4vrbVNy0OqyH8GyjoNTwpYGy2FmmSPiHIPL45lHb4iCtXzXEZ4bQgx9u1yCfkx2c6y6/QwhyPPLr7Ip3jdaSPDEWbyywQaMhgffwYKbbbI71jJTK/93fjGYu24FhWgL27tbV/GMPrwHnh3iSExO3ZcuLFbA6JxXtAJvRt4UEz9ZFHa5NwPJpoQ+ZBaKzVDEb6VIQpaCEfJCJLY/K9G1ooU8g93Ii26A5DHvObKeRMhjCXIfMZYizpU6R//JCYNfcCSk7zda2tEQix70XbhC2EswghdDEwM76YkbMz2nabJyDeCqQrZImiBoTRo4o0Vi0wCm5BA/2Wu/8AMW+1kuZ1qhuciLjvJUifSvvzyvkDyC9jk29iZCJa9MtR+scSYnjAwi8gZHsy1NscKdVPoRTV+5CouQAhnUWfvcvDvm8lnkLREvp4LnwM4ctZxwbEKS8J47oSqSxNIDe8hQAuJVLFS+HzPmKFbc3R6Ah4jX8BUgYN5hJjNpXQY1JE2QPpEPcT/T5+TOn1AJSOMDC5b22eReQYK9DYrU/va/kbEl05pPR+iDhTDvg84hIrw2dXNw7TO3OIs9yP1nKv8HxO6H8HV95gLaRwn47W/m601g+jAwe+S0zo+jv0Af4Jua3nhc+dSH84EzgcsaVaOfDOQO53638GcYNWRxHGv9N6SPZ/gHQKz1VKEUkvRPUmNrzcb0AKsVkreQpPVfCi72OEOKDF+wSlKnjYJdR/FQU8R7tnw1CQ9hoU1zqE6NfJEw8O8IHRLdB634/ygY9FyXBfIhJAlwFj1/+IstJMJh+IwvcdiV6bmWj9TEc+n2UoCcqgHIRsRnqVUWKWv+VotGgr0aJOTJ73RRzFLMJTQ/nLiaLLPMK2Dec+JLbmAluH/lch5Pw2MS9nJOJenw/XnkgaKDwzJ4UWJBZnowDw9faCWRNj9yuRTdcesIkfiTbq24SNRz6JjcN1W8fmy09AE7ESUXWLK1MuIjYiKjWnZ7ogOaQDvkXkMuaqt3fKIcXa8n5akL7zLJFTNYW+DiI6DrdBKsVzof5HyDx/EYk1M+XvRpLCxlsM1kb64XUoHeNhxD3vRBLIqwYFbuVaW0lZYGPaHE3MVuG6HIQx5Ley/ZFoew9xq4mubHuI41my0y+srZGhzA/Qgt5L1Dus/MHIorHNe8Zl/I4De4cHKQxeTkYWlOVS22d+KPcY0oGsz3Q+QJz17lBvBRJr46hj8OadTxXw0VuQrrEc+QWg9QVOn++BkrNeRyaseVPbw0kNiZ8A/j38TreSQEwzmIIQ511i5N3Kb4ZEyn6h3eFITC6g8OAikD/qP9x1E0IOs5DeRnvZz0OL/wkyYAaxOvfcDpnLFkZ4HaVVZL1rQ629uhAxvlhmfZ74kjk0IU+iSbuqSB1CHcvK7xvKT0Nu+58gebzYlV3ZjrFbvWfIPr/GwM7TexP5XGYhM3cRcTfEQuSn2RmJgZWIk36AdJLTkfh8BOkdeyFONRKJqffQ/u0FSNQ9FvoegcTRgPB5O9w/DM3JusitsicSZR+iIHQjhYc/GteqG9gIafbT0PbSKRTGZAwakCXwPKs7r7I80wchWbwKWX4bumcddVKaOLmE7JMS7PfmSDHujRZ4CTp7z8pYua2QL6VP+DyKlM61keL8M4Q0L6PFeze80/6srpsYx9waKfMWqxqLYnLPIWV/Y7oQWPh+OmKZ96GXuSl8HkPYfyrKUhsU6u2ETO0RaGKyUkcnobDCYkSxXk+pVOqGLdIpaAHMFPe+mBzym1zp6l2LdhR4X4x9zyXutT6Jwu3CII6wEVJCb88YT4P7eE9yHnGhe5H3eKir15DULTo3tRRJJjKOBM5B+a67u+d9kTI3DlHlLCSKloRndiLmK67OKDSZeyBdYD7KOrP4k01Ee8RPFhiL/iui1GGI6nPEzWWrEAf4yI3hFRRXuoJCzpBDAdcLwthBiG8xphwyy5ciMTgViaeP3Xt5Eb8K2BZZU8tD2XOJucWNVPFM30qDvdiGKP/jY+LpTcVgXcQpzkfU8n8o3/crSCe5FSmyUyikoNSbWykwBNwIWSnbhmuvc22AuM+hrt6OSBfbJVz7FAqQLrIE6S955Iuychbvuwgt9PrumUe+sYhbvYA41kgkyvejPrIS2gU24YOQVr8MmXbHIRm/JVqM4Yh7bI4oeTekvOWJp1nmie5wAztSrJpuAkOMuUjMQKGoORIRg9cVGpG3dgXRu+vbAynmeeQ083EgW+gLwvPDKRQjjei4tw8QlzL3A0hH/I0bc5cEP/BtkIfyOsRyX0Qv/RAyR+cj3WY6Yt2PIqQ6NFw/CPwn0hn8saxZynClwBZwVhifXZsX9ffEPBbjIL3C2H+KTPILifpZL8Q1X0bxHHO+pTGq7RDC3RSumxHy3IrE18nELbu9Qr0vIHE2kG6ANOnghyDuMhpFzDdF7NcQYUfEjXwbY9AGrt8ihJuFTmJK+yqWVtkesAUcj3ST8e7eKYiTDKZQ5PQh5ugOQwrxU0h8mAU0w40xHadxr9lIdJ2KYky3IfPY78n2hLIW2olZy9zoioI3MUtBDjm6HkcIlVo9zSjm9Afkkr8LeTw3YHXwFkJHEegRYirGmHC9r+vHFn8TZLn5Q5d2QtbTn5BTLuUs9tsv8i1EcXxWUjZ9H5vXfREHKnevU5cBo0j/8RO2EXJ2WfzHm4UeJiJrZCHy3dyAcl83IHuy2oM8Vn5vJIImofOGf+TahEj5xyFxY3WLEUnWgoO83bOJzr0lFJ6kkTV2Q9YBSNSfm9FutwQfn3mbGFTzL55lFQ1BVswZyKM6F/l5foky+75G1CN8O+UgUAMRGa5G3tIr0SL2ovA839FIH/uiq2vfqf/GfhvC9UPK8GKkF1mU+gGk3LZmDVo7RyEDw/JvujXS2ET2QWa1ZaAVi7gXo+BByD9yNnJmLULi4ALk3+iXUcdzuyyO1p/4BxG2t9lDCzKxb6Q0J7Bv/05jEGKsIOYDGdyFdDcorZcYl+mLlO3ZZdTpFmAveA5ympWzQ9MjT7pQOaRQT0MZaovC5yokPiZT2m8xBukQTyOr5VAk/h5BpvY+yD+0FHGe3pRWuv0CboJE2/soNGDHhuSIPplfEHcGtOZfsXm6iLhbpJx6f++0K4J5iTdDi/J1ZCHY/XLAs+LU87s18vVMCL+XIgQwr+rLCDnsf5s+i5BgHsoFXob8RkcjK20dhAQ3oaM4rP80mOe9tDlk8cxGesr5RJ3I3tN7yw9BZrMPGBZ7b5CX/DSE0Cej8/jaMn9dDmyxZ6KF6kP7TWWrV0xXaUaK7PlIZM1E+SLfR6Z76jBMWXwWR/Pg9RTQwltuytXEEzRSfcN+b4I4omX9tUXEmANw56TNbgemA4wl/j+Q3e8oeB2lrfVSHcQjR3qdIuhwhCB5FDc7JambgtUdgLjaiSXKZo3VlPE7UKwpK2uw24BxhWakaFbT5W2U3VTk01r0O+uZX5QWlID1OIqrHYA4pu+7GNizsyk85aqcebD5GoIQ9I9IIe7SXuBSYJS0J6Iwz7rrFbz1M5G4DeQBVv/jjnKdmEY4TxAtqHK5hI2lBW2FOSe5363AEGMIcsydzurmaL1AyikOQGJgGXGflS/XVschyMXwatJWOeMyh95iKreFpy7BXrY3Yql3hPv19LIpogxB4YPlSIz6DMD2jtsQ7Dxkxa3n7pcLvZGJbekS9cylOwQ2KYdQf/9N4BdsfRRJfx+Z5Hsm5ToyXutnY+QC2IE1wIPbXrCJbkYbtmwhasllvAe4F/J1PI9yVM6gML+lUotq8zCH9luM3SoYWQrsRS8mbhKrBXWlCPA55E/5GLnvW9yzSo/P2puKAqBpgnwPOPDbah9z9ztzsjw174jSIV9Dinj6J2PVGpdZS0+jUMFIurGJ3BEwhDkaJWH7LajVhhQBZiCF9h7i8Wq+bLXHAsqNzhM31/XoMgl4hFlOTEyqJsKklLsnSiV9Gp1+YIvUmXvTbTz90bYdOz2zB2ESMG/rMUixzMpWqyT4Bdge5dcsRmb9GNd3LRbK+rQDkdL00B4g6g8HIISxbauVRBifTAXyKv8cRZJvIR7DCrVdHHvnoUg8W/5uW/57qdtDH2RKjkZ7i7NOW+oIpIh3MGL5z1C4TaQzxU8psPEegDbXjw7XXXIvUiXBFmcyylE5EukQU5PnHQFv/Uwl7uueRfyPgXpk+Taeq1HOkJn0a7TFZIt5LDF7fjnxv5066j21Sd+AeBbg9axuJtcjmAi108tXUPin6mskGMJMo/AQnY6Y1an18w2UZb+cwkN8qr2jshJg42tETs08ElOwhiKNTchA5Hs4jfhfRG1dzFSsTEDcZAk6ndJSD0ptC6lH8PNwNMpRTu/3QBvBI8CGaB9THkWTu4L4aQ16vL0JGHdoj5ViYq0BiTY7TfN84smdXY2rFIM1JrhYDfATty1SDPNIufWHAXYHROmBCkEOpR68gzbCH+6e9VBjDwBRfI1Bm8o+QttP/b+59HCVIvD/dc0gEXCsNIQAAAAASUVORK5CYII=" alt="Tanda Tangan"><div class="bold underline">Rahmat Hidayat</div><div>Head of Laboratory</div></div>
+<div class="footer">Page 3 of 11</div>
+</section>
+
+<!-- ================= PAGE 4 ================= -->
+<section class="page">
+<div class="top"><div class="logo">TEXLAB</div><div class="top-right"><h1>TEST REPORT</h1><div class="repno">Report No. : SGR-2710262952</div></div></div>
+<div class="pvh">PVH</div>
+<h3>Summary Of Test Result :</h3>
+<table><tr class="hdr"><th>Test Requested</th><th>Pass</th><th>Fail</th><th>Data</th><th>Comments</th></tr>
+<tr><td>Dimensional Stability</td><td class="center"><input type="checkbox" checked></td><td class="center"><input type="checkbox"></td><td class="center"><input type="checkbox"></td><td><input></td></tr>
+<tr><td>Appearance After Actual Laundry</td><td class="center"><input type="checkbox" checked></td><td class="center"><input type="checkbox"></td><td class="center"><input type="checkbox"></td><td><input></td></tr>
+<tr><td>Colorfastness to Light</td><td class="center"><input type="checkbox" checked></td><td class="center"><input type="checkbox"></td><td class="center"><input type="checkbox"></td><td><input></td></tr>
+<tr><td>Weight</td><td class="center"><input type="checkbox" checked></td><td class="center"><input type="checkbox"></td><td class="center"><input type="checkbox"></td><td><input></td></tr>
+<tr><td>Tearing Strength</td><td class="center"><input type="checkbox" checked></td><td class="center"><input type="checkbox"></td><td class="center"><input type="checkbox"></td><td><input></td></tr>
+<tr><td>Tensile Strength</td><td class="center"><input type="checkbox" checked></td><td class="center"><input type="checkbox"></td><td class="center"><input type="checkbox"></td><td><input></td></tr>
+<tr><td>Seam Slippage / Strength / Stress Points / Pocket Reinforcement</td><td class="center"><input type="checkbox" checked></td><td class="center"><input type="checkbox"></td><td class="center"><input type="checkbox"></td><td><input></td></tr>
+<tr><td>Colorfastness to Crocking</td><td class="center"><input type="checkbox" checked></td><td class="center"><input type="checkbox"></td><td class="center"><input type="checkbox"></td><td><input></td></tr>
+</table>
+<div class="note"><b>Note:</b> Pass = Meet Buyer's Requirement &nbsp;|&nbsp; Fail = Not Meet Buyer's Requirement &nbsp;|&nbsp; N/A = Not Applicable &nbsp;|&nbsp; Data = No Specified Requirement</div>
+<h3>Texlab – PT. Sinar Garmindo Raya contact information for this report.</h3>
+<table><tr><th>Primary Contact</th><td><input value="Aniza Nafsin"></td><th>Email</th><td><input value="aniza.imamy@texlab.id"></td></tr><tr><th>Back Up</th><td><input value="Rahmat Hidayat"></td><th>Email</th><td><input value="rahmat.hidayat@texlab.id"></td></tr></table>
+<div class="footer">Page 4 of 11</div>
+</section>
+
+<!-- ================= PAGE 5 ================= -->
+<section class="page">
+<div class="top"><div class="logo">TEXLAB</div><div class="top-right"><h1>TEST REPORT</h1><div class="repno">Report No. : SGR-2710262952</div></div></div>
+<div class="pvh">PVH</div>
+<h3>Dimensional Stability After Laundry</h3><p class="small">AATCC 150-2025 Modified (Tide Plus Bleach Detergent, Machine wash cold, Normal cycle, Line Dry, Load 1.8 Kg)</p>
+<table><tr class="hdr"><th>Garment: Bottom — After 1 Wash</th><th>Original (in.)</th><th>After 1 Wash (in.)</th><th>Shrinkage (%)</th><th>Range</th><th>Rating</th></tr>
+<tr><td>Body Length</td><td><input class="orig" value="39.5"></td><td><input class="after" value="39.5"></td><td><input class="shrink" readonly></td><td><input value="-5% to +3%"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>Front Rise</td><td><input class="orig" value="11.8"></td><td><input class="after" value="11.8"></td><td><input class="shrink" readonly></td><td><input value="-5% to +3%"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>Back Rise</td><td><input class="orig" value="15"></td><td><input class="after" value="15"></td><td><input class="shrink" readonly></td><td><input value="-5% to +3%"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>Inseam</td><td><input class="orig" value="28.5"></td><td><input class="after" value="28.5"></td><td><input class="shrink" readonly></td><td><input value="-5% to +3%"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>Outseam</td><td><input class="orig" value="39"></td><td><input class="after" value="39"></td><td><input class="shrink" readonly></td><td><input value="-5% to +3%"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>Waist</td><td><input class="orig" value="13.8"></td><td><input class="after" value="13.8"></td><td><input class="shrink" readonly></td><td><input value="-5% to +3%"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>Thigh</td><td><input class="orig" value="13.8"></td><td><input class="after" value="13.8"></td><td><input class="shrink" readonly></td><td><input value="-5% to +3%"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>Leg Opening</td><td><input class="orig" value="11.5"></td><td><input class="after" value="11.5"></td><td><input class="shrink" readonly></td><td><input value="-5% to +3%"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+</table>
+<table><tr class="hdr"><th>Garment: Bottom — After 3 Washes</th><th>Original (in.)</th><th>After 3 Washes (in.)</th><th>Shrinkage (%)</th><th>Range</th><th>Rating</th></tr>
+<tr><td>Body Length</td><td><input class="orig" value="39.5"></td><td><input class="after" value="39.4"></td><td><input class="shrink" readonly></td><td><input value="-5% to +3%"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>Front Rise</td><td><input class="orig" value="11.8"></td><td><input class="after" value="11.8"></td><td><input class="shrink" readonly></td><td><input value="-5% to +3%"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>Back Rise</td><td><input class="orig" value="15"></td><td><input class="after" value="15"></td><td><input class="shrink" readonly></td><td><input value="-5% to +3%"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>Inseam</td><td><input class="orig" value="28.5"></td><td><input class="after" value="28.4"></td><td><input class="shrink" readonly></td><td><input value="-5% to +3%"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>Outseam</td><td><input class="orig" value="39"></td><td><input class="after" value="39"></td><td><input class="shrink" readonly></td><td><input value="-5% to +3%"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>Waist</td><td><input class="orig" value="13.8"></td><td><input class="after" value="13.8"></td><td><input class="shrink" readonly></td><td><input value="-5% to +3%"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>Thigh</td><td><input class="orig" value="13.8"></td><td><input class="after" value="13.8"></td><td><input class="shrink" readonly></td><td><input value="-5% to +3%"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>Leg Opening</td><td><input class="orig" value="11.5"></td><td><input class="after" value="11.4"></td><td><input class="shrink" readonly></td><td><input value="-5% to +3%"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+</table>
+<div class="footer">Page 5 of 11</div>
+</section>
+
+<!-- ================= PAGE 6 ================= -->
+<section class="page">
+<div class="top"><div class="logo">TEXLAB</div><div class="top-right"><h1>TEST REPORT</h1><div class="repno">Report No. : SGR-2710262952</div></div></div>
+<div class="pvh">PVH</div>
+<h3>Appearance After Actual Laundry</h3><p class="small">AATCC 150-2025 Modified (Tide Plus Bleach Detergent, Machine wash cold, Normal cycle, Line Dry, Load 1.8 Kg)</p>
+<table><tr class="hdr"><th>Assessment</th><th>After 1 Wash</th><th>After 3 Washes</th><th>Requirement</th><th>Rating</th></tr>
+<tr><td>Color Change (With Suppressor)</td><td><input value="Grade 4.5"></td><td><input value="Grade 4.5"></td><td><input value="Grade 4.0"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>Color Change (Without Suppressor)</td><td><input value="Grade 4.0"></td><td><input value="Grade 4.0"></td><td><input value="Grade 3.5"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>Special Lay Wet</td><td><input value="Grade 4.5"></td><td><input value="Grade 4.5"></td><td><input value="Grade 4.5"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>Self Staining</td><td><input value="Grade 4.5"></td><td><input value="Grade 4.5"></td><td><input value="Grade 4.5"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>Pilling (Face)</td><td><input value="Grade 4.5"></td><td><input value="Grade 4.5"></td><td><input value="Grade 3.5"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>Pilling (Back)</td><td><input value="Grade 4.5"></td><td><input value="Grade 4.5"></td><td><input value="/"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+</table>
+<h4>Assessment: Material / Product</h4>
+<table><tr><th>Item</th><th>1 Wash</th><th>3 Washes</th><th>Requirement</th><th>Rating</th></tr>
+<tr><td>No pile loss, no fiber migration / fiber loss or loss of luster.</td><td><input value="N/A"></td><td><input value="N/A"></td><td><input value="Satisfactory"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>No objectionable pilling, snagging, change in hand feel or frosting.</td><td><input value="Yes"></td><td><input value="Yes"></td><td><input></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>No conspicuous distortion, hand feel, pilling or surface change.</td><td><input value="Yes"></td><td><input value="Yes"></td><td><input></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>No seam opening. Seam appearance / wrinkling: fairly smooth but non-pressed appearance.</td><td><input value="Yes"></td><td><input value="Yes"></td><td><input></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>No fraying or unraveling of buttonholes, trims or hems.</td><td><input value="Yes"></td><td><input value="Yes"></td><td><input></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>No bubbling, shredding, peeling, delamination, crack marks or blisters.</td><td><input value="Yes"></td><td><input value="Yes"></td><td><input></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+</table>
+<div class="footer">Page 6 of 11</div>
+</section>
+
+<!-- ================= PAGE 7 ================= -->
+<section class="page">
+<div class="top"><div class="logo">TEXLAB</div><div class="top-right"><h1>TEST REPORT</h1><div class="repno">Report No. : SGR-2710262952</div></div></div>
+<div class="pvh">PVH</div>
+<h3>Assessment: Trims</h3>
+<table><tr class="hdr"><th>Item</th><th>After 1 Wash</th><th>After 3 Washes</th><th>Requirement</th><th>Rating</th></tr>
+<tr><td>No deterioration such as chipping, indentation, discoloration, rusting, etc. or detachment of hardware (buttons, snaps, etc.)</td><td><input value="Yes"></td><td><input value="Yes"></td><td><input value="Satisfactory"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>No bleeding or fraying of drawstrings.</td><td><input value="N/A"></td><td><input value="N/A"></td><td><input></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>No deterioration of elastics.</td><td><input value="N/A"></td><td><input value="N/A"></td><td><input></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>No deterioration or delamination of fusible, interlining or appliques, etc.</td><td><input value="N/A"></td><td><input value="N/A"></td><td><input></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>No distortion to neck trim, cuffs or waistbands / bottom bands / hem</td><td><input value="Yes"></td><td><input value="Yes"></td><td><input></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>No stitches unraveling of appliques, patches, etc.</td><td><input value="N/A"></td><td><input value="N/A"></td><td><input></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+</table>
+<h3>Assessment: Label including sewn in woven labels, printed labels and heat transfer</h3>
+<table><tr><th>Item</th><th>1 Wash</th><th>3 Washes</th><th>Requirement</th><th>Rating</th></tr>
+<tr><td>No cracking, delamination or peeling off from the base fabric.</td><td><input value="N/A"></td><td><input value="N/A"></td><td><input value="N/A"></td><td><select><option>/</option><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>All wordings on the label must be legible.</td><td><input value="N/A"></td><td><input value="N/A"></td><td><input></td><td><select><option>/</option><option>PASS</option><option>FAIL</option></select></td></tr>
+</table>
+<h3>Assessment: Graphic / Brand logos</h3>
+<table><tr><th>Item</th><th>1 Wash</th><th>3 Washes</th><th>Requirement</th><th>Rating</th></tr>
+<tr><td>No cracking, delamination or peeling off from the base fabric.</td><td><input value="N/A"></td><td><input value="N/A"></td><td><input value="N/A"></td><td><select><option>/</option><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>No color change, quality or distortion.</td><td><input value="N/A"></td><td><input value="N/A"></td><td><input></td><td><select><option>/</option><option>PASS</option><option>FAIL</option></select></td></tr>
+</table>
+<div class="note"><b>Notes:</b> The sample has been laying wet for 3 hours under 8 lbs pressure after 1st wash and two more washes and dry cycles without laying wet.</div>
+<div class="footer">Page 7 of 11</div>
+</section>
+
+<!-- ================= PAGE 8 ================= -->
+<section class="page">
+<div class="top"><div class="logo">TEXLAB</div><div class="top-right"><h1>TEST REPORT</h1><div class="repno">Report No. : SGR-2710262952</div></div></div>
+<div class="pvh">PVH</div>
+<h3>Weight</h3><p class="small">ASTM D3776/D3776M-20(2025)</p>
+<table><tr class="hdr"><th>Unit</th><th>Test Result</th><th>Range</th><th>Rating</th></tr><tr><td>g/m.Sq</td><td><input value="178"></td><td><input value="-5 to +5% / As Claimed 170 GSM"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr><tr><td>Oz/Sq.Yd</td><td><input value="5.25"></td><td><input></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr></table>
+<h3>Seam Slippage / Strength / Stress Points / Pocket Reinforcement Strength</h3><p class="small">ASTM D1683/D1683M: 22 / ASTM D7506/D7506M:17 (2025) (Speed 12 Inch/Min)</p>
+<table><tr class="hdr"><th>Garment: Bottom</th><th>Seam Slippage (lbs at 6 mm)</th><th>Min.</th><th>Seam Strength (lbs)</th><th>Min.</th><th>Mode of Failure</th><th>Rating</th></tr>
+<tr><td>Front</td><td><input value="NSS"></td><td><input value="18"></td><td><input value="31.8"></td><td><input value="20"></td><td><input value="FR"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>Inseam</td><td><input value="NSS"></td><td><input></td><td><input value="25.6"></td><td><input></td><td><input value="FTS"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>Outseam</td><td><input value="NSS"></td><td><input></td><td><input value="27.5"></td><td><input></td><td><input value="FTS"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>Crotch</td><td><input value="NSS"></td><td><input></td><td><input value="50.3"></td><td><input></td><td><input value="FTS"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>Seat</td><td><input value="NSS"></td><td><input></td><td><input value="33.8"></td><td><input></td><td><input value="FTS"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>Pocket Front</td><td><input value="NSS"></td><td><input value="10"></td><td><input value="14.7"></td><td><input value="10"></td><td><input value="FTS"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+<tr><td>Pocket Back</td><td><input value="NSS"></td><td><input></td><td><input value="10.3"></td><td><input></td><td><input value="FTS"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr>
+</table>
+<div class="note">Notes: (Min) = Minimum &nbsp;|&nbsp; (NSS) = No Seam Slippage &nbsp;|&nbsp; (NST) = No Seam Strength &nbsp;|&nbsp; Mode of Failure: (FTS) = Fabric Torn At Seam, (FR) = Fabric Rupture, (STB) = Sewing Thread Breakage</div>
+<h3>Tearing Strength</h3><p class="small">ASTM D1424-25 (Load: 12800 Grams, Load Range: 20-80%)</p>
+<table><tr class="hdr"><th>Direction</th><th>Test Result (lbs)</th><th>Min. (lbs)</th><th>Rating</th></tr><tr><td>Across Warp</td><td><input value="3.9"></td><td><input value="2"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr><tr><td>Across Weft</td><td><input value="4"></td><td><input value="2"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr></table>
+<h3>Tensile Strength</h3><p class="small">ASTM D5034-21(2025) (Speed: 305 mm/min, Gauge Length: 75 mm)</p>
+<table><tr class="hdr"><th>Assessment</th><th>Test Result (lbs)</th><th>Min. (lbs)</th><th>Rating</th></tr><tr><td>Warp</td><td><input value="42.5"></td><td><input value="35"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr><tr><td>Weft</td><td><input value="35.7"></td><td><input value="35"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr></table>
+<div class="footer">Page 8 of 11</div>
+</section>
+
+<!-- ================= PAGE 9 ================= -->
+<section class="page">
+<div class="top"><div class="logo">TEXLAB</div><div class="top-right"><h1>TEST REPORT</h1><div class="repno">Report No. : SGR-2710262952</div></div></div>
+<div class="pvh">PVH</div>
+<h3>Colorfastness to Light</h3><p class="small">AATCC 16.3-2020 Option 3 (20 AFU)</p>
+<table><tr class="hdr"><th>Assessment</th><th>Testing Result (Grade)</th><th>Min. (Grade)</th><th>Rating</th></tr><tr><td>Color Change</td><td><input value="4"></td><td><input value="3.5"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr></table>
+<div class="note">Notes: The Grey Scale Rating is based on a 5-level scale ranging from 1 to 5, where 1 represents the worst rating and 5 represents the best.</div>
+<h3>Colorfastness to Crocking</h3><p class="small">AATCC 8-2016e(2022)e</p>
+<table><tr class="hdr"><th>Assessment</th><th>Testing Result (Grade)</th><th>Min. (Grade)</th><th>Rating</th></tr><tr><td>Dry (Color Stain)</td><td><input value="4.5"></td><td><input value="3.5"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr><tr><td>Wet (Color Stain)</td><td><input value="4.5"></td><td><input value="3"></td><td><select><option>PASS</option><option>FAIL</option></select></td></tr></table>
+<div class="footer">Page 9 of 11</div>
+</section>
+
+<!-- ================= PAGE 10 ================= -->
+<section class="page">
+<div class="top"><div class="logo">TEXLAB</div><div class="top-right"><h1>TEST REPORT</h1><div class="repno">Report No. : SGR-2710262952</div></div></div>
+<div class="pvh">PVH</div>
+<h3 class="center"><u>Tested Sample Photo</u></h3>
+<div class="photos">
+<div class="ph"><div class="bold">Appearance After Actual Laundry - 3rd Washes (Front)</div><input class="photo-input" type="file" accept="image/*" onchange="previewPhoto(event,'p10a')"><button class="no-print" onclick="this.previousElementSibling.click()">Upload Foto</button><img id="p10a"></div>
+<div class="ph"><div class="bold">Appearance After Actual Laundry - 3rd Washes (Back)</div><input class="photo-input" type="file" accept="image/*" onchange="previewPhoto(event,'p10b')"><button class="no-print" onclick="this.previousElementSibling.click()">Upload Foto</button><img id="p10b"></div>
+</div>
+<div class="footer">Page 10 of 11</div>
+</section>
+
+<!-- ================= PAGE 11 ================= -->
+<section class="page">
+<div class="top"><div class="logo">TEXLAB</div><div class="top-right"><h1>TEST REPORT</h1><div class="repno">Report No. : SGR-2710262952</div></div></div>
+<div class="pvh">PVH</div>
+<h3 class="center"><u>Tested Sample Photo</u></h3>
+<h4 class="center">Colorfastness to Crocking</h4>
+<div class="photos">
+<div class="ph"><div class="bold">Dry</div><input class="photo-input" type="file" accept="image/*" onchange="previewPhoto(event,'p11a')"><button class="no-print" onclick="this.previousElementSibling.click()">Upload Foto</button><img id="p11a"></div>
+<div class="ph"><div class="bold">Wet</div><input class="photo-input" type="file" accept="image/*" onchange="previewPhoto(event,'p11b')"><button class="no-print" onclick="this.previousElementSibling.click()">Upload Foto</button><img id="p11b"></div>
+</div>
+<h4 class="center" style="margin-top:18px">Colorfastness to Light</h4>
+<div class="ph" style="max-width:420px;margin:0 auto"><input class="photo-input" type="file" accept="image/*" onchange="previewPhoto(event,'p11c')"><button class="no-print" onclick="this.previousElementSibling.click()">Upload Foto</button><img id="p11c"></div>
+<h3 class="center" style="margin-top:20px"><u>End of Report</u></h3>
+<div class="footer">Page 11 of 11</div>
+</section>
+
+</div>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+<script>
+function qs(n){return new URLSearchParams(location.search).get(n)||''}
+function goBack(){ if(history.length>1) history.back(); else location.href='index.html'; }
+function previewPhoto(e,id){ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ const im=document.getElementById(id); im.src=r.result; im.classList.add('show'); }; r.readAsDataURL(f); }
+function calcShrink(){
+  document.querySelectorAll('table').forEach(t=>{
+    t.querySelectorAll('tr').forEach(row=>{
+      const o=row.querySelector('.orig'), a=row.querySelector('.after'), s=row.querySelector('.shrink');
+      if(o&&a&&s){ const ov=parseFloat(o.value), av=parseFloat(a.value); if(!isNaN(ov)&&ov!==0&&!isNaN(av)){ const sh=(av-ov)/ov*100; s.value=sh.toFixed(2)+'%'; } }
+    });
+  });
+}
+document.addEventListener('input', e=>{ if(e.target.classList.contains('orig')||e.target.classList.contains('after')) calcShrink(); if(e.target.id==='reportNo'){ document.getElementById('repNo2').textContent=e.target.value; } });
+function saveLocal(){ const data={}; document.querySelectorAll('input,select,textarea').forEach((el,i)=>{ data[i]=el.type==='checkbox'?el.checked:el.value; }); localStorage.setItem('pvh_'+(document.getElementById('reportNo').value||'draft'), JSON.stringify(data)); alert('Tersimpan di browser ini.'); }
+function exportExcel(){
+  if(typeof XLSX==='undefined'){ alert('Butuh internet untuk SheetJS. Pakai Print / PDF dulu ya.'); return; }
+  const wb=XLSX.utils.book_new();
+  const rep=document.getElementById('reportNo').value;
+  const mk=(title, rows)=>{ const ws=XLSX.utils.aoa_to_sheet([[title],['Report No.',rep],[],...rows]); XLSX.utils.book_append_sheet(wb, ws, title.slice(0,31)); };
+  mk('Page 1', [['Date',document.getElementById('reportDate').value],['Overall Rating',document.getElementById('overall').value],['Applicant',document.getElementById('applicant').value],['Attn',document.getElementById('attn').value]]);
+  mk('Page 2 - Sample Desc', [['Style Number',document.getElementById('styleNo').value],['Buyer','PVH']]);
+  mk('Page 5 - Dimensional', [['Info','Lihat PVH.html - tabel Dimensional Stability sudah terisi di layar. Nilai diambil dari input di halaman 5.']]);
+  mk('Page 8 - Weight Seam', [['Info','Lihat PVH.html halaman 8']]);
+  mk('Page 9 - Light Crocking', [['Info','Lihat PVH.html halaman 9']]);
+  XLSX.writeFile(wb, 'PVH_'+rep+'.xlsx');
+}
+window.addEventListener('load', ()=>{
+  // Prefill dari portal utama: ?no= &buyer= &applicant= &style= &reportNo=
+  const no=qs('no')||qs('reportNo')||qs('report_no');
+  const applicant=qs('applicant')||qs('plant');
+  const style=qs('style')||qs('styleNo');
+  if(no){ document.getElementById('reportNo').value=no; const r2=document.getElementById('repNo2'); if(r2) r2.textContent=no; }
+  if(applicant){ const a=document.getElementById('applicant'); if(a) a.value=applicant; }
+  if(style){ const s=document.getElementById('styleNo'); if(s) s.value=style; }
+  // Jika dipanggil dari portal, tanggal hari ini kalau kosong
+  calcShrink();
+  const ov=document.getElementById('overall');
+  const badge=document.getElementById('overallBadge');
+  if(ov&&badge){ ov.addEventListener('change',()=>{ badge.textContent=ov.value; badge.className='badge '+(ov.value==='PASS'?'pass':'fail'); }); }
+  // Load draft kalau ada
+  const key='pvh_'+(document.getElementById('reportNo').value||'draft');
+  const saved=localStorage.getItem(key);
+  if(saved && !no){ try{ const data=JSON.parse(saved); document.querySelectorAll('input,select,textarea').forEach((el,i)=>{ if(data[i]!==undefined){ if(el.type==='checkbox') el.checked=data[i]; else if(el.value!==undefined && el.id!=='reportNo') el.value=data[i]; } }); }catch(e){} }
+});
+</script>
+</body>
+</html>
