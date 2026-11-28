@@ -602,7 +602,7 @@ main{padding:22px 18px 28px;max-width:1100px;margin:0 auto}
 
 
         <div class="actions"><button id="go" type="button" class="p">Export ke Excel</button><button id="gopdf" type="button" class="s">Export ke PDF</button><button id="syncResult" type="button" class="p" style="background:#16a34a">Simpan Hasil ke Dashboard</button></div>
-        <div id="syncNote" style="font-size:12px;color:#475569;margin-top:6px">Tombol hijau ini nyambungin form ini ke Dashboard. Pilih Overall Rating PASS / FAIL di atas, klik ini, status report di Test Reports langsung jadi <b>Selesai · Pass / Fail</b>, diagram QA + Lab Analysis langsung ke-update. Export Excel / PDF juga otomatis nyambung.</div>
+        <div id="syncNote" style="font-size:12px;color:#475569;margin-top:6px">Tombol hijau ini nyambungin form ini ke Dashboard. Pilih Overall Rating PASS / FAIL di atas, klik ini, status report di Test Reports langsung jalan: <b>Masuk &rarr; Proses &rarr; Selesai &middot; Pass / Fail</b>. Tombol <b>Mulai proses / Tahan</b> di Dashboard langsung hilang, ganti jadi <b>Selesai &middot; Pass / Fail + Buka lagi</b>. KPI Masuk berkurang, Selesai nambah, diagram QA + Lab Analysis langsung ke-update. Export Excel / PDF juga otomatis nyambung.</div>
         <div id="msg"></div>
       </div>
     
@@ -1625,22 +1625,41 @@ $("gopdf").addEventListener("click", async () => {
     const r = await exportXlsx("pdf"), bytes = await renderPdf(r.zip), url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
     const link = document.createElement("a"); link.href = url; link.download = r.name; document.body.appendChild(link); link.click(); link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 8000); $("msg").textContent = "Selesai: " + r.name;
-    // --- SYNC KE DASHBOARD: kirim rating ke script utama ---
-    try{ const _rt = ($("rating") ? $("rating").value : "").trim().toUpperCase(); const _rn = ($("rno") ? $("rno").value : "").trim(); if(_rt==="PASS"||_rt==="FAIL"){ window.dispatchEvent(new CustomEvent("llbean-export", {detail:{rating:_rt, rno:_rn}})); } }catch(e){}
+    // --- SYNC KE DASHBOARD: langsung, samain kayak tombol hijau ---
+    try{ syncLLBeanToDashboard(); }catch(e){}
   } catch (e) { $("msg").textContent = "Gagal: " + e.message; console.error(e); } });
-  // --- Tombol hijau: Simpan Hasil ke Dashboard tanpa export ---
-  if($("syncResult")){ $("syncResult").addEventListener("click", () => {
-    const _rt = ($("rating") ? $("rating").value : "").trim().toUpperCase(); const _rn = ($("rno") ? $("rno").value : "").trim();
+  // --- Tombol hijau: Simpan Hasil ke Dashboard - LANGSUNG, tanpa event (biar gak diem) ---
+  // Penyebab diem kemarin: tombol ini cuma kirim CustomEvent "llbean-export" ke script lain.
+  // Kalau script penerima error / belum ke-load, event-nya hilang, msg cuma mentok di "Mengirim..." / diem aja.
+  // Sekarang: tombol ini langsung tulis ke localStorage trp_reports_v1, samain kayak PVH.
+  function syncLLBeanToDashboard(){
+    const _rt = ($("rating") ? $("rating").value : "").trim().toUpperCase();
+    const _rn = ($("rno") ? $("rno").value : "").trim();
     if(!_rn){ $("msg").textContent = "Isi Report No. dulu."; return; }
     if(_rt!=="PASS" && _rt!=="FAIL"){ $("msg").textContent = "Pilih Overall Rating PASS / FAIL dulu."; return; }
-    window.dispatchEvent(new CustomEvent("llbean-export", {detail:{rating:_rt, rno:_rn}}));
-    $("msg").textContent = "Mengirim hasil "+_rt+" ke Dashboard...";
-  }); }
+    const KEY = "trp_reports_v1";
+    let R = []; try{ R = JSON.parse(localStorage.getItem(KEY)||"[]")||[]; }catch(e){ R = []; }
+    const r = R.find(x => String(x.no||"").trim() === _rn);
+    if(!r){ $("msg").textContent = "Report "+_rn+" belum ada di Test Reports. Input dulu di + Input Report di Dashboard, baru sync lagi."; return; }
+    const now = Date.now();
+    const target = _rt === "PASS" ? "pass" : "fail";
+    if(r.status === "selesai" && r.result === target){ $("msg").textContent = "Report "+_rn+" sudah Selesai "+(_rt==="PASS"?"Pass":"Fail")+", tidak ada perubahan."; return; }
+    (r.history = r.history || []);
+    // Biar nyambung ke progress Dashboard: Masuk -> Proses -> Selesai
+    if(r.status === "masuk"){ r.history.push({s:"proses", t:now, w:""}); }
+    else if(r.status === "pending"){ r.history.push({s:r.prev||"proses", t:now, w:""}); }
+    r.status = "selesai"; r.result = target; r.doneAt = now; r.updated = now; r.reason = "";
+    r.history.push({s:target, t:now, w:""});
+    try{ localStorage.setItem(KEY, JSON.stringify(R)); }catch(e){}
+    $("msg").textContent = "Tersimpan ke Dashboard: "+_rn+" -> Selesai "+(_rt==="PASS"?"Pass":"Fail")+" \u2713 Progress: "+r.history.map(h=>h.s).join(" \u2192 ")+" | Buka Dashboard, KPI ke-update.";
+  }
+  window.syncLLBeanToDashboard = syncLLBeanToDashboard;
+  if($("syncResult")){ $("syncResult").addEventListener("click", syncLLBeanToDashboard); }
 $("go").addEventListener("click", async () => {
   $("msg").textContent = "Membuat file…";
   try { $("msg").textContent = "Selesai: " + await exportXlsx();
-    // --- SYNC KE DASHBOARD ---
-    try{ const _rt = ($("rating") ? $("rating").value : "").trim().toUpperCase(); const _rn = ($("rno") ? $("rno").value : "").trim(); if(_rt==="PASS"||_rt==="FAIL"){ window.dispatchEvent(new CustomEvent("llbean-export", {detail:{rating:_rt, rno:_rn}})); } }catch(e){}
+        // --- SYNC KE DASHBOARD: langsung ---
+    try{ syncLLBeanToDashboard(); }catch(e){}
   }
   catch (e) { $("msg").textContent = "Gagal: " + e.message; console.error(e); } });
 
@@ -1690,24 +1709,35 @@ $("go").addEventListener("click", async () => {
     r.updated=now; (r.history=r.history||[]).push({s:v,t:now,w:""});
     return true;
   }
+  // Listener lama dipertahankan buat kompatibilitas, tapi sekarang juga pakai logika progress yang sama.
   window.addEventListener("llbean-export", function(ev){
     try{
       var d=ev.detail||{};
       var rating=String(d.rating||"").toUpperCase();
       var rno=String(d.rno||"").trim();
-      if(!rno || (rating!=="PASS" && rating!=="FAIL")) return;
-      var R=loadR();
-      var r=R.find(function(x){return x.no===rno;});
       var msg=document.getElementById("msg");
+      if(!rno){ if(msg) msg.textContent="Isi Report No. dulu."; return; }
+      if(rating!=="PASS" && rating!=="FAIL"){ if(msg) msg.textContent="Pilih Overall Rating PASS / FAIL dulu."; return; }
+      var R=loadR();
+      var r=R.find(function(x){return String(x.no||"").trim()===rno;});
       if(!r){
         if(msg) msg.textContent="Report "+rno+" belum ada di Test Reports. Input dulu di + Input Report di Dashboard, baru sync lagi.";
         return;
       }
       var target = rating==="PASS" ? "pass" : "fail";
-      setState(r, target);
+      if(r.status==="selesai" && r.result===target){
+        if(msg) msg.textContent="Report "+rno+" sudah Selesai "+(rating==="PASS"?"Pass":"Fail")+", tidak ada perubahan.";
+        return;
+      }
+      var now=Date.now();
+      (r.history=r.history||[]);
+      if(r.status==="masuk"){ r.history.push({s:"proses",t:now,w:""}); }
+      else if(r.status==="pending"){ r.history.push({s:r.prev||"proses",t:now,w:""}); }
+      r.status="selesai"; r.result=target; r.doneAt=now; r.updated=now; r.reason="";
+      r.history.push({s:target,t:now,w:""});
       saveR(R);
-      if(msg) msg.textContent="Tersimpan ke Dashboard: "+rno+" -> Selesai "+(rating==="PASS"?"Pass":"Fail")+" ✓ Buka Dashboard untuk lihat diagram ke-update.";
-    }catch(e){ console.error(e); }
+      if(msg) msg.textContent="Tersimpan ke Dashboard: "+rno+" -> Selesai "+(rating==="PASS"?"Pass":"Fail")+" | Progress: "+r.history.map(function(h){return h.s;}).join(" -> ")+" | Buka Dashboard, KPI ke-update.";
+    }catch(e){ console.error(e); var m2=document.getElementById("msg"); if(m2) m2.textContent="Gagal sync: "+e.message; }
   });
 })();
 </script>

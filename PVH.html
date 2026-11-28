@@ -45,6 +45,32 @@ button{font:inherit;cursor:pointer}
 .btn-pdf{background:#fff!important}
 .btn-back{background:#fff!important}
 .btn-print{background:#fff!important}
+
+/* Tabs per halaman - kayak LL Bean */
+.tabs-wrap{max-width:980px;margin:14px auto 0;padding:0 18px}
+.tabs{display:flex;margin:0}
+.seg{display:inline-flex;padding:4px;background:#f1f5f9;border-radius:10px;gap:2px;max-width:100%;overflow-x:auto;width:100%}
+.seg button{border:0;background:none;height:32px;padding:0 14px;border-radius:7px;color:var(--mut);font-weight:500;white-space:nowrap;transition:color .15s,background .15s;flex:1;min-width:64px}
+.seg button:hover{color:var(--tx)}
+.seg button.on{background:#fff;color:var(--tx);box-shadow:0 1px 2px rgba(15,23,42,.1)}
+.pvh-page{display:none}
+.pvh-page.on{display:block}
+.pvh-nav{display:flex;justify-content:space-between;gap:12px;margin-top:16px}
+.pvh-nav button{border:1px solid var(--bd);background:#fff;border-radius:8px;padding:10px 16px;font-weight:600;cursor:pointer}
+.pvh-nav button:hover{background:#f8fafc}
+.pvh-nav button:disabled{opacity:.4;cursor:default}
+.pvh-nav .spacer{flex:1}
+/* Back - kayak LL Bean */
+.back{border:1px solid var(--bd);background:#fff;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:600;color:var(--tx)}
+.back:hover{background:#f8fafc}
+/* 3 tombol bawah - persis LL Bean */
+.actions{position:sticky;bottom:0;display:flex;gap:12px;padding:14px 0 6px;background:linear-gradient(180deg,rgba(248,250,252,0),var(--bg) 30%)}
+.actions button{flex:1;border-radius:8px;padding:12px 14px;font-weight:700;font-size:13.5px;cursor:pointer}
+.actions button:disabled{opacity:.6;cursor:wait}
+#goxl{background:var(--ac)!important;color:#fff!important;border:1px solid var(--ac)!important}
+#gopdf{background:#fff!important;color:var(--tx)!important;border:1px solid var(--bd)!important}
+#syncResult{background:#16a34a!important;color:#fff!important;border:1px solid #16a34a!important}
+#syncNote{font-size:12px;color:var(--mut);margin-top:6px}
 /* Header judul - kayak LL Bean */
 .phead-wrap{max-width:980px;margin:22px auto 0;padding:0 18px}
 .phead-wrap h1{margin:0;font-size:22px;letter-spacing:-.02em}
@@ -92,9 +118,10 @@ td.lb{font-size:12px;min-width:200px;max-width:340px}
 </style>
 </head>
 <body>
-<div class="top"><div class="crumbs"><a href="index.html">Dashboard</a><span>/</span><b>PVH - Test Report</b></div><div class="tools"><button class="btn-back" onclick="goBack()">← Kembali</button><button class="btn-save" onclick="saveLocal()">Simpan</button><button class="btn-print" onclick="window.print()">Print</button><button class="btn-pdf" id="gopdf">Export PDF</button><button class="btn-excel" id="goxl">Export Excel</button></div></div>
-<div class="phead-wrap"><h1>PVH - Test Report</h1><p class="sub">Isi data, lalu Export. Hasilnya memakai template asli PVH (11 halaman), hanya data yang diisi yang diganti.</p><span id="msg"></span></div>
-<div class="wrap" id="app"></div>
+<div class="top"><div class="crumbs"><a href="index.html">Dashboard</a><span>/</span><b>PVH - Test Report</b></div></div>
+<div class="phead-wrap"><button type="button" class="back" onclick="goBack()">← Kembali ke Dashboard</button><h1 style="margin-top:14px">PVH - Test Report</h1><p class="sub">Isi data, lalu Export. Hasilnya memakai template asli PVH (11 halaman), hanya data yang diisi yang diganti.</p><span id="msg"></span></div>
+<div class="tabs-wrap"><div class="tabs"><div class="seg" id="pvhTabs"><button type="button" class="on">Hal 1</button><button type="button">Hal 2</button><button type="button">Hal 3</button><button type="button">Hal 4</button><button type="button">Hal 5</button><button type="button">Hal 6</button><button type="button">Hal 7</button><button type="button">Hal 8</button><button type="button">Hal 9</button><button type="button">Foto</button></div></div></div>
+<div class="wrap"><div id="app"></div><div class="actions"><button id="goxl" type="button">Export ke Excel</button><button id="gopdf" type="button">Export ke PDF</button><button id="syncResult" type="button">Simpan Hasil ke Dashboard</button></div><div id="syncNote">Tombol hijau ini nyambungin form ini ke Dashboard. Pilih Overall Rating PASS / FAIL di atas (atau biar Auto, nanti dihitung dari hasil uji), klik ini, status report di Test Reports langsung jalan: <b>Masuk &rarr; Proses &rarr; Selesai &middot; Pass / Fail</b>. Tombol <b>Mulai proses / Tahan</b> di Dashboard langsung hilang, ganti jadi <b>Selesai &middot; Pass / Fail + Buka lagi</b>. KPI Masuk berkurang, Selesai nambah, diagram QA + Lab Analysis langsung ke-update. Export Excel / PDF juga otomatis nyambung.</div></div>
 <datalist id="yn"><option value="Yes"><option value="N/A"><option value="No"></datalist>
 <script>/*JSZIP*//*!
 
@@ -226,6 +253,37 @@ document.addEventListener("change",e=>{ if(e.target.closest&&e.target.closest("#
 /* ---------- simpan lokal ---------- */
 function collect(){ const d={}; document.querySelectorAll("[data-k]").forEach(e=>{ d[e.dataset.k]=e.value; }); return d; }
 function saveLocal(){ const d=JSON.stringify(collect()); try{ localStorage.setItem("pvh_draft",d); localStorage.setItem("pvh_"+($("reportNo").value||"draft"),d); $("msg").textContent="Tersimpan di browser ini (foto tidak ikut tersimpan)."; }catch(e){ alert("Tidak bisa menyimpan di browser ini."); } }
+/* ---------- Simpan Hasil ke Dashboard - samain LL Bean ---------- */
+function syncToDashboard(){
+  try{ saveLocal(); }catch(e){}
+  try{ recalc(); }catch(e){}
+  const rno=($("reportNo")?$("reportNo").value:"").trim();
+  if(!rno){ $("msg").textContent="Isi Report No. dulu."; return; }
+  const rating=overallVal();
+  if(rating!=="PASS" && rating!=="FAIL"){ $("msg").textContent="Pilih Overall Rating PASS / FAIL dulu."; return; }
+  const KEY="trp_reports_v1";
+  let R=[]; try{ R=JSON.parse(localStorage.getItem(KEY)||"[]")||[]; }catch(e){ R=[]; }
+  const r=R.find(x=>String(x.no||"").trim()===rno);
+  if(!r){ $("msg").textContent="Report "+rno+" belum ada di Test Reports. Input dulu di + Input Report di Dashboard, baru sync lagi."; return; }
+  const now=Date.now();
+  const target=rating==="PASS"?"pass":"fail";
+  // Kalau sudah Selesai dengan hasil yang sama, jangan dobel history
+  if(r.status==="selesai" && r.result===target){ $("msg").textContent="Report "+rno+" sudah Selesai "+(rating==="PASS"?"Pass":"Fail")+", tidak ada perubahan."; return; }
+  // Biar nyambung ke progress Dashboard: Masuk -> Proses -> Selesai
+  // Kalau masih Masuk, catat dulu dia pernah Proses, biar history tidak bolong
+  (r.history=r.history||[]);
+  if(r.status==="masuk"){
+    r.history.push({s:"proses",t:now,w:""});
+  } else if(r.status==="pending"){
+    // Dari Tahan / Pending, balik dulu ke Proses sebelumnya, baru Selesai
+    r.history.push({s:r.prev||"proses",t:now,w:""});
+  }
+  // Baru Selesai - samain persis logika setState di Dashboard
+  r.status="selesai"; r.result=target; r.doneAt=now; r.updated=now; r.reason="";
+  r.history.push({s:target,t:now,w:""});
+  try{ localStorage.setItem(KEY, JSON.stringify(R)); }catch(e){}
+  $("msg").textContent="Tersimpan ke Dashboard: "+rno+" -> Selesai "+(rating==="PASS"?"Pass":"Fail")+" \u2713 Progress: "+(r.history.map(h=>h.s).join(" \u2192 "))+" | Buka Dashboard, KPI Masuk berkurang, Selesai nambah, grafik ke-update.";
+}
 function restore(){ try{ const d=JSON.parse(localStorage.getItem("pvh_draft")||"null"); if(!d) return; document.querySelectorAll("[data-k]").forEach(e=>{ if(d[e.dataset.k]!=null) e.value=d[e.dataset.k]; }); }catch(e){} }
 
 /* ---------- helper XML ---------- */
@@ -358,19 +416,94 @@ function buildPicker(cur){
   $("app").prepend(c);
   $("pickGo").onclick=()=>{ const r=list.find(x=>x.id===$("pickRep").value); if(r) applyRec(r); };
 }
+/* ---------- Tabs per halaman - kayak LL Bean ---------- */
+function setupTabs(){
+  const app=$("app"); if(!app) return;
+  const pages=[
+    {label:"Hal 1", ids:["s_p1"]},
+    {label:"Hal 2", ids:["s_p2"]},
+    {label:"Hal 3", ids:["s_p3","s_p3b"]},
+    {label:"Hal 4", ids:["s_p4"]},
+    {label:"Hal 5", ids:["s_p5"]},
+    {label:"Hal 6", ids:["s_p6","s_p6b"]},
+    {label:"Hal 7", ids:["s_p7"]},
+    {label:"Hal 8", ids:["s_p8a","s_p8b","s_p8c"]},
+    {label:"Hal 9", ids:["s_p9"]},
+    {label:"Foto", ids:[]},
+  ];
+  const allCards=[...app.children];
+  pages.forEach((pg,idx)=>{
+    const div=document.createElement("div");
+    div.className="pvh-page"+(idx===0?" on":"");
+    div.dataset.page=String(idx);
+    app.appendChild(div);
+    pg.el=div;
+  });
+  allCards.forEach(card=>{
+    if(card.classList.contains("pvh-page")) return;
+    const h2=card.querySelector("h2");
+    const title=h2?h2.textContent.trim():"";
+    if(title==="Ambil dari Dashboard"){ pages[0].el.appendChild(card); return; }
+    if(title==="Foto Sample"){ pages[9].el.appendChild(card); return; }
+    let placed=false;
+    pages.forEach(pg=>{ if(pg.ids.includes(card.id)){ pg.el.appendChild(card); placed=true; } });
+    if(!placed){
+      if(card.classList.contains("hint")){ pages[9].el.appendChild(card); }
+      else { pages[0].el.appendChild(card); }
+    }
+  });
+  // Tombol Prev / Next di bawah tiap halaman, biar gak perlu scroll ke atas
+  pages.forEach((pg,idx)=>{
+    const nav=document.createElement("div");
+    nav.className="pvh-nav";
+    if(idx>0){
+      const prev=document.createElement("button");
+      prev.type="button"; prev.textContent="\u2190 "+pages[idx-1].label;
+      prev.addEventListener("click",()=>{ const t=document.querySelectorAll("#pvhTabs button")[idx-1]; if(t) t.click(); });
+      nav.appendChild(prev);
+    } else {
+      const sp=document.createElement("div"); sp.className="spacer"; nav.appendChild(sp);
+    }
+    if(idx<pages.length-1){
+      const next=document.createElement("button");
+      next.type="button"; next.textContent=pages[idx+1].label+" \u2192";
+      next.addEventListener("click",()=>{ const t=document.querySelectorAll("#pvhTabs button")[idx+1]; if(t) t.click(); });
+      nav.appendChild(next);
+    }
+    pg.el.appendChild(nav);
+  });
+  const tabs=document.querySelectorAll("#pvhTabs button");
+  tabs.forEach((btn,idx)=>{
+    btn.addEventListener("click",()=>{
+      tabs.forEach(b=>b.classList.remove("on"));
+      btn.classList.add("on");
+      document.querySelectorAll(".pvh-page").forEach(p=>p.classList.remove("on"));
+      const target=document.querySelector('.pvh-page[data-page="'+idx+'"]');
+      if(target) target.classList.add("on");
+      window.scrollTo({top:0, behavior:"smooth"});
+      try{ localStorage.setItem("pvh_tab", String(idx)); }catch(e){}
+    });
+  });
+  try{
+    const saved=parseInt(localStorage.getItem("pvh_tab")||"0",10);
+    if(saved>0 && saved<tabs.length){ tabs[saved].click(); }
+  }catch(e){}
+}
 build();
 const REC=linkedRecord();
 if(REC) applyRec(REC); else restore();
-buildPicker(REC); recalc();
+buildPicker(REC); setupTabs(); recalc();
 function wire(id,fn,busy){
   $(id).addEventListener("click",async()=>{
-    const bs=[$("goxl"),$("gopdf")]; bs.forEach(b=>b.disabled=true); $("msg").textContent=busy;
-    try{ const n=await fn(); $("msg").textContent="Selesai: "+n; }
+    const bs=[$("goxl"),$("gopdf"),$("syncResult")]; bs.forEach(b=>{ if(b) b.disabled=true; }); $("msg").textContent=busy;
+    try{ const n=await fn(); $("msg").textContent="Selesai: "+n; try{ syncToDashboard(); }catch(e){} }
     catch(e){ $("msg").textContent="Gagal: "+e.message; console.error(e); alert("Gagal: "+e.message); }
-    bs.forEach(b=>b.disabled=false);
+    bs.forEach(b=>{ if(b) b.disabled=false; });
   });
 }
 wire("goxl",exportXlsx,"Membuat Excel…"); wire("gopdf",exportPdf,"Membuat PDF…");
+/* Tombol hijau + auto-sync kayak LL Bean: habis Export juga langsung sync */
+if($("syncResult")) $("syncResult").addEventListener("click", syncToDashboard);
 </script>
 <script>/*PDF*/
 const WRAPF = 0.95;
