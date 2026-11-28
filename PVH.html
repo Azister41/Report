@@ -22,7 +22,7 @@
   font-family: "Optimistic Mono", ui-monospace, monospace;
 }
 </style>
-<!-- PVH v2-hide - Summary hide fix: clear A-J + hideRow + refresh SUMMARY_SEL + PDF backup -->
+<!-- PVH v24-pdf-llbean - Summary hide fix: clear A-J + hideRow + refresh SUMMARY_SEL + PDF backup -->
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PVH - Test Report</title>
 <style>
@@ -90,7 +90,7 @@ input,select,textarea{width:100%;font:inherit;padding:10px 12px;border:1px solid
 input:focus,select:focus,textarea:focus{border-color:var(--ac);box-shadow:0 0 0 3px rgba(37,99,235,.15);outline:none}
 textarea{min-height:56px;resize:vertical}
 input[readonly]{background:#f8fafc}
-.badge{display:inline-block;padding:5px 12px;border-radius:999px;font-weight:800;font-size:12px}
+.badge{display:inline-block;padding:5px 12px;border-radius:999px;font-weight:800;font-size:12px} #overallBadge,.mk{display:none!important} /* v19: tulisan PASS ijo dobel dihapus, dropdown udah cukup */
 .badge.pass{background:#dcfce7;color:#166534}
 .badge.fail{background:#fee2e2;color:#991b1b}
 .tw{overflow-x:auto;margin-top:8px;border:1px solid var(--bd);border-radius:12px;overflow:hidden}
@@ -152,7 +152,8 @@ select.test-req:focus{border-color:#2563eb;outline:none}
 <div class="top"><div class="crumbs"><a href="index.html">Dashboard</a><span>/</span><b>PVH - Test Report</b></div></div>
 <div class="phead-wrap"><button type="button" class="back" onclick="goBack()">← Kembali ke Dashboard</button><h1 style="margin-top:14px">PVH - Test Report</h1><p class="sub">Isi data, lalu Export. Hasilnya memakai template asli PVH (11 halaman), hanya data yang diisi yang diganti.</p><span id="draftHint" style="font-size:11px;color:#64748b;display:block;margin-top:4px"></span><span id="msg"></span></div>
 <div class="tabs-wrap"><div class="tabs"><div class="seg" id="pvhTabs"><button type="button" class="on">Hal 1</button><button type="button">Hal 2</button><button type="button">Hal 3</button><button type="button">Hal 4</button><button type="button">Hal 5</button><button type="button">Hal 6</button><button type="button">Hal 7</button><button type="button">Hal 8</button><button type="button">Hal 9</button><button type="button">Foto</button></div></div></div>
-<div class="wrap"><div id="app"></div><div class="actions"><button id="goxl" type="button">Export ke Excel</button><button id="gopdf" type="button">Export ke PDF</button><button id="syncResult" type="button">Simpan Hasil ke Dashboard</button></div><div id="syncNote">Tombol hijau ini nyambungin form ini ke Dashboard. Pilih Overall Rating PASS / FAIL di atas (atau biar Auto, nanti dihitung dari hasil uji), klik ini, status report di Test Reports langsung jalan: <b>Masuk &rarr; Proses &rarr; Selesai &middot; Pass / Fail</b>. Tombol <b>Mulai proses / Tahan</b> di Dashboard langsung hilang, ganti jadi <b>Selesai &middot; Pass / Fail + Buka lagi</b>. KPI Masuk berkurang, Selesai nambah, diagram QA + Lab Analysis langsung ke-update. Export Excel / PDF juga otomatis nyambung.</div></div>
+<div class="wrap"><div id="app"></div><div style="background:#dcfce7;border:1px solid #16a34a;padding:10px 12px;border-radius:8px;font-size:13px;line-height:1.6;margin:10px 0">   <b>v24 — PDF udah ala LL Bean:</b><br>   Klik <b>Export ke PDF</b> langsung jadi, nggak perlu buka Excel → Print lagi. PDF-nya digambar ulang dari Excel-nya sendiri (baca styles, font Carlito, hitung wrap, skala, margin digeser ke kanan), jadi rapi kayak LL Bean. Excel-nya juga tetep rapi, margin-nya udah digeser ke kanan ~6mm biar mepet garis. </div>
+<div style="background:#dbeafe;border:1px solid #2563eb;padding:8px 10px;border-radius:8px;font-size:12px;margin:10px 0"><b>Versi: v24 - PDF ALA LL BEAN (Gambar Ulang dari Excel)</b> — Cara LL Bean: Tab yang nggak dipilih dihapus + rebuild, PDF digambar ulang dari Excel (baca styles, font Carlito, hitung wrap, skala, gambar urut fill-gambar-teks-border) kayak LL Bean, jadi rapi. Kalau masih muncul semua, screenshot-in tulisan ini.</div><div class="actions"><button id="goxl" type="button">Export ke Excel</button><button id="gopdf" type="button">Export ke PDF</button><button id="syncResult" type="button">Simpan Hasil ke Dashboard</button></div><div id="syncNote">Tombol hijau ini nyambungin form ini ke Dashboard. Pilih Overall Rating PASS / FAIL di atas (atau biar Auto, nanti dihitung dari hasil uji), klik ini, status report di Test Reports langsung jalan: <b>Masuk &rarr; Proses &rarr; Selesai &middot; Pass / Fail</b>. Tombol <b>Mulai proses / Tahan</b> di Dashboard langsung hilang, ganti jadi <b>Selesai &middot; Pass / Fail + Buka lagi</b>. KPI Masuk berkurang, Selesai nambah, diagram QA + Lab Analysis langsung ke-update. Export Excel / PDF juga otomatis nyambung.</div></div>
 <datalist id="yn"><option value="Yes"><option value="N/A"><option value="No"></datalist>
 <script>/*JSZIP*//*!
 
@@ -199,7 +200,7 @@ function build(){
     if(s.id==="p1"){
       h+='<div class="grid"><div><label>Report No.</label><input id="reportNo" data-k="reportNo" value="'+ea(s.fields[0].v)+'"></div>'+
          '<div><label>Tanggal laporan</label><input id="reportDate" type="date" data-k="date" value="'+todayISO()+'"></div>'+
-         '<div><label>Overall Rating</label><div><span id="overallBadge" class="badge pass">PASS</span> <select id="overall" data-k="overall" style="width:130px;display:inline-block"><option>Auto</option><option>PASS</option><option>FAIL</option></select></div></div></div><div style="height:10px"></div>'+kv(s.fields.slice(2));
+         '<div><label>Overall Rating</label><div><select id="overall" data-k="overall" style="width:130px;display:inline-block"><option>Auto</option><option>PASS</option><option>FAIL</option></select></div></div></div><div style="height:10px"></div>'+kv(s.fields.slice(2));
     } else if(s.type==="kv"){
       h+=kv(s.fields);
       if(s.id==="p8a") h+='<div class="grid" style="margin-top:12px"><div><label>Oz/Sq.Yd (otomatis)</label><input id="oz" readonly></div></div>';
@@ -209,7 +210,7 @@ function build(){
       if(s.fields&&s.fields.length) h+='<div style="height:10px"></div>'+kv(s.fields);
       if(s.note) h+='<p class="hint">'+esc(s.note)+'</p>';
     } else if(s.type==="summary"){
-      h+=table(["Test Requested","Hasil","Comments"],s.rows.map(r=>'<tr><td class="lb">'+esc(r.label)+'</td><td><select id="sum_'+r.r+'" data-k="sum_'+r.r+'" style="width:110px"><option>Auto</option><option>Pass</option><option>Fail</option><option>Data</option></select><span class="mk" id="mk_'+r.r+'"></span></td><td>'+inp(r.comment)+'</td></tr>'));
+      h+=table(["Test Requested","Hasil","Comments"],s.rows.map(r=>'<tr><td class="lb">'+esc(r.label)+'</td><td><select id="sum_'+r.r+'" data-k="sum_'+r.r+'" style="width:110px"><option>Auto</option><option>Pass</option><option>Fail</option><option>Data</option></select></td><td>'+inp(r.comment)+'</td></tr>'));
       h+='<div style="height:10px"></div>'+kv(s.fields);
     } else if(s.type==="dim"){
       let rows=s.labels.map((l,i)=>'<tr><td class="lb">'+esc(l)+'</td><td><input class="dimo" data-k="dim_o_'+i+'" id="dim_o_'+i+'" value="'+ea(s.orig[i])+'"></td><td><input class="dima1" data-k="dim_a1_'+i+'" id="dim_a1_'+i+'" value="'+ea(s.a1[i])+'"></td><td><input class="dima3" data-k="dim_a3_'+i+'" id="dim_a3_'+i+'" value="'+ea(s.a3[i])+'"></td><td><input readonly id="dim_s1_'+i+'"></td><td><input readonly id="dim_s3_'+i+'"></td></tr>');
@@ -273,8 +274,8 @@ function recalc(){
   const dw=$("dimwarn"); dw.style.display=warn.length?"block":"none"; dw.textContent=warn.join("  ");
   const w=num(val("8_D11")); $("oz").value=w==null?"":(w/33.906).toFixed(2);
   ["18","19"].forEach(r=>{ $("f_9_J"+r).value=crock(r); });
-  document.querySelectorAll('[id^="sum_"]').forEach(s=>{ const r=s.id.slice(4), m=summaryMark(r), e=$("mk_"+r); e.textContent=m; e.className="mk "+m.toLowerCase(); });
-  const ov=overallVal(), b=$("overallBadge"); b.textContent=ov; b.className="badge "+(ov==="PASS"?"pass":"fail");
+  document.querySelectorAll('[id^="sum_"]').forEach(s=>{ const r=s.id.slice(4), m=summaryMark(r), e=$("mk_"+r); if(e){ e.textContent=m; e.className="mk "+m.toLowerCase(); } }); // v19: mk dihapus, guard biar nggak error
+  const ov=overallVal(), b=$("overallBadge"); if(b){ b.textContent=ov; b.className="badge "+(ov==="PASS"?"pass":"fail"); } // v19: overallBadge dihapus, guard
 }
 document.addEventListener("input",e=>{ if(e.target.closest&&e.target.closest("#app")) recalc(); });
 document.addEventListener("change",e=>{ if(e.target.closest&&e.target.closest("#app")) recalc(); });
@@ -362,6 +363,22 @@ function putCell(xml,ref,make,skipIfMissing){
   return xml.replace(rr,'<row r="'+rn+'"'+attrs+'>'+inner.slice(0,pos)+make("")+inner.slice(pos)+'</row>');
 }
 const stripT=a=>a.replace(/\s+t="[^"]*"/,"");
+function removeMergeForRow(xml, rNum){
+  let out = xml.replace(/<mergeCell[^>]*ref="([A-Z]+)(\d+):([A-Z]+)(\d+)"[^>]*\/>/g, (m, c1, r1, c2, r2)=>{
+    const a=parseInt(r1,10), b=parseInt(r2,10);
+    if(rNum>=Math.min(a,b) && rNum<=Math.max(a,b)) return "";
+    return m;
+  }).replace(/<mergeCell[^>]*ref="([A-Z]+)(\d+)"[^>]*\/>/g, (m, c1, r1)=>{
+    if(parseInt(r1,10)===rNum) return "";
+    return m;
+  });
+  // Update count di <mergeCells count="N"> biar Excel nggak protes merge count mismatch (ini yang bikin geser di Excel!)
+  try{
+    const cnt = (out.match(/<mergeCell[^>]*\/>/g)||[]).length;
+    if(cnt===0){ out = out.replace(/<mergeCells[^>]*>\s*<\/mergeCells>/, ''); out = out.replace(/<mergeCells[^>]*\/>/, ''); } else { out = out.replace(/<mergeCells([^>]*?)count="\d+"/, '<mergeCells$1count="'+cnt+'"'); }
+  }catch(e){}
+  return out;
+}
 function hideRow(xml, rNum){
   // Sembunyikan baris di Excel: hidden="1" + tinggi 0, biar barisnya ilang total, bukan cuma kosong
   // Pakai \b biar r="8" tidak ke-match r="18", dan pastikan <row ... r="N" persis
@@ -369,9 +386,9 @@ function hideRow(xml, rNum){
   if(!re.test(xml)) return xml;
   return xml.replace(re, (m,p1,p2)=>{
     let attrs=p1;
-    if(/hidden=/.test(attrs)) attrs=attrs.replace(/hidden="[^"]*"/, 'hidden="1"');
+    if(/\shidden="/.test(attrs)) attrs=attrs.replace(/\shidden="[^"]*"/, ' hidden="1"');
     else attrs+=' hidden="1"';
-    if(/ht="/.test(attrs)) attrs=attrs.replace(/ht="[^"]*"/, 'ht="0"');
+    if(/\sht="/.test(attrs)) attrs=attrs.replace(/\sht="[^"]*"/, ' ht="0"');
     else attrs+=' ht="0"';
     if(!/customHeight/.test(attrs)) attrs+=' customHeight="1"';
     return attrs+p2;
@@ -387,6 +404,71 @@ function setCache(xml,ref,v){ const re=new RegExp('(<c r="'+ref+'"[^>]*>(?:<f[^>
 const allFields=s=>[].concat(s.type==="kv"||s.type==="dim"||s.type==="table"||s.type==="summary"?(s.fields||[]):[], (s.rows||[]).flatMap(r=>(r.cells||[]).concat(r.comment?[r.comment]:[])));
 
 /* ---------- export Excel dari template asli ---------- */
+function applyDeleteSheets(wbStr, relsStr, ctStr, sheetNumsToDelete){
+  // CARA LL BEAN (terbukti nggak corrupt) - dipakai di PVH v23
+  // LL Bean nggak pernah patch workbook.xml pakai DOMParser / hide sheet.
+  // Dia REBUILD <sheets> dan <definedNames> dari 0, terus hapus rels + Content_Types pakai regex, terus zip.remove sheet-nya.
+  // Kenapa ini aman? Karena 4 file itu dibangun dari daftar sheet yang sama, jadi nggak mungkin ada yang ketinggalan.
+  // PVH beda: sheet-nya beda-beda template (Page 5 Dimensional, Page 6 Appearance, dll), jadi kita nggak bisa clone 1 template kayak LL Bean.
+  // Tapi prinsipnya sama: REBUILD sheets + definedNames dari 0, bukan tambal.
+  const nameByNum = {5:"Page 5", 6:"Page 6 ", 7:"Page 7", 8:"Page 8 (2)", 9:"Page 9"};
+  const fileByNum = {5:"xl/worksheets/sheet5.xml", 6:"xl/worksheets/sheet6.xml", 7:"xl/worksheets/sheet7.xml", 8:"xl/worksheets/sheet8.xml", 9:"xl/worksheets/sheet9.xml"};
+  const rIdByNum = {5:"rId5", 6:"rId6", 7:"rId7", 8:"rId8", 9:"rId9"};
+  const namesToDelete = sheetNumsToDelete.map(n=>nameByNum[n]);
+  // --- 1. workbook.xml: REBUILD <sheets> dari 0 ---
+  // Ambil semua <sheet .../> asli, filter yang nggak dihapus
+  const allSheets = wbStr.match(/<sheet [^>]*\/>/g) || [];
+  const keptSheets = [];
+  const keptNames = [];
+  allSheets.forEach(s=>{
+    const m = s.match(/name="([^"]+)"/);
+    const nm = m ? m[1] : "";
+    if(!namesToDelete.includes(nm)){
+      keptSheets.push(s);
+      keptNames.push(nm);
+    }
+  });
+  let wb = wbStr;
+  // Ganti blok <sheets>...</sheets> dengan yang baru
+  wb = wb.replace(/<sheets>[\s\S]*?<\/sheets>/, "<sheets>" + keptSheets.join("") + "</sheets>");
+  // --- REBUILD <definedNames> Print_Area dari 0, kayak LL Bean ---
+  // Di template PVH, semua Print_Area itu '$A$1:$J$51', kecuali Page 8 (2) yang nggak punya Print_Area.
+  // Jadi kita rebuild: untuk tiap sheet yang masih ada, kalau dulu dia punya Print_Area, bikin lagi dengan localSheetId baru (0..n-1).
+  // Sheet yang nggak punya Print_Area di template asli: "Page 8 (2)" -> jangan dibikin.
+  const noPrintArea = ["Page 8 (2)"];
+  let names = "";
+  keptNames.forEach((nm, newIdx)=>{
+    if(noPrintArea.includes(nm)) return;
+    // Escape single quote di nama sheet (Page 6 ada spasi, aman; tapi tetap escape)
+    const escNm = nm.replace(/'/g, "''");
+    names += '<definedName name="_xlnm.Print_Area" localSheetId="' + newIdx + '">' + "'" + escNm + "'!$A$1:$J$51</definedName>";
+  });
+  if(/<definedNames>[\s\S]*?<\/definedNames>/.test(wb)){
+    wb = wb.replace(/<definedNames>[\s\S]*?<\/definedNames>/, "<definedNames>" + names + "</definedNames>");
+  }
+  // --- activeTab: kalau kegedean, set ke terakhir (kayak LL Bean yang rebuild total, activeTab aman) ---
+  const newCount = keptSheets.length;
+  wb = wb.replace(/activeTab="\d+"/, (m)=>{
+    const at = parseInt(m.replace(/\D/g,"")||"0",10);
+    return 'activeTab="' + Math.min(at, Math.max(0, newCount-1)) + '"';
+  });
+  // --- 2. workbook.xml.rels: hapus Relationship sheet yang dihapus (regex, kayak LL Bean) ---
+  let rels = relsStr;
+  sheetNumsToDelete.forEach(n=>{
+    const rid = rIdByNum[n];
+    rels = rels.replace(new RegExp('<Relationship Id="' + rid + '"[^>]*\\/>', 'g'), "");
+  });
+  // --- 3. [Content_Types].xml: hapus Override sheet yang dihapus (regex, kayak LL Bean) ---
+  let ct = ctStr;
+  sheetNumsToDelete.forEach(n=>{
+    const pn = "/" + fileByNum[n];
+    // Escape untuk regex
+    const escPn = pn.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    ct = ct.replace(new RegExp('<Override PartName="' + escPn + '"[^>]*\\/>', 'g'), "");
+  });
+  return {wb:wb, rels:rels, ct:ct, rIdsToDelete: sheetNumsToDelete.map(n=>rIdByNum[n])};
+}
+
 async function buildXlsx(){   // Refresh SUMMARY_SEL dari localStorage saat Export, biar tidak stale
    try{ const _k="pvh_summary_"+($("reportNo")?$("reportNo").value.trim():"draft"); const _raw=localStorage.getItem(_k)||localStorage.getItem("pvh_summary_draft"); if(_raw){ const _arr=JSON.parse(_raw); if(Array.isArray(_arr)&&_arr.length) SUMMARY_SEL=_arr.map(Number); } }catch(e){}
 
@@ -395,6 +477,11 @@ async function buildXlsx(){   // Refresh SUMMARY_SEL dari localStorage saat Expo
   recalc();
   const zip=await JSZip.loadAsync(TEMPLATE_B64,{base64:true}), P="xl/worksheets/sheet", X={};
   for(let n=1;n<=11;n++) X[n]=await zip.file(P+n+".xml").async("string");
+  // v24 - GESER KANAN kayak LL Bean: template asli left 0.708" right 0.197" -> isi masih jauh dari garis kanan di PDF.
+  // Baru: left 0.95" right 0.08" -> isi kegeser ke kanan ~0.24" (~6mm) mepet ke garis, berlaku untuk Excel + PDF (PDF baca pageMargins dari Excel).
+  // Ini yang bikin PDF LL Bean rapi banget. PVH template-nya margin-nya sama persis kayak LL Bean, jadi shift-nya sama.
+  const shiftMargins = (xml) => xml.replace(/<pageMargins[^>]*\/>/, '<pageMargins left="0.95" right="0.08" top="0.23622047244094491" bottom="0.74803149606299213" header="0" footer="0"/>');
+  for(let n=1;n<=11;n++) X[n]=shiftMargins(X[n]);
 
   // isian umum (teks / angka / tanggal)
   CFG.sections.forEach(s=>allFields(s).forEach(f=>{
@@ -454,15 +541,19 @@ async function buildXlsx(){   // Refresh SUMMARY_SEL dari localStorage saat Expo
      // Tensile (13) tidak dipilih
      if(!_sel.includes(13)){ ["D39","H39","J39","D40","H40","J40"].forEach(ref=>{ X[8]=setCell(X[8],ref,""); }); }
    }catch(e){}
+    // v21 - HIDE BARIS DIHIDUPIN LAGI (cuma baris, NGGAK hide sheet). Ini yang bikin Summary cuma munculin tes yang dipilih.
    // HIDE BARIS yang tidak dipilih - biar nama tes-nya ilang total di Excel, bukan cuma kosong
    try{
      const _sel2 = (typeof SUMMARY_SEL!=="undefined"? SUMMARY_SEL : [8,9,10,11,12,13,14,16]);
      // Sheet 4 Summary: hide baris tes yang tidak dipilih + kosongin label B-nya biar kalau hidden ke-ignore tetap blank
      CFG.sections.find(s=>s.type==="summary").rows.forEach(r=>{
        if(!_sel2.includes(Number(r.r))){
-         X[4]=hideRow(X[4], r.r);
-         // Label di kolom B (B8, B9, dst) - kosongin biar tidak nongol kalau ada viewer yang ignore hidden
-         try{ ["A","B","C","D","E","F","G","H","I","J"].forEach(c=>{ X[4]=setCell(X[4],c+r.r,""); }); }catch(e){}
+         // Seam (r=14) itu 2 baris: 14 & 15 (merge A14:D15). Harus hide dua-duanya, kalau cuma 14, merge kepotong & geser!
+         const _rowsToHide = (Number(r.r)===14) ? [14,15] : [Number(r.r)];
+         _rowsToHide.forEach(_rr=>{
+           X[4]=hideRow(X[4], _rr);
+           try{ ["A","B","C","D","E","F","G","H","I","J"].forEach(c=>{ X[4]=setCell(X[4],c+_rr,""); }); }catch(e){}
+         });
        }
      });
      // Sheet 8 - Weight (rows 8-12), Seam (14-28), Tearing (30-34), Tensile (36-40)
@@ -474,6 +565,7 @@ async function buildXlsx(){   // Refresh SUMMARY_SEL dari localStorage saat Expo
      if(!_sel2.includes(10)){ [8,9,10,11,12].forEach(rn=>{ X[9]=hideRow(X[9], rn); }); }
      if(!_sel2.includes(16)){ [15,16,17,18,19].forEach(rn=>{ X[9]=hideRow(X[9], rn); }); }
    }catch(e){ console.warn("hide row gagal", e); }
+   // Excel dibalikin ke asli - Excel-nya udah rapi, jangan diubah. Yang dibenerin cuma PDF-nya.
    // Hapus baris asli yang disembunyikan: kosongin sel-nya di Excel
    try{
      CFG.sections.forEach(s=>{
@@ -483,7 +575,53 @@ async function buildXlsx(){   // Refresh SUMMARY_SEL dari localStorage saat Expo
        else if(s.type==="dim"){ (s.labels||[]).forEach((lab,i)=>{ if(!del.includes((lab||"").trim())) return; ["C","E"].forEach(col=>{ X[5]=setCell(X[5],col+(11+i),""); X[5]=setCell(X[5],col+(21+i),""); }); }); }
      });
    }catch(e){}
-   for(let n=1;n<=11;n++) zip.file(P+n+".xml",X[n]);
+   /* FIX v17 - FINAL: hitung ulang mergeCells count untuk semua sheet, biar nggak pernah mismatch lagi.
+    Kenapa 1-2 tes lebih sering corrupt dari 7 tes? Karena 1 tes = 7-8 baris di-hide, 7 tes = cuma 1-2 baris di-hide.
+    Tiap baris yang di-hide dulu ngapus merge-nya, dan 1 merge itu bisa nyangkut 2-5 baris (misal Seam A14:D15, Sheet8 D19:D23).
+    Dihapus buat baris 14, kehapus juga buat baris 15, hitungannya jadi ngaco, Excel protes.
+    Sekarang: merge NGGAK dihapus sama sekali (cukup hideRow), terus di sini kita hitung ulang count-nya dari merge yang beneran ada. */
+    try{
+      for(let _si=1; _si<=11; _si++){
+        let _x = X[_si];
+        if(!_x || !_x.includes("<mergeCells")) continue;
+        const _cnt = (_x.match(/<mergeCell[^>]*\/>/g)||[]).length;
+        if(_cnt===0){
+          _x = _x.replace(/<mergeCells[^>]*>\s*<\/mergeCells>/, "");
+          _x = _x.replace(/<mergeCells[^>]*\/>/, "");
+        } else {
+          _x = _x.replace(/<mergeCells([^>]*?)count="\d+"/, '<mergeCells$1count="'+_cnt+'"');
+        }
+        X[_si]=_x;
+      }
+    }catch(e){ console.warn("fix merge count gagal", e); }
+    // v22 OPSI B: hapus sheet utuh yang tes-nya nggak dipilih SAMA SEKALI, pakai DOMParser (bukan hide).
+    // Kalau cuma sebagian (misal Page 8 cuma Weight doang), sheet-nya tetap ada, barisnya aja yang di-hide (v21).
+    let _toDelete = [];
+    try{
+      const _selB = (typeof SUMMARY_SEL!=="undefined"? SUMMARY_SEL : [8,9,10,11,12,13,14,16]);
+      if(!_selB.includes(8)) _toDelete.push(5); // Dimensional -> Page 5
+      if(!_selB.includes(9)){ _toDelete.push(6,7); } // Appearance -> Page 6 + Page 7
+      if(!_selB.includes(11) && !_selB.includes(14) && !_selB.includes(12) && !_selB.includes(13)) _toDelete.push(8); // Page 8 utuh
+      if(!_selB.includes(10) && !_selB.includes(16)) _toDelete.push(9); // Page 9 utuh
+    }catch(e){}
+    // Tulis dulu semua sheet yang masih ada
+    for(let n=1;n<=11;n++){ if(_toDelete.includes(n)) continue; zip.file(P+n+".xml",X[n]); }
+    // Kalau ada yang dihapus, update 3 file XML-nya pakai DOMParser + hapus file sheet-nya dari zip
+    if(_toDelete.length){
+      try{
+        const _wbStr = await zip.file("xl/workbook.xml").async("string");
+        const _relsStr = await zip.file("xl/_rels/workbook.xml.rels").async("string");
+        const _ctStr = await zip.file("[Content_Types].xml").async("string");
+        const _res = applyDeleteSheets(_wbStr, _relsStr, _ctStr, _toDelete);
+        zip.file("xl/workbook.xml", _res.wb);
+        zip.file("xl/_rels/workbook.xml.rels", _res.rels);
+        zip.file("[Content_Types].xml", _res.ct);
+        _toDelete.forEach(_n=>{
+          zip.remove("xl/worksheets/sheet"+_n+".xml");
+          try{ zip.remove("xl/worksheets/_rels/sheet"+_n+".xml.rels"); }catch(e){}
+        });
+      }catch(e){ console.warn("delete sheet gagal, fallback ke hide baris aja", e); }
+    }
    // Sheet 12 Tes Tambahan - CUMA kalau ada tes tambahan / ada baris asli yang dihapus.
    // Kalau tidak ada, jangan bikin sheet kosong, biar Export normal tetap 11 halaman aja, PDF-nya juga tidak nambah halaman "Tidak ada tes tambahan".
    try{
@@ -500,27 +638,7 @@ async function buildXlsx(){   // Refresh SUMMARY_SEL dari localStorage saat Expo
      if(!ct2.includes("sheet12.xml")){ ct2=ct2.replace("</Types>", '<Override PartName="/xl/worksheets/sheet12.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>'); zip.file("[Content_Types].xml", ct2); }
      } // end if _hasExtra
    }catch(e){ console.warn("extra sheet gagal", e); }
-   // HIDE SHEET yang tes-nya tidak dipilih - biar di Excel tab-nya ilang & di PDF halamannya ilang
-   try{
-     const _sel3 = (typeof SUMMARY_SEL!=="undefined"? SUMMARY_SEL : [8,9,10,11,12,13,14,16]);
-     const _hideSheetNames = [];
-     if(!_sel3.includes(8)) _hideSheetNames.push("Page 5");
-     if(!_sel3.includes(9)) _hideSheetNames.push("Page 6 ", "Page 7");
-     if(!_sel3.includes(11) && !_sel3.includes(14) && !_sel3.includes(12) && !_sel3.includes(13)) _hideSheetNames.push("Page 8 (2)");
-     if(!_sel3.includes(10) && !_sel3.includes(16)) _hideSheetNames.push("Page 9");
-     if(_hideSheetNames.length){
-       let wb2 = await zip.file("xl/workbook.xml").async("string");
-       _hideSheetNames.forEach(nm=>{
-         const escNm = nm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-         const re = new RegExp('(<sheet[^>]*name="'+escNm+'"[^>]*)(/?>)');
-         wb2 = wb2.replace(re, (mm,p1,p2)=>{
-           if(/state=/.test(p1)) return mm.replace(/state="[^"]*"/, 'state="hidden"');
-           return p1 + ' state="hidden"' + p2;
-         });
-       });
-       zip.file("xl/workbook.xml", wb2);
-     }
-   }catch(e){ console.warn("hide sheet gagal", e); }
+    // v20 - HIDE SHEET DIMATIIN TOTAL. Tab-nya tetep ada tapi isinya KOSONG, biar Excel nggak pernah corrupt.
    { // tautan email halaman 4
     const rp="xl/worksheets/_rels/sheet4.xml.rels"; let rl=await zip.file(rp).async("string");
     rl=rl.replace("mailto:aniza.imamy@texlab.id","mailto:"+val("4_G21").trim()).replace("mailto:rahmat.hidayat@texlab.id","mailto:"+val("4_G22").trim());
@@ -546,9 +664,48 @@ async function exportXlsx(){
   save(await zip.generateAsync({type:"blob",compression:"DEFLATE",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),name); return name;
 }
 async function exportPdf(){
-  const {zip,name}=await buildXlsx(), bytes=await renderPdf(zip), n=name.replace(/\.xlsx$/,".pdf");
+    if(typeof renderPdf === 'undefined'){
+      alert('PDF renderer-nya lagi nggak ke-load (ke-cache lama di GitHub). Refresh (Ctrl+R) dulu, terus coba lagi. Atau Export ke Excel dulu, terus buka Excel -> Print -> Save as PDF.');
+      const {zip:zip2,name:name2}=await buildXlsx();
+      const b2=await zip2.generateAsync({type:"blob",compression:"DEFLATE",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+      save(b2, name2); return name2;
+    }
+    const {zip,name}=await buildXlsx(), bytes=await renderPdf(zip), n=name.replace(/\.xlsx$/,".pdf");
   save(new Blob([bytes],{type:"application/pdf"}),n); return n;
 }
+  // ===== FITUR BARU: Export Excel + PDF Sekalian (1 klik, 2 file) =====
+  // Sesuai request kamu: habis Export Excel, langsung keluar pilihan Excel to PDF sekalian, nggak perlu buka Excel & Print manual.
+  async function exportBoth(){
+    const btn=document.getElementById('goboth');
+    const oldTxt=btn?btn.textContent:'';
+    try{
+      if(btn){ btn.disabled=true; btn.textContent='Lagi bikin Excel + PDF... ⏳'; }
+      // FIX CORRUPT: buildXlsx dipanggil 2x (sekali buat Excel, sekali buat PDF) biar zip-nya nggak kepake 2x & rusak. Lebih aman walau agak lambat dikit.
+      const {zip:zipX, name}=await buildXlsx();
+      const zip = zipX;
+      // 1. Download Excel-nya dulu
+      const xlsxBlob=await zip.generateAsync({type:"blob",compression:"DEFLATE",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+      save(xlsxBlob, name);
+      // 2. Langsung bikin PDF-nya dari Excel yang sama (jadi datanya 100% sama, nggak ada data master)
+      if(typeof renderPdf === 'undefined'){ alert('Excel-nya udah ke-download. PDF-nya belum ke-download karena PDF renderer-nya lagi nggak ke-load (ke-cache lama di GitHub). Refresh halaman (Ctrl+R) terus coba lagi, atau buka Excel-nya -> Print -> Save as PDF.'); return name; }
+      const pdfBytes=await renderPdf(zip);
+      const pdfName=name.replace(/\.xlsx$/,".pdf");
+      // Kasih jeda dikit biar browser nggak nge-block download kedua
+      await new Promise(r=>setTimeout(r, 400));
+      save(new Blob([pdfBytes],{type:"application/pdf"}), pdfName);
+      // Kasih tau user
+      try{ const note=document.getElementById('syncNote'); if(note){ const old=note.innerHTML; note.innerHTML='✅ Keluar 2 file: <b>'+name+'</b> + <b>'+pdfName+'</b> — datanya sama, dari form yang kamu isi. Tinggal kirim 2-2nya ke boss. '+old; setTimeout(()=>note.innerHTML=old, 8000); } }catch(e){}
+      return name;
+    }catch(e){
+      alert('Gagal Export Excel + PDF: '+e.message);
+      throw e;
+    }finally{
+      if(btn){ btn.disabled=false; btn.textContent=oldTxt; }
+    }
+  }
+  // Pasang tombolnya
+  try{ document.getElementById('goboth')?.addEventListener('click', exportBoth); }catch(e){}
+  // v18: tawaran PDF setelah Export Excel dihapus - sepakat cuma Excel aja, PDF via Save as PDF di Excel.
 /* ---------- terhubung ke Dashboard (localStorage "trp_reports_v1") ---------- */
 function dashList(){ try{ const l=JSON.parse(localStorage.getItem("trp_reports_v1")||"[]"); return Array.isArray(l)?l:[]; }catch(e){ return []; } }
 function linkedRecord(){
@@ -708,7 +865,7 @@ function renderSummaryDynamic(){
       return '<option value="'+t.r+'"'+sel+dis+'>'+t.label+'</option>';
     }).join("");
     tr.innerHTML='<td><label style="font-size:11px;color:var(--mut);display:block;margin-bottom:2px">Test Requested #'+(idx+1)+'</label><select class="test-req" data-test-req="'+idx+'" data-k="testreq_'+idx+'">'+opts+'</select></td>'
-      +'<td><label style="font-size:11px;color:var(--mut);display:block;margin-bottom:2px">Hasil</label><select id="sum_'+r+'" data-k="sum_'+r+'" style="width:110px"><option'+(savedSum==="Auto"?" selected":"")+'>Auto</option><option'+(savedSum==="Pass"?" selected":"")+'>Pass</option><option'+(savedSum==="Fail"?" selected":"")+'>Fail</option><option'+(savedSum==="Data"?" selected":"")+'>Data</option></select><span class="mk" id="mk_'+r+'"></span></td>'
+      +'<td><label style="font-size:11px;color:var(--mut);display:block;margin-bottom:2px">Hasil</label><select id="sum_'+r+'" data-k="sum_'+r+'" style="width:110px"><option'+(savedSum==="Auto"?" selected":"")+'>Auto</option><option'+(savedSum==="Pass"?" selected":"")+'>Pass</option><option'+(savedSum==="Fail"?" selected":"")+'>Fail</option><option'+(savedSum==="Data"?" selected":"")+'>Data</option></select></td>'
       +'<td><label style="font-size:11px;color:var(--mut);display:block;margin-bottom:2px">Comments</label><input id="f_'+rowDef.comment.k+'" data-k="'+rowDef.comment.k+'" value="'+String(savedComment).replace(/"/g,"&quot;")+'"></td>'
       +'<td><button type="button" class="del-row" data-summary-del-idx="'+idx+'" title="Hapus baris ini">×</button></td>';
     table.appendChild(tr);
@@ -912,7 +1069,7 @@ function buildExtraSheetXml(){
     }
     xml+='</row>';
   });
-  xml+='</sheetData><pageMargins left="0.5" right="0.5" top="0.5" bottom="0.5" header="0" footer="0"/><pageSetup paperSize="9" orientation="portrait"/></worksheet>';
+  xml+='</sheetData><pageMargins left="0.95" right="0.08" top="0.23622047244094491" bottom="0.74803149606299213" header="0" footer="0"/><pageSetup paperSize="9" orientation="portrait"/></worksheet>';
   return xml;
 }
 
@@ -923,13 +1080,13 @@ buildPicker(REC); setupTabs(); try{ loadSummarySel(); }catch(e){} try{ renderSum
 try{ const _rnoEl=document.getElementById("reportNo"); if(_rnoEl){ _rnoEl.addEventListener("change", ()=>{ try{ loadExtra(); attachExtraControls(); }catch(e){} try{ loadSummarySel(); renderSummaryDynamic(); applySummaryVisibility(); }catch(e){} }); } }catch(e){}
 function wire(id,fn,busy){
   $(id).addEventListener("click",async()=>{
-    const bs=[$("goxl"),$("gopdf"),$("syncResult")]; bs.forEach(b=>{ if(b) b.disabled=true; }); $("msg").textContent=busy;
+    const bs=[$("goxl"),$("gopdf"),$("syncResult")]; // v24: gopdf balik, pakai renderPdf LL Bean bs.forEach(b=>{ if(b) b.disabled=true; }); $("msg").textContent=busy;
     try{ const n=await fn(); $("msg").textContent="Selesai: "+n; try{ syncToDashboard(false); }catch(e){} }
     catch(e){ $("msg").textContent="Gagal: "+e.message; console.error(e); alert("Gagal: "+e.message); }
     bs.forEach(b=>{ if(b) b.disabled=false; });
   });
 }
-wire("goxl",exportXlsx,"Membuat Excel…"); wire("gopdf",exportPdf,"Membuat PDF…");
+wire("goxl",exportXlsx,"Membuat Excel…"); wire("gopdf",exportPdf,"Membuat PDF…"); // v24: gopdf balik, PDF digambar ulang dari Excel kayak LL Bean
 /* Tombol hijau + auto-sync kayak LL Bean: habis Export juga langsung sync */
 if($("syncResult")) $("syncResult").addEventListener("click", ()=>{ try{ $("msg").textContent="Menyimpan hasil ke Dashboard..."; }catch(e){} try{ syncToDashboard(true); }catch(e){ console.error(e); try{ $("msg").textContent="Gagal simpan: "+(e.message||e)+". Coba klik lagi / refresh."; }catch(_){} } });
 </script>
@@ -1055,7 +1212,7 @@ async function renderPdf(zip) {
       }); });
          // Backup: kalau Sheet 4 (Summary) label-nya kosong, anggap baris tidak dipilih -> hide, biar tidak muncul blank di PDF
      if(sp.includes("sheet4.xml")){
-       [8,9,10,11,12,13,14,16].forEach(rn=>{
+       [8,9,10,11,12,13,14,15,16].forEach(rn=>{
          const aCell = cells["1,"+rn];
          const hasLabel = aCell && String(aCell.txt||"").trim()!=="";
          const hasX = [5,6,7].some(ci=>{ const c=cells[ci+","+rn]; return c && String(c.txt||"").trim()!==""; });
