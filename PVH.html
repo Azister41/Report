@@ -113,6 +113,29 @@ td.lb{font-size:12px;min-width:200px;max-width:340px}
 .ph.has .x{display:block}
 .pc{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:700}
 .hint{font-size:12px;color:var(--mut);background:#f8fafc;border:1px solid var(--bd);border-radius:8px;padding:8px 10px;margin-top:10px}
+.summary-picker{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0;padding:10px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px}
+.summary-picker select{flex:1;min-width:220px;padding:8px 10px;border:1px solid #93c5fd;border-radius:8px;font-size:13px}
+.summary-picker button{border:0;background:#2563eb;color:#fff;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer;font-size:13px}
+.summary-picker button.ghost{background:#fff;color:#991b1b;border:1px solid #fecaca}
+.summary-hint{font-size:12px;color:var(--mut);margin:0 0 8px}
+.extra-box{margin-top:16px;border:1px dashed #94a3b8;border-radius:12px;padding:12px;background:#f8fafc}
+.extra-box h3{margin:0 0 4px;font-size:14px}
+.extra-box p.sub2{margin:0 0 10px;color:var(--mut);font-size:12px}
+.extra-toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.extra-toolbar button{border:1px solid var(--bd);background:#fff;border-radius:8px;padding:7px 10px;font-size:12px;font-weight:700;cursor:pointer}
+.extra-toolbar button.primary{background:#2563eb;color:#fff;border-color:#2563eb}
+.extra-group{border:1px solid var(--bd);border-radius:10px;padding:10px;margin-bottom:10px;background:#fff}
+.extra-group-head{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.extra-group-head input{flex:1;padding:7px 9px;border:1px solid var(--bd);border-radius:8px;font-weight:700;font-size:13px}
+.extra-group-head button{border:1px solid var(--bd);background:#fff;border-radius:8px;padding:6px 9px;font-size:12px;cursor:pointer}
+.extra-table{width:100%;border-collapse:collapse;font-size:12px}
+.extra-table th{font-size:11px;color:var(--mut);text-align:left;padding:6px;border-bottom:1px solid var(--bd)}
+.extra-table td{padding:4px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+.extra-table input,.extra-table select{width:100%;padding:6px 7px;border:1px solid var(--bd);border-radius:6px;font-size:12px}
+.extra-table .del-row{border:0;background:#fee2e2;color:#991b1b;border-radius:6px;padding:5px 8px;cursor:pointer;font-weight:700}
+.del-orig{border:0;background:#fee2e2;color:#991b1b;border-radius:999px;width:20px;height:20px;font-size:12px;line-height:1;cursor:pointer;margin-left:6px;flex-shrink:0}
+.deleted-note{font-size:12px;color:#991b1b;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:8px 10px;margin-top:8px}
+.deleted-note button{border:1px solid #fecaca;background:#fff;border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer;margin-left:6px}
 @media(max-width:640px){.grid{grid-template-columns:1fr}.top{height:auto;padding:10px 14px;flex-wrap:wrap}.top .tools{margin-left:0}}
 @media print{.top,.phead-wrap{display:none}body{background:#fff}.card{break-inside:avoid;border-color:#ddd;box-shadow:none}}
 </style>
@@ -222,15 +245,13 @@ const val=k=>{ const e=$(k==="reportNo"?"reportNo":k==="date"?"reportDate":"f_"+
 function shr(o,a){ const O=num(o),A=num(a); return (O&&A!=null)?(A-O)/O*100:null; }
 function crock(r){ const e=num(val("9_E"+r)),h=num(val("9_H"+r)); return (e!=null&&h!=null)?(e>=h?"PASS":"FAIL"):"PASS"; }
 function ratingOf(key){ if(key==="9_J18") return crock(18); if(key==="9_J19") return crock(19); return val(key)||"PASS"; }
-function summaryMark(r){
-  const sel=$("sum_"+r).value; if(sel!=="Auto") return sel;
+function summaryMark(r){   const _el=$("sum_"+r); if(!_el) return null; const sel=_el.value; if(sel!=="Auto") return sel;
   const g=CFG.sections.find(s=>s.type==="summary").groups[r]||[];
   return g.some(k=>ratingOf(k)==="FAIL")?"Fail":"Pass";
 }
 function overallVal(){   const _oEl=$("overall"); const o=_oEl?_oEl.value:"Auto"; if(o!=="Auto") return o;
-  const all=[...document.querySelectorAll("select.rating")].some(s=>s.value==="FAIL")||crock(18)==="FAIL"||crock(19)==="FAIL";
-  return all?"FAIL":"PASS";
-}
+  const visibleRating=[...document.querySelectorAll("select.rating")].filter(s=>{ try{ const card=s.closest(".card"); if(card && card.style.display==="none") return false; const tr=s.closest("tr"); if(tr && tr.style.display==="none") return false; return true; }catch(e){ return true; } });
+  const all=visibleRating.some(s=>s.value==="FAIL")||(typeof SUMMARY_SEL!=="undefined" && SUMMARY_SEL.includes(16) && (crock(18)==="FAIL"||crock(19)==="FAIL"));   return all?"FAIL":"PASS"; }
 function recalc(){
   for(let i=0;i<8;i++){
     [["1","a1"],["3","a3"]].forEach(([n,a])=>{ const s=shr($("dim_o_"+i).value,$("dim_"+a+"_"+i).value); $("dim_s"+n+"_"+i).value=s==null?"":s.toFixed(2)+"%"; });
@@ -371,6 +392,8 @@ async function buildXlsx(){
 
   // halaman 4: tanda X
   CFG.sections.find(s=>s.type==="summary").rows.forEach(r=>{
+     try{ if(typeof SUMMARY_SEL!=="undefined" && !SUMMARY_SEL.includes(Number(r.r))){ ["E","F","G"].forEach(c=>{ X[4]=setCell(X[4],c+r.r,""); }); if(r.comment && r.comment.ref) X[4]=setCell(X[4],r.comment.ref,""); return; } }catch(e){}
+     try{ const _del=(EXTRA && EXTRA.p4 && EXTRA.p4.deleted)||[]; if(_del.includes((r.label||"").trim())){ ["E","F","G"].forEach(c=>{ X[4]=setCell(X[4],c+r.r,""); }); return; } }catch(e){}
     const mk=summaryMark(r.r), col={Pass:"E",Fail:"F",Data:"G"}[mk];
     ["E","F","G"].forEach(c=>{ X[4]=setCell(X[4],c+r.r,c===col?"X":""); });
   });
@@ -385,7 +408,54 @@ async function buildXlsx(){
   const wv=num(val("8_D11")); if(wv!=null) X[8]=setCache(X[8],"D12",wv/33.906);
   X[9]=setCache(X[9],"J18",crock(18)); X[9]=setCache(X[9],"J19",crock(19));
 
-  for(let n=1;n<=11;n++) zip.file(P+n+".xml",X[n]);
+  
+   // Tes yang tidak dipilih di Summary: kosongin sel detail-nya di Excel (biar tidak ikut Export)
+   try{
+     const _sel = (typeof SUMMARY_SEL!=="undefined"? SUMMARY_SEL : [8,9,10,11,12,13,14,16]);
+     // Dimensional (p5) tidak dipilih -> kosongin Hal 5
+     if(!_sel.includes(8)){ for(let i=0;i<8;i++){ ["C","E"].forEach(col=>{ X[5]=setCell(X[5],col+(11+i),""); X[5]=setCell(X[5],col+(21+i),""); }); } CFG.sections.find(s=>s.id==="p5").fields.forEach(f=>{ if(f.sh && f.ref) X[f.sh]=setCell(X[f.sh],f.ref,""); }); }
+     // Appearance (p6,p6b,p7) tidak dipilih -> kosongin Hal 6-7
+     if(!_sel.includes(9)){ ["p6","p6b","p7"].forEach(pid=>{ const _s=CFG.sections.find(s=>s.id===pid); if(!_s) return; (_s.rows||[]).forEach(r=> (r.cells||[]).forEach(c=>{ if(c.sh && c.ref) X[c.sh]=setCell(X[c.sh],c.ref,""); })); (_s.fields||[]).forEach(f=>{ if(f.sh && f.ref) X[f.sh]=setCell(X[f.sh],f.ref,""); }); }); }
+     // Weight (p8a) tidak dipilih
+     if(!_sel.includes(11)){ const _s=CFG.sections.find(s=>s.id==="p8a"); (_s.fields||[]).forEach(f=>{ if(f.sh && f.ref) X[f.sh]=setCell(X[f.sh],f.ref,""); }); }
+     // Seam (p8b) tidak dipilih
+     if(!_sel.includes(14)){ const _s=CFG.sections.find(s=>s.id==="p8b"); (_s.rows||[]).forEach(r=> (r.cells||[]).forEach(c=>{ if(c.sh && c.ref) X[c.sh]=setCell(X[c.sh],c.ref,""); })); }
+     // Light (10) tidak dipilih -> kosongin 9_E11 dst
+     if(!_sel.includes(10)){ ["E11","H11","J11"].forEach(ref=>{ X[9]=setCell(X[9],ref,""); }); }
+     // Crocking (16) tidak dipilih
+     if(!_sel.includes(16)){ ["E18","H18","J18","E19","H19","J19"].forEach(ref=>{ X[9]=setCell(X[9],ref,""); }); }
+     // Tearing (12) tidak dipilih
+     if(!_sel.includes(12)){ ["D33","H33","J33","D34","H34","J34"].forEach(ref=>{ X[8]=setCell(X[8],ref,""); }); }
+     // Tensile (13) tidak dipilih
+     if(!_sel.includes(13)){ ["D39","H39","J39","D40","H40","J40"].forEach(ref=>{ X[8]=setCell(X[8],ref,""); }); }
+   }catch(e){}
+   // Hapus baris asli yang disembunyikan: kosongin sel-nya di Excel
+   try{
+     CFG.sections.forEach(s=>{
+       const del=(EXTRA && EXTRA[s.id] && EXTRA[s.id].deleted)||[]; if(!del.length) return;
+       if(s.type==="table"){ (s.rows||[]).forEach(r=>{ if(!del.includes((r.label||"").trim())) return; (r.cells||[]).forEach(c=>{ if(c.sh && c.ref) X[c.sh]=setCell(X[c.sh],c.ref,""); }); }); }
+       else if(s.type==="summary"){ (s.rows||[]).forEach(r=>{ if(!del.includes((r.label||"").trim())) return; if(r.comment && r.comment.sh && r.comment.ref) X[r.comment.sh]=setCell(X[r.comment.sh],r.comment.ref,""); }); }
+       else if(s.type==="dim"){ (s.labels||[]).forEach((lab,i)=>{ if(!del.includes((lab||"").trim())) return; ["C","E"].forEach(col=>{ X[5]=setCell(X[5],col+(11+i),""); X[5]=setCell(X[5],col+(21+i),""); }); }); }
+     });
+   }catch(e){}
+   for(let n=1;n<=11;n++) zip.file(P+n+".xml",X[n]);
+   // Sheet 12 Tes Tambahan - CUMA kalau ada tes tambahan / ada baris asli yang dihapus.
+   // Kalau tidak ada, jangan bikin sheet kosong, biar Export normal tetap 11 halaman aja, PDF-nya juga tidak nambah halaman "Tidak ada tes tambahan".
+   try{
+     const _hasExtra=(()=>{ try{ return Object.keys(EXTRA||{}).some(k=>{ const d=EXTRA[k]; return (d.groups||[]).some(g=>g.rows && g.rows.length) || (d.deleted||[]).length; }); }catch(e){ return false; } })();
+     if(!_hasExtra){ /* tidak ada tes tambahan, skip Sheet 12 */ }
+     else {
+     const extraXml=buildExtraSheetXml();
+     zip.file("xl/worksheets/sheet12.xml", extraXml);
+     let wb=await zip.file("xl/workbook.xml").async("string");
+     if(!wb.includes("Tes Tambahan")){ wb=wb.replace("</sheets>", '<sheet name="Tes Tambahan" sheetId="40" r:id="rId100"/></sheets>'); zip.file("xl/workbook.xml", wb); }
+     let rels=await zip.file("xl/_rels/workbook.xml.rels").async("string");
+     if(!rels.includes("sheet12.xml")){ rels=rels.replace("</Relationships>", '<Relationship Id="rId100" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet12.xml"/></Relationships>'); zip.file("xl/_rels/workbook.xml.rels", rels); }
+     let ct2=await zip.file("[Content_Types].xml").async("string");
+     if(!ct2.includes("sheet12.xml")){ ct2=ct2.replace("</Types>", '<Override PartName="/xl/worksheets/sheet12.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>'); zip.file("[Content_Types].xml", ct2); }
+     } // end if _hasExtra
+   }catch(e){ console.warn("extra sheet gagal", e); }
+   
   { // tautan email halaman 4
     const rp="xl/worksheets/_rels/sheet4.xml.rels"; let rl=await zip.file(rp).async("string");
     rl=rl.replace("mailto:aniza.imamy@texlab.id","mailto:"+val("4_G21").trim()).replace("mailto:rahmat.hidayat@texlab.id","mailto:"+val("4_G22").trim());
@@ -446,7 +516,7 @@ function buildPicker(cur){
     list.map(r=>'<option value="'+ea(r.id)+'"'+(cur&&cur.id===r.id?" selected":"")+'>'+esc(r.no)+(r.style?" — "+esc(r.style):"")+'</option>').join("")+
     '</select></div><div><button type="button" id="pickGo" style="border:0;border-radius:8px;padding:9px 14px;font-weight:700;color:#fff;background:#2563eb;cursor:pointer">Isi form dari report ini</button></div></div>';
   $("app").prepend(c);
-  $("pickGo").onclick=()=>{ const r=list.find(x=>x.id===$("pickRep").value); if(r) applyRec(r); };
+  $("pickGo").onclick=()=>{ const r=list.find(x=>x.id===$("pickRep").value); if(r){ applyRec(r); try{ loadExtra(); attachExtraControls(); }catch(e){} try{ loadSummarySel(); renderSummaryDynamic(); applySummaryVisibility(); }catch(e){} } };
 }
 /* ---------- Tabs per halaman - kayak LL Bean ---------- */
 function setupTabs(){
@@ -521,10 +591,223 @@ function setupTabs(){
     if(saved>0 && saved<tabs.length){ tabs[saved].click(); }
   }catch(e){}
 }
+
+
+/* ---------- SUMMARY: Test Requested jadi dropdown ---------- */
+/* Buyer kadang minta 1 tes, kadang 2, kadang 8. Kalau 8 dipajang terus, yang tidak diminta ikut ke-Export, buyer bingung.
+   Sekarang: pilih tes dari dropdown, baru template-nya muncul. Kalau tidak dipilih, tidak muncul di form & tidak ikut Export. */
+const SUMMARY_TESTS = [
+  {r:8, label:"Dimensional Stability", sections:["p5"], clear:[{sh:5, refs:["C11","E11","C12","E12","C13","E13","C14","E14","C15","E15","C16","E16","C17","E17","C18","E18","C21","E21","C22","E22","C23","E23","C24","E24","C25","E25","C26","E26","C27","E27","C28","E28"]}]},
+  {r:9, label:"Appearance After Actual Laundry", sections:["p6","p6b","p7"], clear:[]},
+  {r:10, label:"Colorfastness to Light", sections:["p9-light"], clear:[{sh:9, refs:["E11","H11","J11"]}]},
+  {r:11, label:"Weight", sections:["p8a"], clear:[{sh:8, refs:["D11","H11","J11"]}]},
+  {r:12, label:"Tearing Strength", sections:["p8c-tearing"], clear:[{sh:8, refs:["D33","H33","J33","D34","H34","J34"]}]},
+  {r:13, label:"Tensile Strength", sections:["p8c-tensile"], clear:[{sh:8, refs:["D39","H39","J39","D40","H40","J40"]}]},
+  {r:14, label:"Seam Slippage / Strength / Stress Points/Pocket Reinforcement", sections:["p8b"], clear:[]},
+  {r:16, label:"Colorfastness to Crocking", sections:["p9-crocking"], clear:[{sh:9, refs:["E18","H18","J18","E19","H19","J19"]}]},
+];
+let SUMMARY_SEL = [];
+function summaryKey(){ try{ const rno=($("reportNo")?$("reportNo").value.trim():"")||"draft"; return "pvh_summary_"+rno; }catch(e){ return "pvh_summary_draft"; } }
+function loadSummarySel(){ try{ const raw=localStorage.getItem(summaryKey()) || localStorage.getItem("pvh_summary_draft"); if(raw){ const arr=JSON.parse(raw); if(Array.isArray(arr) && arr.length) { SUMMARY_SEL=arr.map(Number); return; } } }catch(e){} SUMMARY_SEL=[8,9,10,11,12,13,14,16]; }
+function saveSummarySel(){ try{ const d=JSON.stringify(SUMMARY_SEL); localStorage.setItem(summaryKey(), d); localStorage.setItem("pvh_summary_draft", d); }catch(e){} }
+function isTestSelected(r){ return SUMMARY_SEL.includes(Number(r)); }
+function renderSummaryDynamic(){
+  const card=document.getElementById("s_p4"); if(!card) return;
+  // Cari tabel summary di card
+  const tw=card.querySelector(".tw"); if(!tw) return;
+  // Simpan nilai sum_ & comment yang sudah diisi sebelum re-render, biar tidak hilang pas nambah/hapus tes
+  const savedVals={}; card.querySelectorAll("[data-k]").forEach(el=>{ savedVals[el.dataset.k]=el.value; });
+  // Dropdown picker di atas tabel
+  let picker=card.querySelector(".summary-picker"); if(picker) picker.remove();
+  const pickerDiv=document.createElement("div"); pickerDiv.className="summary-picker";
+  const notSelected=SUMMARY_TESTS.filter(t=>!isTestSelected(t.r));
+  pickerDiv.innerHTML='<select id="summaryPick">'+(notSelected.length? notSelected.map(t=>'<option value="'+t.r+'">'+t.label+'</option>').join("") : '<option value="">Semua tes sudah dipilih</option>')+'</select><button type="button" id="summaryAddBtn">+ Tambah Tes</button><button type="button" class="ghost" id="summaryClearBtn">Hapus Semua</button><span style="font-size:12px;color:#475569">Dipilih: '+SUMMARY_SEL.length+' / 8 tes</span>';
+  card.insertBefore(pickerDiv, tw);
+  const hint=document.createElement("p"); hint.className="summary-hint"; hint.textContent="Pilih tes yang diminta buyer dari dropdown, klik + Tambah Tes. Tes yang tidak dipilih tidak muncul di bawah & tidak ikut Export ke Excel/PDF. Hapus tes pakai tombol × di baris-nya.";
+  card.insertBefore(hint, tw);
+  // Rebuild tbody: hanya tes yang dipilih
+  const table=tw.querySelector("table"); if(!table) return;
+  const sec=CFG.sections.find(s=>s.type==="summary"); if(!sec) return;
+  let tbody=table.querySelector("tbody"); if(!tbody){ tbody=document.createElement("tbody"); table.appendChild(tbody); }
+  // Kalau thead tidak ada tbody, kita rebuild semua baris (kecuali header)
+  const rows=table.querySelectorAll("tr"); rows.forEach((tr,idx)=>{ if(idx===0) return; tr.remove(); });
+  SUMMARY_SEL.forEach(r=>{
+    const rowDef=sec.rows.find(x=>Number(x.r)===Number(r)); if(!rowDef) return;
+    const tr=document.createElement("tr");
+    const savedSum=savedVals["sum_"+r]||"Auto"; const savedComment=savedVals[rowDef.comment.k]||rowDef.comment.v||"";
+    tr.innerHTML='<td class="lb">'+rowDef.label+'</td><td><select id="sum_'+r+'" data-k="sum_'+r+'" style="width:110px"><option'+(savedSum==="Auto"?" selected":"")+'>Auto</option><option'+(savedSum==="Pass"?" selected":"")+'>Pass</option><option'+(savedSum==="Fail"?" selected":"")+'>Fail</option><option'+(savedSum==="Data"?" selected":"")+'>Data</option></select><span class="mk" id="mk_'+r+'"></span></td><td><input id="f_'+rowDef.comment.k+'" data-k="'+rowDef.comment.k+'" value="'+String(savedComment).replace(/"/g,"&quot;")+'"></td><td><button type="button" class="del-row" data-summary-del="'+r+'" title="Hapus tes ini dari Summary">×</button></td>';
+    table.appendChild(tr);
+  });
+  if(!SUMMARY_SEL.length){
+    const tr=document.createElement("tr"); tr.innerHTML='<td colspan="4" style="color:var(--mut);font-size:12px">Belum ada tes yang dipilih. Pilih dari dropdown di atas, klik + Tambah Tes.</td>'; table.appendChild(tr);
+  }
+  // Wire picker
+  const addBtn=document.getElementById("summaryAddBtn"); if(addBtn) addBtn.onclick=()=>{ const sel=document.getElementById("summaryPick"); if(!sel || !sel.value) return; const r=Number(sel.value); if(!isTestSelected(r)){ SUMMARY_SEL.push(r); saveSummarySel(); renderSummaryDynamic(); applySummaryVisibility(); try{ recalc(); }catch(e){} } };
+  const clearBtn=document.getElementById("summaryClearBtn"); if(clearBtn) clearBtn.onclick=()=>{ if(!confirm("Hapus semua tes dari Summary? Nanti bisa ditambah lagi dari dropdown.")) return; SUMMARY_SEL=[]; saveSummarySel(); renderSummaryDynamic(); applySummaryVisibility(); };
+  card.querySelectorAll("[data-summary-del]").forEach(b=>{ b.onclick=()=>{ const r=Number(b.getAttribute("data-summary-del")); if(!confirm("Hapus tes ini dari Summary? Template Hal-nya ikut disembunyikan & tidak ikut Export.")) return; SUMMARY_SEL=SUMMARY_SEL.filter(x=>x!==r); saveSummarySel(); renderSummaryDynamic(); applySummaryVisibility(); }; });
+  // Re-apply saved values ke input yang baru (sudah di-set di innerHTML, tapi pastikan)
+  try{ recalc(); }catch(e){}
+}
+function applySummaryVisibility(){
+  // Sembunyikan / tampilkan card & baris detail sesuai SUMMARY_SEL
+  const show=(id, visible)=>{ const el=document.getElementById(id); if(el) el.style.display=visible?"":"none"; };
+  // p5 Dimensional
+  show("s_p5", isTestSelected(8));
+  // p6, p6b, p7 Appearance
+  show("s_p6", isTestSelected(9)); show("s_p6b", isTestSelected(9)); show("s_p7", isTestSelected(9));
+  // p8a Weight
+  show("s_p8a", isTestSelected(11));
+  // p8b Seam
+  show("s_p8b", isTestSelected(14));
+  // p9: tampilkan card kalau Light ATAU Crocking dipilih
+  show("s_p9", isTestSelected(10)||isTestSelected(16));
+  // p8c: tampilkan card kalau Tearing ATAU Tensile dipilih
+  show("s_p8c", isTestSelected(12)||isTestSelected(13));
+  // Baris parsial di p9: Light (9_E11) & Crocking (9_E18, 9_E19)
+  try{
+    const p9=document.getElementById("s_p9");
+    if(p9){ p9.querySelectorAll("tr").forEach(tr=>{ const inp=tr.querySelector('[data-k="9_E11"]'); if(inp) tr.style.display=isTestSelected(10)?"":"none"; const inp2=tr.querySelector('[data-k="9_E18"],[data-k="9_E19"]'); if(inp2) tr.style.display=isTestSelected(16)?"":"none"; }); }
+    const p8c=document.getElementById("s_p8c");
+    if(p8c){ p8c.querySelectorAll("tr").forEach(tr=>{ const t1=tr.querySelector('[data-k="8_D33"],[data-k="8_D34"]'); if(t1) tr.style.display=isTestSelected(12)?"":"none"; const t2=tr.querySelector('[data-k="8_D39"],[data-k="8_D40"]'); if(t2) tr.style.display=isTestSelected(13)?"":"none"; }); }
+  }catch(e){}
+  // Update note di card yang disembunyikan? Tidak perlu, karena display:none sudah hilang
+  // Kalau card disembunyikan, extra-box di dalamnya ikut hilang, bagus
+}
+
+/* ---------- TES TAMBAHAN Hal 4-9: tambah/hapus Baris, Group, Kolom ---------- */
+const EXTRA_SECTIONS = {
+  p4: {title:"Hal 4 — Summary", cols:[{k:"hasil",label:"Hasil"},{k:"comment",label:"Comments"}]},
+  p5: {title:"Hal 5 — Dimensional", cols:[{k:"orig",label:"Original (in.)"},{k:"a1",label:"After 1 Wash"},{k:"a3",label:"After 3 Washes"},{k:"ket",label:"Keterangan"}]},
+  p6: {title:"Hal 6 — Appearance", cols:[{k:"a1",label:"After 1 Wash"},{k:"a3",label:"After 3 Washes"},{k:"req",label:"Requirement"},{k:"rating",label:"Rating"}]},
+  p6b: {title:"Hal 6 — Material/Product", cols:[{k:"a1",label:"After 1 Wash"},{k:"a3",label:"After 3 Washes"},{k:"req",label:"Requirement"}]},
+  p7: {title:"Hal 7 — Trims/Label/Graphic", cols:[{k:"a1",label:"After 1 Wash"},{k:"a3",label:"After 3 Washes"},{k:"req",label:"Requirement / Remarks"}]},
+  p8a: {title:"Hal 8 — Weight", cols:[{k:"val",label:"Hasil"},{k:"req",label:"Requirement"},{k:"rating",label:"Rating"}]},
+  p8b: {title:"Hal 8 — Seam", cols:[{k:"slip",label:"Slippage"},{k:"minslip",label:"Min Slip"},{k:"str",label:"Strength"},{k:"minstr",label:"Min Str"},{k:"mode",label:"Mode of Failure"},{k:"rating",label:"Rating"}]},
+  p8c: {title:"Hal 8 — Tearing/Tensile", cols:[{k:"res",label:"Test Result"},{k:"min",label:"Min"},{k:"rating",label:"Rating"}]},
+  p9: {title:"Hal 9 — Colorfastness", cols:[{k:"res",label:"Result (Grade)"},{k:"min",label:"Min (Grade)"},{k:"rating",label:"Rating"}]}
+};
+let EXTRA = {};
+function extraKey(){ try{ const rno=($("reportNo")?$("reportNo").value.trim():"")||"draft"; return "pvh_extra_"+rno; }catch(e){ return "pvh_extra_draft"; } }
+function initExtraEmpty(){ const o={}; Object.keys(EXTRA_SECTIONS).forEach(k=>{ o[k]={groups:[], extraCols:[], deleted:[]}; }); return o; }
+function loadExtra(){ try{ const k=extraKey(); let raw=localStorage.getItem(k); if(!raw && k!=="pvh_extra_draft") raw=localStorage.getItem("pvh_extra_draft"); if(raw){ const parsed=JSON.parse(raw); const base=initExtraEmpty(); Object.keys(base).forEach(sec=>{ if(parsed[sec]) base[sec]=Object.assign(base[sec], parsed[sec]); }); EXTRA=base; return; } }catch(e){} EXTRA=initExtraEmpty(); }
+function saveExtra(){ try{ const d=JSON.stringify(EXTRA); localStorage.setItem(extraKey(), d); localStorage.setItem("pvh_extra_draft", d); }catch(e){} }
+function extraUid(){ return "x"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function escHtml(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function colLetter(idx){ let s=""; idx++; while(idx>0){ const m=(idx-1)%26; s=String.fromCharCode(65+m)+s; idx=Math.floor((idx-1)/26); } return s; }
+function renderExtraFor(secId){
+  const cfg=EXTRA_SECTIONS[secId]; const data=EXTRA[secId]||{groups:[],extraCols:[],deleted:[]};
+  const allCols=[...cfg.cols, ...(data.extraCols||[])];
+  let h='<div class="extra-box" data-extra-box="'+secId+'"><h3>Tes Tambahan — '+escHtml(cfg.title)+'</h3><p class="sub2">Kalau buyer minta tes dadakan, tambah di sini. Tes tambahan masuk ke <b>Sheet 12 Tes Tambahan</b> di Excel, format asli Hal 4-9 tidak digeser. Baris asli yang kelebihan bisa dihapus pakai tombol × di tiap baris asli.</p>';
+  h+='<div class="extra-toolbar"><button type="button" class="primary" data-extra-act="add-group" data-sec="'+secId+'">+ Tambah Group</button><button type="button" data-extra-act="add-row" data-sec="'+secId+'">+ Tambah Baris Tes</button><button type="button" data-extra-act="add-col" data-sec="'+secId+'">+ Tambah Kolom</button></div>';
+  if(data.extraCols && data.extraCols.length){ h+='<div style="font-size:12px;margin-bottom:8px">Kolom tambahan: '+data.extraCols.map(c=>escHtml(c.label)+' <button type="button" data-extra-act="del-col" data-sec="'+secId+'" data-col="'+c.k+'" style="border:0;background:#fee2e2;color:#991b1b;border-radius:6px;padding:2px 6px;cursor:pointer">×</button>').join(" • ")+'</div>'; }
+  if(!data.groups.length){ h+='<p style="font-size:12px;color:var(--mut);margin:0 0 8px">Belum ada tes tambahan. Klik <b>+ Tambah Group</b> dulu kalau tes-nya berkelompok, atau langsung <b>+ Tambah Baris Tes</b>.</p>'; }
+  data.groups.forEach(g=>{
+    h+='<div class="extra-group" data-group="'+g.id+'"><div class="extra-group-head"><input data-extra-group-title data-sec="'+secId+'" data-group="'+g.id+'" value="'+escHtml(g.title)+'" placeholder="Nama Group, misal: Additional Test — Pilling"><button type="button" data-extra-act="add-row-in-group" data-sec="'+secId+'" data-group="'+g.id+'">+ Baris di Group ini</button><button type="button" data-extra-act="del-group" data-sec="'+secId+'" data-group="'+g.id+'" style="color:#991b1b">Hapus Group</button></div>';
+    h+='<table class="extra-table"><tr><th style="width:28%">Tes / Assessment</th>'+allCols.map(c=>'<th>'+escHtml(c.label)+'</th>').join("")+'<th style="width:36px"></th></tr>';
+    if(!g.rows.length) h+='<tr><td colspan="'+(allCols.length+2)+'" style="color:var(--mut);font-size:12px">Belum ada baris. Klik + Baris di Group ini.</td></tr>';
+    g.rows.forEach(r=>{
+      h+='<tr data-row="'+r.id+'"><td><input data-extra-row-label data-sec="'+secId+'" data-group="'+g.id+'" data-row="'+r.id+'" value="'+escHtml(r.label)+'" placeholder="Nama tes, misal: Bursting Strength"></td>'+allCols.map(c=>'<td><input data-extra-cell data-sec="'+secId+'" data-group="'+g.id+'" data-row="'+r.id+'" data-col="'+c.k+'" value="'+escHtml((r.vals||{})[c.k]||"")+'" placeholder="'+escHtml(c.label)+'"></td>').join("")+'<td><button type="button" class="del-row" data-extra-act="del-row" data-sec="'+secId+'" data-group="'+g.id+'" data-row="'+r.id+'">×</button></td></tr>';
+    });
+    h+='</table></div>';
+  });
+  if(data.deleted && data.deleted.length){ h+='<div class="deleted-note">Baris asli yang disembunyikan ('+data.deleted.length+'): '+data.deleted.map(l=>escHtml(l)+' <button type="button" data-extra-act="restore-orig" data-sec="'+secId+'" data-label="'+escHtml(l)+'">Kembalikan</button>').join(" • ")+'</div>'; }
+  h+='</div>';
+  return h;
+}
+function attachExtraControls(){
+  loadExtra();
+  Object.keys(EXTRA_SECTIONS).forEach(secId=>{
+    const card=document.getElementById("s_"+secId); if(!card) return;
+    const old=card.querySelector(".extra-box"); if(old) old.remove();
+    const wrap=document.createElement("div"); wrap.innerHTML=renderExtraFor(secId); card.appendChild(wrap.firstChild);
+    try{
+      const rows=card.querySelectorAll(".tw table tr");
+      rows.forEach((tr,idx)=>{
+        if(idx===0) return;
+        const lb=tr.querySelector("td.lb"); if(!lb) return;
+        const label=(lb.textContent||"").trim().replace(/×$/,"").trim();
+        const isDeleted=(EXTRA[secId].deleted||[]).includes(label);
+        if(isDeleted){ tr.style.display="none"; return; } else { tr.style.display=""; }
+        if(!lb.querySelector(".del-orig")){
+          const b=document.createElement("button"); b.type="button"; b.className="del-orig"; b.title="Hapus baris asli ini (kelebihan)"; b.textContent="×";
+          b.addEventListener("click", ()=>{ if(!confirm('Hapus baris asli "'+label+'"? Barisnya disembunyikan, bisa dikembalikan lagi.')) return; EXTRA[secId].deleted.push(label); saveExtra(); tr.style.display="none"; attachExtraControls(); });
+          lb.appendChild(b);
+        }
+      });
+    }catch(e){}
+  });
+  document.querySelectorAll(".extra-box").forEach(box=>{
+    box.addEventListener("click", (e)=>{
+      const btn=e.target.closest("[data-extra-act]"); if(!btn) return;
+      const act=btn.getAttribute("data-extra-act"); const sec=btn.getAttribute("data-sec");
+      if(act==="add-group"){ const t=prompt("Nama Group baru (misal: Additional Test — Seam):"); if(t==null||!t.trim()) return; EXTRA[sec].groups.push({id:extraUid(), title:t.trim(), rows:[]}); saveExtra(); attachExtraControls(); }
+      else if(act==="add-row"){ if(!EXTRA[sec].groups.length) EXTRA[sec].groups.push({id:extraUid(), title:"Tes Tambahan", rows:[]}); const g=EXTRA[sec].groups[EXTRA[sec].groups.length-1]; g.rows.push({id:extraUid(), label:"", vals:{}}); saveExtra(); attachExtraControls(); }
+      else if(act==="add-row-in-group"){ const gid=btn.getAttribute("data-group"); const g=(EXTRA[sec].groups||[]).find(x=>x.id===gid); if(!g) return; g.rows.push({id:extraUid(), label:"", vals:{}}); saveExtra(); attachExtraControls(); }
+      else if(act==="del-row"){ const gid=btn.getAttribute("data-group"), rid=btn.getAttribute("data-row"); const g=(EXTRA[sec].groups||[]).find(x=>x.id===gid); if(!g) return; if(!confirm("Hapus baris tes ini?")) return; g.rows=g.rows.filter(r=>r.id!==rid); saveExtra(); attachExtraControls(); }
+      else if(act==="del-group"){ const gid=btn.getAttribute("data-group"); if(!confirm("Hapus group ini + semua baris di dalamnya?")) return; EXTRA[sec].groups=EXTRA[sec].groups.filter(g=>g.id!==gid); saveExtra(); attachExtraControls(); }
+      else if(act==="add-col"){ const t=prompt("Nama kolom baru (misal: After 5 Washes / Catatan / Method):"); if(t==null||!t.trim()) return; EXTRA[sec].extraCols.push({k:"xc"+extraUid(), label:t.trim()}); saveExtra(); attachExtraControls(); }
+      else if(act==="del-col"){ const ck=btn.getAttribute("data-col"); if(!confirm("Hapus kolom tambahan ini? Isi di kolom ini ikut kehapus.")) return; EXTRA[sec].extraCols=EXTRA[sec].extraCols.filter(c=>c.k!==ck); (EXTRA[sec].groups||[]).forEach(g=>g.rows.forEach(r=>{ if(r.vals) delete r.vals[ck]; })); saveExtra(); attachExtraControls(); }
+      else if(act==="restore-orig"){ const lab=btn.getAttribute("data-label"); EXTRA[sec].deleted=(EXTRA[sec].deleted||[]).filter(x=>x!==lab); saveExtra(); attachExtraControls(); }
+    });
+    box.addEventListener("input", (e)=>{
+      const el=e.target; const sec=el.getAttribute("data-sec"); if(!sec) return;
+      if(el.hasAttribute("data-extra-group-title")){ const g=(EXTRA[sec].groups||[]).find(x=>x.id===el.getAttribute("data-group")); if(g) g.title=el.value; saveExtra(); }
+      else if(el.hasAttribute("data-extra-row-label")){ const g=(EXTRA[sec].groups||[]).find(x=>x.id===el.getAttribute("data-group")); if(!g) return; const r=g.rows.find(x=>x.id===el.getAttribute("data-row")); if(r) r.label=el.value; saveExtra(); }
+      else if(el.hasAttribute("data-extra-cell")){ const g=(EXTRA[sec].groups||[]).find(x=>x.id===el.getAttribute("data-group")); if(!g) return; const r=g.rows.find(x=>x.id===el.getAttribute("data-row")); if(!r) return; r.vals=r.vals||{}; r.vals[el.getAttribute("data-col")]=el.value; saveExtra(); }
+    });
+  });
+}
+function buildExtraSheetXml(){
+  const rno=($("reportNo")?$("reportNo").value.trim():"")||""; const date=($("reportDate")?$("reportDate").value:"")||"";
+  const rows=[];
+  rows.push(["Tes Tambahan — PVH Test Report"]);
+  rows.push(["Report No. : "+rno, "Tanggal : "+date]);
+  rows.push([""]);
+  rows.push(["Catatan: Tes di sini adalah tes tambahan dari buyer yang tidak ada di template asli 11 halaman. Format asli tidak digeser."]);
+  rows.push([""]);
+  let hasAny=false;
+  Object.keys(EXTRA_SECTIONS).forEach(secId=>{
+    const data=EXTRA[secId]||{groups:[],extraCols:[],deleted:[]};
+    const hasRows=(data.groups||[]).some(g=>g.rows && g.rows.length);
+    const hasDeleted=(data.deleted||[]).length>0;
+    if(!hasRows && !hasDeleted) return;
+    hasAny=true;
+    const cfg=EXTRA_SECTIONS[secId];
+    rows.push([cfg.title]);
+    if(hasDeleted) rows.push(["Baris asli yang dihapus / disembunyikan di "+cfg.title+": "+data.deleted.join(" | ")]);
+    (data.groups||[]).forEach(g=>{
+      if(!g.rows.length) return;
+      rows.push(["Group: "+g.title]);
+      const allCols=[...cfg.cols, ...(data.extraCols||[])];
+      rows.push(["Tes / Assessment", ...allCols.map(c=>c.label)]);
+      g.rows.forEach(r=>{ rows.push([r.label||"(tanpa nama)", ...allCols.map(c=>((r.vals||{})[c.k]||""))]); });
+      rows.push([""]);
+    });
+    rows.push([""]);
+  });
+  if(!hasAny) rows.push(["Tidak ada tes tambahan."]);
+  let maxCols=1; rows.forEach(r=>{ if(r.length>maxCols) maxCols=r.length; });
+  let xml='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><dimension ref="A1:'+colLetter(maxCols-1)+rows.length+'"/><sheetViews><sheetView workbookViewId="0"/></sheetViews><sheetFormatPr defaultRowHeight="15"/><cols>';
+  for(let i=0;i<maxCols;i++) xml+='<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+(i===0?42:20)+'"/>';
+  xml+='</cols><sheetData>';
+  rows.forEach((r,ri)=>{
+    xml+='<row r="'+(ri+1)+'">';
+    for(let ci=0;ci<r.length;ci++){
+      const ref=colLetter(ci)+(ri+1); const v=escHtml(r[ci]||"");
+      if(v==="") xml+='<c r="'+ref+'"/>';
+      else xml+='<c r="'+ref+'" t="inlineStr"><is><t xml:space="preserve">'+v+'</t></is></c>';
+    }
+    xml+='</row>';
+  });
+  xml+='</sheetData><pageMargins left="0.5" right="0.5" top="0.5" bottom="0.5" header="0" footer="0"/><pageSetup paperSize="9" orientation="portrait"/></worksheet>';
+  return xml;
+}
+
 build();
 const REC=linkedRecord();
 if(REC) applyRec(REC); else restore();
-buildPicker(REC); setupTabs(); recalc();
+buildPicker(REC); setupTabs(); try{ loadSummarySel(); }catch(e){} try{ renderSummaryDynamic(); }catch(e){} try{ applySummaryVisibility(); }catch(e){} try{ attachExtraControls(); }catch(e){} recalc();
+try{ const _rnoEl=document.getElementById("reportNo"); if(_rnoEl){ _rnoEl.addEventListener("change", ()=>{ try{ loadExtra(); attachExtraControls(); }catch(e){} try{ loadSummarySel(); renderSummaryDynamic(); applySummaryVisibility(); }catch(e){} }); } }catch(e){}
 function wire(id,fn,busy){
   $(id).addEventListener("click",async()=>{
     const bs=[$("goxl"),$("gopdf"),$("syncResult")]; bs.forEach(b=>{ if(b) b.disabled=true; }); $("msg").textContent=busy;
