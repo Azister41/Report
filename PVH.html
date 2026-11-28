@@ -1,28 +1,7 @@
 <!DOCTYPE html>
 <html lang="id">
-<head><style>
-@font-face {
-  font-family: "Optimistic";
-  font-style: normal;
-  font-weight: 400 600;
-  font-display: swap;
-  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Optimistic Mono";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
-}
-:where(html) {
-  font-family: "Optimistic", system-ui, sans-serif;
-}
-:where(code, pre, kbd, samp) {
-  font-family: "Optimistic Mono", ui-monospace, monospace;
-}
-</style>
-<!-- PVH v7-master-pdf - Summary hide fix: clear A-J + hideRow + refresh SUMMARY_SEL + PDF backup -->
+<head>
+<!-- PVH v8-master-pdf-full - Summary hide fix: clear A-J + hideRow + refresh SUMMARY_SEL + PDF backup -->
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PVH - Test Report</title>
 <style>
@@ -567,15 +546,12 @@ async function exportXlsx(){
   const {zip,name}=await buildXlsx();
   save(await zip.generateAsync({type:"blob",compression:"DEFLATE",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),name); return name;
 }
-// ===== PATCH v7-master-pdf: nerusin file kemarin, cuma ganti cara bikin PDF-nya =====
-  // File kemarin (v6) udah bener semua: form, Excel, autosave, tab, dynamic, summary — JANGAN DIULANG DARI 0.
-  // Yang rusak cuma PDF-nya. Jadi exportPdf-nya aja yang diganti: sekarang fetch('master.pdf') dari repo GitHub (sejajar sama file ini),
-  // terus tulis di atas master PDF asli. Kalau master.pdf belum di-upload ke repo, otomatis fallback ke cara lama (renderPdf) biar nggak error.
-  // Mapping posisi tulisan di master.pdf — geser X/Y di sini kalau tulisan-nya masih geser dikit. Sekali pas, seterusnya otomatis pas.
-  const PDF_MASTER_MAPPING = {
-    reportNo:  {page:3, x:95,  y:762, size:10, bold:false},
-    reportDate:{page:3, x:95,  y:748, size:10, bold:false},
-  };
+// ===== PATCH v8-master-pdf-full: nerusin file kemarin, PDF-nya diisi SEMUA field, bukan cuma 2 =====
+  // Masalah kemarin: mapping cuma Report No. + Date, jadi sisanya masih data contoh master, keliatan kayak export master doang.
+  // Fix: ambil SEMUA nilai yang berubah dari Excel yang udah diisi user (buildXlsx), terus tulis semua itu ke atas master.pdf.
+  // Jadi yang ke-export itu master.pdf + SEMUA isi form kamu, bukan master doang.
+  // Caranya: bandingin Excel hasil buildXlsx sama Excel template asli (TEMPLATE_B64). Cell yang nilainya beda = isi user -> tulis ke master.pdf di posisi yang sama.
+  // Posisi dihitung dari colX/rowY Excel yang sama kayak renderPdf lama, jadi posisinya nempel pas di atas tabel master.
   const exportPdfLama = async function(){ const {zip,name}=await buildXlsx(), bytes=await renderPdf(zip), n=name.replace(/\.xlsx$/,".pdf"); save(new Blob([bytes],{type:"application/pdf"}),n); return n; };
   async function exportPdf(){
     try{
@@ -585,28 +561,133 @@ async function exportXlsx(){
       const pdf = await PDFLib.PDFDocument.load(masterBytes);
       const font = await pdf.embedFont(PDFLib.StandardFonts.Helvetica);
       const fontBold = await pdf.embedFont(PDFLib.StandardFonts.HelveticaBold);
-      let reportNoVal = '', reportDateVal = '';
-      try{ reportNoVal = document.getElementById('reportNo')?.value || ''; }catch(e){}
-      try{ reportDateVal = document.getElementById('reportDate')?.value || ''; }catch(e){}
-      let fallbackName = 'PVH';
-      try{ const bx = await buildXlsx(); fallbackName = bx.name || 'PVH'; if(!reportNoVal) reportNoVal = fallbackName.replace('.xlsx',''); }catch(e){}
-      const data = { reportNo: reportNoVal, reportDate: reportDateVal };
-      for(const [key,m] of Object.entries(PDF_MASTER_MAPPING)){
-        const v = data[key]; if(!v) continue;
-        if(m.page >= pdf.getPageCount()) continue;
-        const page = pdf.getPage(m.page);
-        page.drawText(String(v), {x:m.x, y:m.y, size:m.size||10, font: m.bold?fontBold:font, color: PDFLib.rgb(0,0,0)});
+      // 1. Ambil Excel yang udah diisi user (buildXlsx) + Excel template asli buat bandingin
+      const {zip: builtZip, name: xlsxName} = await buildXlsx();
+      const origZip = await JSZip.loadAsync(TEMPLATE_B64, {base64:true});
+      const dom = s => new DOMParser().parseFromString(s, "application/xml");
+      const parseCellRef = ref => { const m = ref.match(/([A-Z]+)(\d+)/); const ci = m[1].split("").reduce((a,ch)=>a*26+ch.charCodeAt(0)-64,0); return {ci, r:+m[2]}; };
+      const getCellText = (sheetXml, sharedStrings) => {
+        // Ambil semua <c r="A1"><v>...</v></c> + shared strings + inlineStr
+        const sx = dom(sheetXml);
+        const cells = {};
+        const strs = [];
+        // sharedStrings.xml kalau ada
+        try{
+          if(sharedStrings){
+            const sd = dom(sharedStrings);
+            Array.from(sd.getElementsByTagName("si")).forEach(si=>{
+              let t=""; Array.from(si.getElementsByTagName("t")).forEach(tn=>t+=tn.textContent); strs.push(t);
+            });
+          }
+        }catch(e){}
+        Array.from(sx.getElementsByTagName("c")).forEach(c=>{
+          const ref=c.getAttribute("r"); if(!ref) return;
+          const t=c.getAttribute("t");
+          let txt="";
+          const vEl=c.getElementsByTagName("v")[0];
+          const isEl=c.getElementsByTagName("is")[0];
+          if(t==="s" && vEl) txt = strs[+vEl.textContent] || "";
+          else if(isEl){ Array.from(isEl.getElementsByTagName("t")).forEach(tn=>txt+=tn.textContent); }
+          else if(vEl) txt = vEl.textContent;
+          // Kalau ada <f> (rumus) + <v> cache, pake cache-nya (itu nilai yang tampil di Excel)
+          cells[ref]=txt;
+        });
+        return {sx, cells};
+      };
+      // Shared strings dari builtZip (sama kayak orig, tapi ambil dari built)
+      let builtSS = null, origSS = null;
+      try{ builtSS = await builtZip.file("xl/sharedStrings.xml")?.async("string"); }catch(e){}
+      try{ origSS = await origZip.file("xl/sharedStrings.xml")?.async("string"); }catch(e){}
+      // 2. Untuk tiap sheet 1..11 -> PDF page 0..10
+      let totalDrawn = 0;
+      for(let n=1; n<=11; n++){
+        if(n-1 >= pdf.getPageCount()) break;
+        const builtXml = await builtZip.file("xl/worksheets/sheet"+n+".xml").async("string");
+        const origXml = await origZip.file("xl/worksheets/sheet"+n+".xml").async("string");
+        const built = getCellText(builtXml, builtSS);
+        const orig = getCellText(origXml, origSS);
+        const sx = built.sx;
+        // Hitung colX/rowY kayak renderPdf lama
+        const dcol = {}; Array.from(sx.getElementsByTagName("col")).forEach(c=>{ for(let i=+c.getAttribute("min"); i<=+c.getAttribute("max"); i++) dcol[i]=+c.getAttribute("width")*7*0.75; });
+        const colW = i => dcol[i] || 64*0.75, NC=10, NR=51;
+        const rowH=[]; for(let rr=1; rr<=NR; rr++) rowH[rr]=15;
+        Array.from(sx.getElementsByTagName("row")).forEach(r=>{
+          const nn=+r.getAttribute("r"); if(nn>NR) return;
+          if(r.getAttribute("hidden")==="1"||r.getAttribute("hidden")==="true"){ rowH[nn]=0; return; }
+          if(r.getAttribute("ht")) rowH[nn]=+r.getAttribute("ht");
+        });
+        const colX=[0]; for(let i=1;i<=NC;i++) colX[i]=colX[i-1]+colW(i);
+        const rowY=[0,0]; for(let rr=1; rr<=NR; rr++) rowY[rr+1]=rowY[rr]+rowH[rr];
+        const CW=colX[NC], CH=rowY[NR+1];
+        const ps = sx.getElementsByTagName("pageSetup")[0], pm = sx.getElementsByTagName("pageMargins")[0];
+        const pw = ps && ps.getAttribute("paperSize")==="1" ? [612,792] : [595.28,841.89];
+        const mg = a => pm ? +pm.getAttribute(a)*72 : 0;
+        const PW = pw[0]-mg("left")-mg("right"), PH = pw[1]-mg("top")-mg("bottom");
+        let sc = Math.min(PW/CW, PH/CH); if(sc>1.25) sc=1.25; if(!isFinite(sc)||sc<=0) sc=1;
+        const X = x => mg("left")+x*sc;
+        const Y = y => pw[1]-mg("top")-y*sc;
+        // Merges: kalau cell adalah merge, pake posisi kiri-atas merge-nya
+        const merges={};
+        const mergeEl = sx.getElementsByTagName("mergeCells")[0];
+        if(mergeEl) Array.from(mergeEl.getElementsByTagName("mergeCell")).forEach(mc=>{
+          const ref=mc.getAttribute("ref"); if(!ref) return;
+          const [a,b]=ref.split(":"); const p1=parseCellRef(a), p2=parseCellRef(b||a);
+          merges[ref]={c1:p1.ci,r1:p1.r,c2:p2.ci,r2:p2.r};
+          // Tandai semua cell di dalam merge biar nggak ke-draw dobel
+          for(let cc=p1.ci; cc<=p2.ci; cc++) for(let rr=p1.r; rr<=p2.r; rr++) if(!(cc===p1.ci&&rr===p1.r)) merges[cc+","+rr]=true;
+        });
+        const page = pdf.getPage(n-1);
+        // 3. Bandingin built vs orig, yang beda = isi user -> tulis ke master.pdf
+        for(const [ref, txtVal] of Object.entries(built.cells)){
+          const origVal = orig.cells[ref] || "";
+          if(txtVal === origVal) continue; // sama kayak template -> jangan tulis, biar nggak dobel
+          if(!txtVal || !txtVal.trim()) continue; // kosong -> jangan tulis (biar master-nya yang tampil, atau kalau user ngosongin, tutup pake putih)
+          // Kalau user ngosongin cell yang di template ada isinya, tutup pake kotak putih dulu
+          // (di sini kita skip karena txtVal kosong sudah di-skip di atas; untuk kasus hapus, perlu handle khusus, tapi jarang)
+          const {ci, r} = parseCellRef(ref);
+          if(ci>NC || r>NR) continue;
+          if(merges[ci+","+r]===true) continue; // bagian dalam merge, skip
+          // Posisi: X = kiri cell + padding dikit, Y = bawah cell + baseline
+          const cellW = colX[ci]-colX[ci-1];
+          const cellH = rowH[r];
+          // Alignment: kalau angka, rata kanan; kalau teks, rata kiri (kira-kira kayak Excel)
+          const isNum = /^-?\d+(\.\d+)?%?$/.test(txtVal.trim());
+          const fSize = 9; // ukuran font di master PDF kira-kira 9-10, pake 9 biar muat
+          const textW = (font.widthOfTextAtSize(txtVal, fSize) || 0);
+          let tx = X(colX[ci-1]) + 2;
+          if(isNum) tx = X(colX[ci]) - textW - 3; // rata kanan
+          // Y: baseline di tengah cell. PDF Y dari bawah, jadi Y(rowY[r+1]) + cellH*sc*0.35
+          const ty = Y(rowY[r+1]) + cellH*sc*0.35;
+          // Tutup dulu tulisan lama di posisi itu pake kotak putih (biar nggak dobel sama contoh di master, kalau master-nya ada contoh)
+          // Kotaknya selebar cell, setinggi cell, putih. Ini yang bikin "tulisan oke tapi export master doang" jadi bener: contoh lama ketutup, yang baru yang tampil.
+          try{ page.drawRectangle({x: X(colX[ci-1])+0.5, y: Y(rowY[r+1])+0.5, width: cellW*sc-1, height: cellH*sc-1, color: PDFLib.rgb(1,1,1)}); }catch(e){}
+          try{ page.drawText(String(txtVal), {x: tx, y: ty, size: fSize, font: font, color: PDFLib.rgb(0,0,0)}); totalDrawn++; }catch(e){}
+        }
+        // Handle khusus: cell yang di built kosong tapi di orig ada isi DAN user sengaja ngosongin (misal Summary X yang dihapus)
+        // Tutup pake putih biar contoh master-nya hilang
+        for(const [ref, origVal] of Object.entries(orig.cells)){
+          if(!origVal || !origVal.trim()) continue;
+          const builtVal = built.cells[ref] || "";
+          if(builtVal.trim() !== "") continue; // masih ada isi, udah di-handle di atas
+          // Kalau orig ada isi tapi built kosong -> user ngosongin -> tutup pake putih
+          const {ci, r} = parseCellRef(ref);
+          if(ci>NC || r>NR) continue;
+          if(merges[ci+","+r]===true) continue;
+          const cellW = colX[ci]-colX[ci-1]; const cellH=rowH[r];
+          try{ page.drawRectangle({x: X(colX[ci-1])+0.5, y: Y(rowY[r+1])+0.5, width: cellW*sc-1, height: cellH*sc-1, color: PDFLib.rgb(1,1,1)}); }catch(e){}
+        }
       }
       const out = await pdf.save();
-      const n = (reportNoVal || fallbackName.replace('.xlsx','')) + '.pdf';
+      const n = (xlsxName||'PVH').replace(/\.xlsx$/,"") + '.pdf';
       save(new Blob([out],{type:'application/pdf'}), n);
-      try{ const note=document.getElementById('syncNote'); if(note){ const old=note.innerHTML; note.innerHTML='✅ PDF pake <b>master.pdf dari repo</b> — layout-nya sama persis kayak master, nggak ada geser. '+old; setTimeout(()=>note.innerHTML=old, 5000); } }catch(e){}
+      try{ const note=document.getElementById('syncNote'); if(note){ const old=note.innerHTML; note.innerHTML='✅ PDF pake <b>master.pdf + '+totalDrawn+' isi form kamu</b> — bukan master doang lagi. '+old; setTimeout(()=>note.innerHTML=old, 6000); } }catch(e){}
       return n;
     }catch(e){
-      console.warn('master.pdf belum ketemu, fallback ke cara lama:', e.message);
+      console.warn('master.pdf gagal, fallback ke cara lama:', e.message);
       return await exportPdfLama();
     }
   }
+
 /* ---------- terhubung ke Dashboard (localStorage "trp_reports_v1") ---------- */
 function dashList(){ try{ const l=JSON.parse(localStorage.getItem("trp_reports_v1")||"[]"); return Array.isArray(l)?l:[]; }catch(e){ return []; } }
 function linkedRecord(){
@@ -1177,5 +1258,5 @@ const merges = {}, mm = []; Array.from(sx.getElementsByTagName("mergeCell")).for
 }
 
 </script>
-<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
+</body>
 </html>
