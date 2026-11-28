@@ -105,8 +105,8 @@ td.lb{font-size:12px;min-width:200px;max-width:340px}
 .photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
 .ph{position:relative;display:flex;align-items:center;justify-content:center;text-align:center;border:2px dashed #cbd5e1;border-radius:12px;background:#f8fafc;cursor:pointer;overflow:hidden;width:100%;max-width:220px;color:var(--mut);font-size:12px;padding:8px;min-height:120px}
 .ph:hover{border-color:var(--ac);background:#eff6ff}
-.ph input{display:none}
-.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff;display:none}
+.ph input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff;display:none;pointer-events:none}
 .ph.has img{display:block}
 .ph.has span{display:none}
 .ph .x{position:absolute;top:4px;right:4px;z-index:2;border:0;border-radius:999px;width:24px;height:24px;background:#0f172a;color:#fff;font-weight:700;cursor:pointer;display:none}
@@ -190,9 +190,10 @@ function build(){
     CFG.photos.map(p=>'<div class="pc"><span>'+esc(p.label)+'</span><label class="ph" id="ph_'+p.id+'" style="aspect-ratio:'+p.w+'/'+p.h+'"><span>Pilih foto dari galeri</span><img alt=""><button type="button" class="x" title="Hapus foto">×</button><input type="file" accept="image/*"></label></div>').join("")+'</div></div>';
   h+='<div class="hint">Template Excel PVH (11 halaman, logo, format, simbol perawatan, tanda tangan) tertanam di file ini. Yang berubah hanya isian di atas. Nilai awal form = isi contoh dari report SGR-2710262952.</div>';
   $("app").innerHTML=h;
-  CFG.photos.forEach(p=>{
-    const box=$("ph_"+p.id), file=box.querySelector("input"), img=box.querySelector("img");
-    file.onchange=async()=>{ if(!file.files[0]) return; try{ await loadPhoto(p,file.files[0],img); box.classList.add("has"); }catch(e){ alert("Foto tidak bisa dibaca."); } file.value=""; };
+  CFG.photos.forEach(p=>{     const box=$("ph_"+p.id), file=box.querySelector("input"), img=box.querySelector("img");
+    // Fallback: di beberapa browser, label + input display:none tidak buka file picker. Jadi klik kotak = paksa file.click()
+    box.addEventListener("click", (e)=>{ if(e.target.closest && e.target.closest(".x")) return; if(e.target===file) return; try{ file.click(); }catch(err){} });
+    file.onchange=async()=>{ if(!file.files[0]) return; try{ await loadPhoto(p,file.files[0],img); box.classList.add("has"); const _m=$("msg"); if(_m) _m.textContent="Foto "+p.label+" terpasang. Jangan lupa Export / Simpan Hasil."; }catch(e){ alert("Foto tidak bisa dibaca. Coba foto JPG / PNG lain."); } file.value=""; };
     box.querySelector(".x").onclick=e=>{ e.preventDefault(); e.stopPropagation(); delete PHOTO[p.id]; img.removeAttribute("src"); box.classList.remove("has"); };
   });
   $("reportDate").addEventListener("input",syncDates);
@@ -226,8 +227,7 @@ function summaryMark(r){
   const g=CFG.sections.find(s=>s.type==="summary").groups[r]||[];
   return g.some(k=>ratingOf(k)==="FAIL")?"Fail":"Pass";
 }
-function overallVal(){
-  const o=$("overall").value; if(o!=="Auto") return o;
+function overallVal(){   const _oEl=$("overall"); const o=_oEl?_oEl.value:"Auto"; if(o!=="Auto") return o;
   const all=[...document.querySelectorAll("select.rating")].some(s=>s.value==="FAIL")||crock(18)==="FAIL"||crock(19)==="FAIL";
   return all?"FAIL":"PASS";
 }
@@ -252,7 +252,7 @@ document.addEventListener("change",e=>{ if(e.target.closest&&e.target.closest("#
 
 /* ---------- simpan lokal ---------- */
 function collect(){ const d={}; document.querySelectorAll("[data-k]").forEach(e=>{ d[e.dataset.k]=e.value; }); return d; }
-function saveLocal(){ const d=JSON.stringify(collect()); try{ localStorage.setItem("pvh_draft",d); localStorage.setItem("pvh_"+($("reportNo").value||"draft"),d); $("msg").textContent="Tersimpan di browser ini (foto tidak ikut tersimpan)."; }catch(e){ alert("Tidak bisa menyimpan di browser ini."); } }
+function saveLocal(){ const d=JSON.stringify(collect()); try{ localStorage.setItem("pvh_draft",d); localStorage.setItem("pvh_"+($("reportNo").value||"draft"),d); $("msg").textContent="Tersimpan di browser ini (foto tidak ikut tersimpan)."; }catch(e){ /* localStorage penuh / diblokir - jangan alert & jangan gagalkan sync, tetap lanjut ke Dashboard */ try{ console.warn("saveLocal gagal", e); }catch(_){} } }
   /* ---------- AUTOSAVE: biar keluar-masuk gak hilang ---------- */
   /* Masalah kemarin: saveLocal() cuma jalan kalau klik Simpan Hasil / Export. Kalau keluar begitu aja tanpa klik, isi form hilang. */
   /* Sekarang: tiap ketik / ganti field, otomatis simpan diam-diam (tanpa ganggu pesan), + simpan juga pas mau keluar halaman. */
@@ -535,7 +535,7 @@ function wire(id,fn,busy){
 }
 wire("goxl",exportXlsx,"Membuat Excel…"); wire("gopdf",exportPdf,"Membuat PDF…");
 /* Tombol hijau + auto-sync kayak LL Bean: habis Export juga langsung sync */
-if($("syncResult")) $("syncResult").addEventListener("click", ()=>syncToDashboard(true));
+if($("syncResult")) $("syncResult").addEventListener("click", ()=>{ try{ $("msg").textContent="Menyimpan hasil ke Dashboard..."; }catch(e){} try{ syncToDashboard(true); }catch(e){ console.error(e); try{ $("msg").textContent="Gagal simpan: "+(e.message||e)+". Coba klik lagi / refresh."; }catch(_){} } });
 </script>
 <script>/*PDF*/
 const WRAPF = 0.95;
