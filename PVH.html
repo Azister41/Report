@@ -22,7 +22,7 @@
   font-family: "Optimistic Mono", ui-monospace, monospace;
 }
 </style>
-<!-- PVH v24-pdf-llbean - Summary hide fix: clear A-J + hideRow + refresh SUMMARY_SEL + PDF backup -->
+<!-- PVH v24.1-fix-hal2 - Summary hide fix: clear A-J + hideRow + refresh SUMMARY_SEL + PDF backup -->
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PVH - Test Report</title>
 <style>
@@ -152,8 +152,8 @@ select.test-req:focus{border-color:#2563eb;outline:none}
 <div class="top"><div class="crumbs"><a href="index.html">Dashboard</a><span>/</span><b>PVH - Test Report</b></div></div>
 <div class="phead-wrap"><button type="button" class="back" onclick="goBack()">← Kembali ke Dashboard</button><h1 style="margin-top:14px">PVH - Test Report</h1><p class="sub">Isi data, lalu Export. Hasilnya memakai template asli PVH (11 halaman), hanya data yang diisi yang diganti.</p><span id="draftHint" style="font-size:11px;color:#64748b;display:block;margin-top:4px"></span><span id="msg"></span></div>
 <div class="tabs-wrap"><div class="tabs"><div class="seg" id="pvhTabs"><button type="button" class="on">Hal 1</button><button type="button">Hal 2</button><button type="button">Hal 3</button><button type="button">Hal 4</button><button type="button">Hal 5</button><button type="button">Hal 6</button><button type="button">Hal 7</button><button type="button">Hal 8</button><button type="button">Hal 9</button><button type="button">Foto</button></div></div></div>
-<div class="wrap"><div id="app"></div><div style="background:#dcfce7;border:1px solid #16a34a;padding:10px 12px;border-radius:8px;font-size:13px;line-height:1.6;margin:10px 0">   <b>v24 — PDF udah ala LL Bean:</b><br>   Klik <b>Export ke PDF</b> langsung jadi, nggak perlu buka Excel → Print lagi. PDF-nya digambar ulang dari Excel-nya sendiri (baca styles, font Carlito, hitung wrap, skala, margin digeser ke kanan), jadi rapi kayak LL Bean. Excel-nya juga tetep rapi, margin-nya udah digeser ke kanan ~6mm biar mepet garis. </div>
-<div style="background:#dbeafe;border:1px solid #2563eb;padding:8px 10px;border-radius:8px;font-size:12px;margin:10px 0"><b>Versi: v24 - PDF ALA LL BEAN (Gambar Ulang dari Excel)</b> — Cara LL Bean: Tab yang nggak dipilih dihapus + rebuild, PDF digambar ulang dari Excel (baca styles, font Carlito, hitung wrap, skala, gambar urut fill-gambar-teks-border) kayak LL Bean, jadi rapi. Kalau masih muncul semua, screenshot-in tulisan ini.</div><div class="actions"><button id="goxl" type="button">Export ke Excel</button><button id="gopdf" type="button">Export ke PDF</button><button id="syncResult" type="button">Simpan Hasil ke Dashboard</button></div><div id="syncNote">Tombol hijau ini nyambungin form ini ke Dashboard. Pilih Overall Rating PASS / FAIL di atas (atau biar Auto, nanti dihitung dari hasil uji), klik ini, status report di Test Reports langsung jalan: <b>Masuk &rarr; Proses &rarr; Selesai &middot; Pass / Fail</b>. Tombol <b>Mulai proses / Tahan</b> di Dashboard langsung hilang, ganti jadi <b>Selesai &middot; Pass / Fail + Buka lagi</b>. KPI Masuk berkurang, Selesai nambah, diagram QA + Lab Analysis langsung ke-update. Export Excel / PDF juga otomatis nyambung.</div></div>
+<div class="wrap"><div id="app"></div>
+<div class="actions"><button id="goxl" type="button">Export ke Excel</button><button id="syncResult" type="button">Simpan Hasil ke Dashboard</button></div></div>
 <datalist id="yn"><option value="Yes"><option value="N/A"><option value="No"></datalist>
 <script>/*JSZIP*//*!
 
@@ -965,10 +965,10 @@ function colLetter(idx){ let s=""; idx++; while(idx>0){ const m=(idx-1)%26; s=St
 function renderExtraFor(secId){
   const cfg=EXTRA_SECTIONS[secId]; const data=EXTRA[secId]||{groups:[],extraCols:[],deleted:[]};
   const allCols=[...cfg.cols, ...(data.extraCols||[])];
-  let h='<div class="extra-box" data-extra-box="'+secId+'"><h3>Tes Tambahan — '+escHtml(cfg.title)+'</h3><p class="sub2">Kalau buyer minta tes dadakan, tambah di sini. Tes tambahan masuk ke <b>Sheet 12 Tes Tambahan</b> di Excel, format asli Hal 4-9 tidak digeser. Baris asli yang kelebihan bisa dihapus pakai tombol × di tiap baris asli.</p>';
+  let h='<div class="extra-box" data-extra-box="'+secId+'">';
   h+='<div class="extra-toolbar"><button type="button" class="primary" data-extra-act="add-group" data-sec="'+secId+'">+ Tambah Group</button><button type="button" data-extra-act="add-row" data-sec="'+secId+'">+ Tambah Baris Tes</button><button type="button" data-extra-act="add-col" data-sec="'+secId+'">+ Tambah Kolom</button></div>';
   if(data.extraCols && data.extraCols.length){ h+='<div style="font-size:12px;margin-bottom:8px">Kolom tambahan: '+data.extraCols.map(c=>escHtml(c.label)+' <button type="button" data-extra-act="del-col" data-sec="'+secId+'" data-col="'+c.k+'" style="border:0;background:#fee2e2;color:#991b1b;border-radius:6px;padding:2px 6px;cursor:pointer">×</button>').join(" • ")+'</div>'; }
-  if(!data.groups.length){ h+='<p style="font-size:12px;color:var(--mut);margin:0 0 8px">Belum ada tes tambahan. Klik <b>+ Tambah Group</b> dulu kalau tes-nya berkelompok, atau langsung <b>+ Tambah Baris Tes</b>.</p>'; }
+  
   data.groups.forEach(g=>{
     h+='<div class="extra-group" data-group="'+g.id+'"><div class="extra-group-head"><input data-extra-group-title data-sec="'+secId+'" data-group="'+g.id+'" value="'+escHtml(g.title)+'" placeholder="Nama Group, misal: Additional Test — Pilling"><button type="button" data-extra-act="add-row-in-group" data-sec="'+secId+'" data-group="'+g.id+'">+ Baris di Group ini</button><button type="button" data-extra-act="del-group" data-sec="'+secId+'" data-group="'+g.id+'" style="color:#991b1b">Hapus Group</button></div>';
     h+='<table class="extra-table"><tr><th style="width:28%">Tes / Assessment</th>'+allCols.map(c=>'<th>'+escHtml(c.label)+'</th>').join("")+'<th style="width:36px"></th></tr>';
@@ -1080,13 +1080,13 @@ buildPicker(REC); setupTabs(); try{ loadSummarySel(); }catch(e){} try{ renderSum
 try{ const _rnoEl=document.getElementById("reportNo"); if(_rnoEl){ _rnoEl.addEventListener("change", ()=>{ try{ loadExtra(); attachExtraControls(); }catch(e){} try{ loadSummarySel(); renderSummaryDynamic(); applySummaryVisibility(); }catch(e){} }); } }catch(e){}
 function wire(id,fn,busy){
   $(id).addEventListener("click",async()=>{
-    const bs=[$("goxl"),$("gopdf"),$("syncResult")]; // v24: gopdf balik, pakai renderPdf LL Bean bs.forEach(b=>{ if(b) b.disabled=true; }); $("msg").textContent=busy;
+    const bs=[$("goxl"),$("syncResult")]; // v24: gopdf balik, pakai renderPdf LL Bean bs.forEach(b=>{ if(b) b.disabled=true; }); $("msg").textContent=busy;
     try{ const n=await fn(); $("msg").textContent="Selesai: "+n; try{ syncToDashboard(false); }catch(e){} }
     catch(e){ $("msg").textContent="Gagal: "+e.message; console.error(e); alert("Gagal: "+e.message); }
     bs.forEach(b=>{ if(b) b.disabled=false; });
   });
 }
-wire("goxl",exportXlsx,"Membuat Excel…"); wire("gopdf",exportPdf,"Membuat PDF…"); // v24: gopdf balik, PDF digambar ulang dari Excel kayak LL Bean
+wire("goxl",exportXlsx,"Membuat Excel…");  // v24: gopdf balik, PDF digambar ulang dari Excel kayak LL Bean
 /* Tombol hijau + auto-sync kayak LL Bean: habis Export juga langsung sync */
 if($("syncResult")) $("syncResult").addEventListener("click", ()=>{ try{ $("msg").textContent="Menyimpan hasil ke Dashboard..."; }catch(e){} try{ syncToDashboard(true); }catch(e){ console.error(e); try{ $("msg").textContent="Gagal simpan: "+(e.message||e)+". Coba klik lagi / refresh."; }catch(_){} } });
 </script>
@@ -1259,8 +1259,8 @@ const merges = {}, mm = []; Array.from(sx.getElementsByTagName("mergeCell")).for
     Object.values(cells).forEach(c => { if (!c.txt) return; const m = merges[c.ci + "," + c.r]; if (m && (m.c1 !== c.ci || m.r1 !== c.r)) return; const q = rect(c), f = c.xf.f, k = f.b ? "b" : "r", sz = f.sz, lh = sz * 1.22; let tc = f.c;
       cfs.forEach(cf => { if (cf.rg.some(g => inRg(g, c.ci, c.r))) cf.rules.forEach(r => { if (r.dx && r.dx.fl && c.fl && r.dx.fl === c.fl && c.fl[0] === 255 && c.fl[1] === 0 && (r.f === c.txt.trim() || (r.tx && c.txt.includes(r.tx)))) tc = f.c; }); });
       let lines = []; const wmax = q.w - 0.5;
-      c.txt.split("\n").forEach(par => { if (!c.xf.w) { lines.push(par); return; } let cur = ""; par.split(" ").forEach(wd => { const t = cur ? cur + " " + wd : wd; if (tw(t, k, sz) * WRAPF > wmax && cur) { lines.push(cur); cur = wd; } else cur = t; }); lines.push(cur); });
-      const bh = lines.length * lh, v = c.xf.v || "bottom", top = v === "top" ? q.y + 1 : v === "center" ? q.y + (q.h - bh) / 2 : q.y + q.h - bh - 1, hz = c.xf.h && c.xf.h !== "general" ? c.xf.h : (c.num ? "right" : "left");
+      c.txt.split("\n").forEach(par => { /* v24.1 HAL 2: paksa wrap untuk semua sel, bukan cuma wrapText. D34 Care Instruction style-nya no-wrap tapi teksnya panjang, kalau nggak di-wrap dia meluber keluar sel & kepotong di PDF. */ let cur = ""; par.split(" ").forEach(wd => { const t = cur ? cur + " " + wd : wd; if (tw(t, k, sz) * WRAPF > wmax && cur) { lines.push(cur); cur = wd; } else cur = t; }); lines.push(cur); });
+      const bh = lines.length * lh, v = (c.txt.includes("machine wash") ? "top" : (c.xf.v || "bottom")) // v24.1: Care Instruction (D34) paksa TOP biar nggak numpuk sama simbol gambar yang di TOP, top = v === "top" ? q.y + 1 : v === "center" ? q.y + (q.h - bh) / 2 : q.y + q.h - bh - 1, hz = c.xf.h && c.xf.h !== "general" ? c.xf.h : (c.num ? "right" : "left");
       lines.forEach((ln, i) => { const w = tw(ln, k, sz), x = hz === "center" || hz === "centerContinuous" ? q.x + (q.w - w) / 2 : hz === "right" ? q.x + q.w - w - 1.5 : q.x + 1.5, y = top + i * lh + sz * 0.96;
         ops += "BT " + tc.map(v => f2(v / 255)).join(" ") + " rg /" + (k === "b" ? "F2" : "F1") + " " + sz + " Tf " + f2(X(x)) + " " + f2(Y(y)) + " Td " + hexs(ln, k) + " Tj ET\n";
         if (f.u && ln.trim()) ops += tc.map(v => f2(v / 255)).join(" ") + " RG " + f2(0.5 * sc) + " w " + f2(X(x)) + " " + f2(Y(y + 1.3)) + " m " + f2(X(x + w)) + " " + f2(Y(y + 1.3)) + " l S\n"; }); });
