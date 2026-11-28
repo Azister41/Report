@@ -603,7 +603,7 @@ main{padding:22px 18px 28px;max-width:1100px;margin:0 auto}
 
         <div class="actions"><button id="go" type="button" class="p">Export ke Excel</button><button id="gopdf" type="button" class="s">Export ke PDF</button><button id="syncResult" type="button" class="p" style="background:#16a34a">Simpan Hasil ke Dashboard</button></div>
         <div id="syncNote" style="font-size:12px;color:#475569;margin-top:6px">Tombol hijau ini nyambungin form ini ke Dashboard. Pilih Overall Rating PASS / FAIL di atas, klik ini, status report di Test Reports langsung jalan: <b>Masuk &rarr; Proses &rarr; Selesai &middot; Pass / Fail</b>. Tombol <b>Mulai proses / Tahan</b> di Dashboard langsung hilang, ganti jadi <b>Selesai &middot; Pass / Fail + Buka lagi</b>. KPI Masuk berkurang, Selesai nambah, diagram QA + Lab Analysis langsung ke-update. Export Excel / PDF juga otomatis nyambung.</div>
-        <div id="msg"></div>
+        <div id="draftHint" style="font-size:11px;color:#64748b;margin-top:4px"></div><div id="msg"></div>
       </div>
     
         
@@ -1739,6 +1739,99 @@ $("go").addEventListener("click", async () => {
       if(msg) msg.textContent="Tersimpan ke Dashboard: "+rno+" -> Selesai "+(rating==="PASS"?"Pass":"Fail")+" | Progress: "+r.history.map(function(h){return h.s;}).join(" -> ")+" | Buka Dashboard, KPI ke-update.";
     }catch(e){ console.error(e); var m2=document.getElementById("msg"); if(m2) m2.textContent="Gagal sync: "+e.message; }
   });
+
+  // ---------- AUTOSAVE LL BEAN: biar keluar-masuk gak hilang ----------
+  // Masalah kemarin: LL Bean NGGAK punya simpan draft sama sekali. Keluar tanpa Export = isi form hilang 100%.
+  // Sekarang: tiap ketik / ganti field, otomatis simpan diam-diam ke localStorage per-Report No.
+  // Yang disimpan: semua input header (rno, client, date, rating, a1-a4, attn, t1-t5, p2_*, f*), + S (Hasil Uji), + SUMMARY, + SEC.
+  // Foto TIDAK ikut tersimpan (browser tidak boleh simpan file foto otomatis) - jadi foto harus upload ulang kalau keluar.
+  var _llAutosaveT = null;
+  function saveLLBeanDraftSilent(){
+    try{
+      var rnoEl = document.getElementById("rno");
+      var rno = rnoEl ? (rnoEl.value||"").trim() : "";
+      var data = { inputs: {}, S: null, SUMMARY: null, SEC: null, tab: 1, savedAt: Date.now() };
+      // 1) Semua input/select/textarea yang punya id
+      document.querySelectorAll("input[id], select[id], textarea[id]").forEach(function(el){
+        if(el.id==="photo" || el.id==="thumb") return;
+        if(el.type==="file") return;
+        data.inputs[el.id] = el.value;
+      });
+      // 2) S, SUMMARY, SEC - ini yang bikin Hasil Uji & Summary ke-save
+      try{ if(typeof S!=="undefined") data.S = JSON.parse(JSON.stringify(S)); }catch(e){}
+      try{ if(typeof SUMMARY!=="undefined") data.SUMMARY = JSON.parse(JSON.stringify(SUMMARY)); }catch(e){}
+      try{ if(typeof SEC!=="undefined") data.SEC = JSON.parse(JSON.stringify(SEC)); }catch(e){}
+      // 3) Tab yang lagi dibuka
+      try{ for(var i=1;i<=4;i++){ var pg=document.getElementById("pg"+i); if(pg && !pg.hidden) data.tab=i; } }catch(e){}
+      var json = JSON.stringify(data);
+      localStorage.setItem("llbean_draft", json);
+      if(rno) localStorage.setItem("llbean_"+rno, json);
+      var hint=document.getElementById("draftHint"); if(hint) hint.textContent="Draft tersimpan otomatis \u2022 "+new Date().toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});
+    }catch(e){}
+  }
+  function scheduleLLBeanAutosave(){ clearTimeout(_llAutosaveT); _llAutosaveT=setTimeout(saveLLBeanDraftSilent, 600); }
+  function restoreLLBeanDraft(){
+    try{
+      var params2=new URLSearchParams(location.search);
+      var no2=params2.get("no")||"";
+      var rnoEl=document.getElementById("rno");
+      var curNo = no2 || (rnoEl ? (rnoEl.value||"").trim() : "");
+      var json = null;
+      // Utamakan draft per-Report No, baru draft global terakhir
+      if(curNo) json = localStorage.getItem("llbean_"+curNo);
+      if(!json) json = localStorage.getItem("llbean_draft");
+      if(!json) return;
+      var data = JSON.parse(json);
+      if(!data) return;
+      // Jangan timpa kalau Report No-nya beda report - cek: kalau draft per-No, pasti sama. Kalau draft global, cek apakah rno di draft sama dengan rno sekarang, atau rno sekarang masih default.
+      // Kalau user buka report B tapi draft global-nya punya report A, jangan timpa.
+      if(data.inputs && data.inputs.rno && curNo && data.inputs.rno!==curNo && localStorage.getItem("llbean_"+curNo)===null){
+        // Draft global punya No beda, dan tidak ada draft khusus untuk No ini -> jangan restore, biar form baru bersih
+        // Tapi kalau user buka LL Bean tanpa ?no= (manual), tetap restore draft global
+        if(no2) return;
+      }
+      // Restore S / SUMMARY / SEC dulu, baru render ulang
+      try{ if(data.S && typeof S!=="undefined"){ for(var k in S) delete S[k]; Object.assign(S, JSON.parse(JSON.stringify(data.S))); } }catch(e){}
+      try{ if(data.SUMMARY && typeof SUMMARY!=="undefined"){ SUMMARY.length=0; Array.prototype.push.apply(SUMMARY, JSON.parse(JSON.stringify(data.SUMMARY))); } }catch(e){}
+      try{ if(data.SEC && typeof SEC!=="undefined"){ SEC.length=0; Array.prototype.push.apply(SEC, JSON.parse(JSON.stringify(data.SEC))); } }catch(e){}
+      // Restore input by id
+      if(data.inputs){
+        Object.keys(data.inputs).forEach(function(id){
+          var el=document.getElementById(id);
+          if(el && el.value!==undefined) el.value=data.inputs[id];
+        });
+      }
+      // Render ulang Hasil Uji & Summary dari S/SUMMARY yang baru di-restore
+      try{ if(typeof renderDyn==="function") renderDyn(); }catch(e){}
+      try{ if(typeof renderSummary==="function") renderSummary(); }catch(e){}
+      // Restore input lagi setelah render (karena renderDyn rebuild pg4, renderSummary rebuild pg3)
+      if(data.inputs){
+        Object.keys(data.inputs).forEach(function(id){
+          var el2=document.getElementById(id);
+          if(el2 && el2.value!==undefined) el2.value=data.inputs[id];
+        });
+      }
+      // Balik ke tab terakhir
+      try{ if(data.tab && typeof showTab==="function") showTab(data.tab); }catch(e){}
+      var msgEl=document.getElementById("msg");
+      if(msgEl && data.savedAt){
+        var hint2=document.getElementById("draftHint");
+        if(hint2) hint2.textContent="Draft tersimpan dimuat \u2022 "+new Date(data.savedAt).toLocaleString("id-ID");
+      }
+    }catch(e){ console.error("restore draft gagal", e); }
+  }
+  // Pasang autosave: tiap ketik / ganti
+  document.addEventListener("input", scheduleLLBeanAutosave);
+  document.addEventListener("change", scheduleLLBeanAutosave);
+  window.addEventListener("beforeunload", function(){ try{ saveLLBeanDraftSilent(); }catch(e){} });
+  // Buat kasusmu: 1 orang 1 PC, sering ditinggal ngerjain lain (pindah tab / pindah aplikasi / minimize)
+  // beforeunload kadang nggak ke-trigger kalau cuma pindah, jadi simpan juga pas tab disembunyiin / blur / pagehide
+  document.addEventListener("visibilitychange", function(){ if(document.hidden){ try{ saveLLBeanDraftSilent(); }catch(e){} } });
+  window.addEventListener("pagehide", function(){ try{ saveLLBeanDraftSilent(); }catch(e){} });
+  window.addEventListener("blur", function(){ try{ saveLLBeanDraftSilent(); }catch(e){} });
+  // Restore draft pas buka - delay dikit biar render awal kelar dulu
+  setTimeout(restoreLLBeanDraft, 300);
+
 })();
 </script>
 

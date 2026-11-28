@@ -119,7 +119,7 @@ td.lb{font-size:12px;min-width:200px;max-width:340px}
 </head>
 <body>
 <div class="top"><div class="crumbs"><a href="index.html">Dashboard</a><span>/</span><b>PVH - Test Report</b></div></div>
-<div class="phead-wrap"><button type="button" class="back" onclick="goBack()">← Kembali ke Dashboard</button><h1 style="margin-top:14px">PVH - Test Report</h1><p class="sub">Isi data, lalu Export. Hasilnya memakai template asli PVH (11 halaman), hanya data yang diisi yang diganti.</p><span id="msg"></span></div>
+<div class="phead-wrap"><button type="button" class="back" onclick="goBack()">← Kembali ke Dashboard</button><h1 style="margin-top:14px">PVH - Test Report</h1><p class="sub">Isi data, lalu Export. Hasilnya memakai template asli PVH (11 halaman), hanya data yang diisi yang diganti.</p><span id="draftHint" style="font-size:11px;color:#64748b;display:block;margin-top:4px"></span><span id="msg"></span></div>
 <div class="tabs-wrap"><div class="tabs"><div class="seg" id="pvhTabs"><button type="button" class="on">Hal 1</button><button type="button">Hal 2</button><button type="button">Hal 3</button><button type="button">Hal 4</button><button type="button">Hal 5</button><button type="button">Hal 6</button><button type="button">Hal 7</button><button type="button">Hal 8</button><button type="button">Hal 9</button><button type="button">Foto</button></div></div></div>
 <div class="wrap"><div id="app"></div><div class="actions"><button id="goxl" type="button">Export ke Excel</button><button id="gopdf" type="button">Export ke PDF</button><button id="syncResult" type="button">Simpan Hasil ke Dashboard</button></div><div id="syncNote">Tombol hijau ini nyambungin form ini ke Dashboard. Pilih Overall Rating PASS / FAIL di atas (atau biar Auto, nanti dihitung dari hasil uji), klik ini, status report di Test Reports langsung jalan: <b>Masuk &rarr; Proses &rarr; Selesai &middot; Pass / Fail</b>. Tombol <b>Mulai proses / Tahan</b> di Dashboard langsung hilang, ganti jadi <b>Selesai &middot; Pass / Fail + Buka lagi</b>. KPI Masuk berkurang, Selesai nambah, diagram QA + Lab Analysis langsung ke-update. Export Excel / PDF juga otomatis nyambung.</div></div>
 <datalist id="yn"><option value="Yes"><option value="N/A"><option value="No"></datalist>
@@ -253,6 +253,28 @@ document.addEventListener("change",e=>{ if(e.target.closest&&e.target.closest("#
 /* ---------- simpan lokal ---------- */
 function collect(){ const d={}; document.querySelectorAll("[data-k]").forEach(e=>{ d[e.dataset.k]=e.value; }); return d; }
 function saveLocal(){ const d=JSON.stringify(collect()); try{ localStorage.setItem("pvh_draft",d); localStorage.setItem("pvh_"+($("reportNo").value||"draft"),d); $("msg").textContent="Tersimpan di browser ini (foto tidak ikut tersimpan)."; }catch(e){ alert("Tidak bisa menyimpan di browser ini."); } }
+  /* ---------- AUTOSAVE: biar keluar-masuk gak hilang ---------- */
+  /* Masalah kemarin: saveLocal() cuma jalan kalau klik Simpan Hasil / Export. Kalau keluar begitu aja tanpa klik, isi form hilang. */
+  /* Sekarang: tiap ketik / ganti field, otomatis simpan diam-diam (tanpa ganggu pesan), + simpan juga pas mau keluar halaman. */
+  let _autosaveT=null;
+  function saveDraftSilent(){
+    try{
+      const d=JSON.stringify(collect());
+      const rno=($("reportNo")?$("reportNo").value.trim():"")||"draft";
+      localStorage.setItem("pvh_draft",d);
+      if(rno!=="draft") localStorage.setItem("pvh_"+rno,d);
+      const hint=document.getElementById("draftHint"); if(hint) hint.textContent="Draft tersimpan otomatis \u2022 "+new Date().toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});
+    }catch(e){}
+  }
+  function scheduleAutosave(){ clearTimeout(_autosaveT); _autosaveT=setTimeout(saveDraftSilent, 600); }
+  document.addEventListener("input", e=>{ if(e.target.closest && e.target.closest("#app")) scheduleAutosave(); });
+  document.addEventListener("change", e=>{ if(e.target.closest && e.target.closest("#app")) scheduleAutosave(); });
+  window.addEventListener("beforeunload", ()=>{ try{ saveDraftSilent(); }catch(e){} });
+  // Buat kasusmu: 1 orang 1 PC, sering ditinggal ngerjain lain (pindah tab / pindah aplikasi / minimize)
+  // beforeunload kadang nggak ke-trigger kalau cuma pindah, jadi simpan juga pas tab disembunyiin / blur / pagehide
+  document.addEventListener("visibilitychange", ()=>{ if(document.hidden){ try{ saveDraftSilent(); }catch(e){} } });
+  window.addEventListener("pagehide", ()=>{ try{ saveDraftSilent(); }catch(e){} });
+  window.addEventListener("blur", ()=>{ try{ saveDraftSilent(); }catch(e){} });
 /* ---------- Simpan Hasil ke Dashboard - samain LL Bean ---------- */
 function syncToDashboard(){
   try{ saveLocal(); }catch(e){}
