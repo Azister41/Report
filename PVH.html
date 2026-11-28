@@ -22,7 +22,7 @@
   font-family: "Optimistic Mono", ui-monospace, monospace;
 }
 </style>
-<!-- PVH v3-merge - Summary hide fix: clear A-J + hideRow + refresh SUMMARY_SEL + PDF backup -->
+<!-- PVH v7-master-pdf - Summary hide fix: clear A-J + hideRow + refresh SUMMARY_SEL + PDF backup -->
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PVH - Test Report</title>
 <style>
@@ -147,6 +147,7 @@ select.test-req:focus{border-color:#2563eb;outline:none}
 @media(max-width:640px){.grid{grid-template-columns:1fr}.top{height:auto;padding:10px 14px;flex-wrap:wrap}.top .tools{margin-left:0}}
 @media print{.top,.phead-wrap{display:none}body{background:#fff}.card{break-inside:avoid;border-color:#ddd;box-shadow:none}}
 </style>
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 </head>
 <body>
 <div class="top"><div class="crumbs"><a href="index.html">Dashboard</a><span>/</span><b>PVH - Test Report</b></div></div>
@@ -494,6 +495,7 @@ async function buildXlsx(){   // Refresh SUMMARY_SEL dari localStorage saat Expo
      if(!_sel2.includes(10)){ [8,9,10,11,12].forEach(rn=>{ X[9]=hideRow(X[9], rn); X[9]=removeMergeForRow(X[9], rn); }); }
      if(!_sel2.includes(16)){ [15,16,17,18,19].forEach(rn=>{ X[9]=hideRow(X[9], rn); X[9]=removeMergeForRow(X[9], rn); }); }
    }catch(e){ console.warn("hide row gagal", e); }
+   // Excel dibalikin ke asli - Excel-nya udah rapi, jangan diubah. Yang dibenerin cuma PDF-nya.
    // Hapus baris asli yang disembunyikan: kosongin sel-nya di Excel
    try{
      CFG.sections.forEach(s=>{
@@ -565,10 +567,46 @@ async function exportXlsx(){
   const {zip,name}=await buildXlsx();
   save(await zip.generateAsync({type:"blob",compression:"DEFLATE",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),name); return name;
 }
-async function exportPdf(){
-  const {zip,name}=await buildXlsx(), bytes=await renderPdf(zip), n=name.replace(/\.xlsx$/,".pdf");
-  save(new Blob([bytes],{type:"application/pdf"}),n); return n;
-}
+// ===== PATCH v7-master-pdf: nerusin file kemarin, cuma ganti cara bikin PDF-nya =====
+  // File kemarin (v6) udah bener semua: form, Excel, autosave, tab, dynamic, summary — JANGAN DIULANG DARI 0.
+  // Yang rusak cuma PDF-nya. Jadi exportPdf-nya aja yang diganti: sekarang fetch('master.pdf') dari repo GitHub (sejajar sama file ini),
+  // terus tulis di atas master PDF asli. Kalau master.pdf belum di-upload ke repo, otomatis fallback ke cara lama (renderPdf) biar nggak error.
+  // Mapping posisi tulisan di master.pdf — geser X/Y di sini kalau tulisan-nya masih geser dikit. Sekali pas, seterusnya otomatis pas.
+  const PDF_MASTER_MAPPING = {
+    reportNo:  {page:3, x:95,  y:762, size:10, bold:false},
+    reportDate:{page:3, x:95,  y:748, size:10, bold:false},
+  };
+  const exportPdfLama = async function(){ const {zip,name}=await buildXlsx(), bytes=await renderPdf(zip), n=name.replace(/\.xlsx$/,".pdf"); save(new Blob([bytes],{type:"application/pdf"}),n); return n; };
+  async function exportPdf(){
+    try{
+      const r = await fetch('master.pdf');
+      if(!r.ok) throw new Error('master.pdf belum ada di repo (HTTP '+r.status+')');
+      const masterBytes = await r.arrayBuffer();
+      const pdf = await PDFLib.PDFDocument.load(masterBytes);
+      const font = await pdf.embedFont(PDFLib.StandardFonts.Helvetica);
+      const fontBold = await pdf.embedFont(PDFLib.StandardFonts.HelveticaBold);
+      let reportNoVal = '', reportDateVal = '';
+      try{ reportNoVal = document.getElementById('reportNo')?.value || ''; }catch(e){}
+      try{ reportDateVal = document.getElementById('reportDate')?.value || ''; }catch(e){}
+      let fallbackName = 'PVH';
+      try{ const bx = await buildXlsx(); fallbackName = bx.name || 'PVH'; if(!reportNoVal) reportNoVal = fallbackName.replace('.xlsx',''); }catch(e){}
+      const data = { reportNo: reportNoVal, reportDate: reportDateVal };
+      for(const [key,m] of Object.entries(PDF_MASTER_MAPPING)){
+        const v = data[key]; if(!v) continue;
+        if(m.page >= pdf.getPageCount()) continue;
+        const page = pdf.getPage(m.page);
+        page.drawText(String(v), {x:m.x, y:m.y, size:m.size||10, font: m.bold?fontBold:font, color: PDFLib.rgb(0,0,0)});
+      }
+      const out = await pdf.save();
+      const n = (reportNoVal || fallbackName.replace('.xlsx','')) + '.pdf';
+      save(new Blob([out],{type:'application/pdf'}), n);
+      try{ const note=document.getElementById('syncNote'); if(note){ const old=note.innerHTML; note.innerHTML='✅ PDF pake <b>master.pdf dari repo</b> — layout-nya sama persis kayak master, nggak ada geser. '+old; setTimeout(()=>note.innerHTML=old, 5000); } }catch(e){}
+      return n;
+    }catch(e){
+      console.warn('master.pdf belum ketemu, fallback ke cara lama:', e.message);
+      return await exportPdfLama();
+    }
+  }
 /* ---------- terhubung ke Dashboard (localStorage "trp_reports_v1") ---------- */
 function dashList(){ try{ const l=JSON.parse(localStorage.getItem("trp_reports_v1")||"[]"); return Array.isArray(l)?l:[]; }catch(e){ return []; } }
 function linkedRecord(){
@@ -1086,8 +1124,7 @@ const merges = {}, mm = []; Array.from(sx.getElementsByTagName("mergeCell")).for
     // format kondisional (cellIs / containsText)
     const cfs = Array.from(sx.getElementsByTagName("conditionalFormatting")).map(cf => ({ rg: cf.getAttribute("sqref").split(" "), rules: Array.from(cf.getElementsByTagName("cfRule")).map(r => ({ ty: r.getAttribute("type"), dx: dxfL[+r.getAttribute("dxfId")], f: (first(r, "formula") || { textContent: "" }).textContent.replace(/"/g, ""), tx: r.getAttribute("text") })) }));
     const inRg = (rg, c, r) => { const p = x => { const q = x.match(/([A-Z]+)(\d+)/); return [q[1].split("").reduce((s, ch) => s * 26 + ch.charCodeAt(0) - 64, 0), +q[2]]; }, [a, b] = rg.split(":"), [c1, r1] = p(a), [c2, r2] = p(b || a); return c >= c1 && c <= c2 && r >= r1 && r <= r2; };
-    // tinggi baris otomatis untuk teks yang membungkus
-    Object.values(cells).forEach(c => { if (!c.txt || !c.xf.w || rowCustom[c.r]) return; const m = merges[c.ci + "," + c.r]; if (m && (m.r2 > m.r1)) return;
+    // tinggi baris otomatis untuk teks yang membungkus     Object.values(cells).forEach(c => { if (!c.txt || !c.xf.w || rowCustom[c.r]) return; const m = merges[c.ci + "," + c.r]; if (m && (m.r2 > m.r1)) return;
       let w = 0; for (let i = m ? m.c1 : c.ci; i <= (m ? m.c2 : c.ci); i++) w += colW(i); w -= 3; const k = c.xf.f.b ? "b" : "r", sz = c.xf.f.sz; let n = 0;
       c.txt.split("\n").forEach(par => { let cur = ""; n++; par.split(" ").forEach(wd => { const t = cur ? cur + " " + wd : wd; if (tw(t, k, sz) * WRAPF > w && cur) { n++; cur = wd; } else cur = t; }); });
       rowH[c.r] = Math.max(rowH[c.r], n * sz * 1.22 + 2); });
