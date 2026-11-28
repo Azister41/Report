@@ -1626,13 +1626,20 @@ $("gopdf").addEventListener("click", async () => {
     const link = document.createElement("a"); link.href = url; link.download = r.name; document.body.appendChild(link); link.click(); link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 8000); $("msg").textContent = "Selesai: " + r.name;
     // --- SYNC KE DASHBOARD: langsung, samain kayak tombol hijau ---
-    try{ syncLLBeanToDashboard(); }catch(e){}
+    try{ syncLLBeanToDashboard(false); }catch(e){}
   } catch (e) { $("msg").textContent = "Gagal: " + e.message; console.error(e); } });
   // --- Tombol hijau: Simpan Hasil ke Dashboard - LANGSUNG, tanpa event (biar gak diem) ---
   // Penyebab diem kemarin: tombol ini cuma kirim CustomEvent "llbean-export" ke script lain.
   // Kalau script penerima error / belum ke-load, event-nya hilang, msg cuma mentok di "Mengirim..." / diem aja.
   // Sekarang: tombol ini langsung tulis ke localStorage trp_reports_v1, samain kayak PVH.
-  function syncLLBeanToDashboard(){
+  function closeAfterSaveLLBean(){
+    try{ $("msg").textContent += " | Menutup halaman, kembali ke Dashboard..."; }catch(e){}
+    setTimeout(()=>{ try{ window.close(); }catch(e){} 
+      setTimeout(()=>{ try{ if(!document.hidden) window.location.href="index.html"; }catch(e){} }, 600);
+    }, 1200);
+  }
+  function syncLLBeanToDashboard(autoClose){
+    // autoClose = true cuma dari tombol hijau Simpan Hasil. Export TIDAK nutup, biar bisa cek file dulu.
     const _rt = ($("rating") ? $("rating").value : "").trim().toUpperCase();
     const _rn = ($("rno") ? $("rno").value : "").trim();
     if(!_rn){ $("msg").textContent = "Isi Report No. dulu."; return; }
@@ -1652,14 +1659,15 @@ $("gopdf").addEventListener("click", async () => {
     r.history.push({s:target, t:now, w:""});
     try{ localStorage.setItem(KEY, JSON.stringify(R)); }catch(e){}
     $("msg").textContent = "Tersimpan ke Dashboard: "+_rn+" -> Selesai "+(_rt==="PASS"?"Pass":"Fail")+" \u2713 Progress: "+r.history.map(h=>h.s).join(" \u2192 ")+" | Buka Dashboard, KPI ke-update.";
+    if(autoClose){ try{ saveLLBeanDraftSilent(); }catch(e){} closeAfterSaveLLBean(); }
   }
   window.syncLLBeanToDashboard = syncLLBeanToDashboard;
-  if($("syncResult")){ $("syncResult").addEventListener("click", syncLLBeanToDashboard); }
+  if($("syncResult")){ $("syncResult").addEventListener("click", function(){ syncLLBeanToDashboard(true); }); }
 $("go").addEventListener("click", async () => {
   $("msg").textContent = "Membuat file…";
   try { $("msg").textContent = "Selesai: " + await exportXlsx();
         // --- SYNC KE DASHBOARD: langsung ---
-    try{ syncLLBeanToDashboard(); }catch(e){}
+    try{ syncLLBeanToDashboard(false); }catch(e){}
   }
   catch (e) { $("msg").textContent = "Gagal: " + e.message; console.error(e); } });
 

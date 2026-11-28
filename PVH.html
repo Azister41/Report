@@ -276,7 +276,16 @@ function saveLocal(){ const d=JSON.stringify(collect()); try{ localStorage.setIt
   window.addEventListener("pagehide", ()=>{ try{ saveDraftSilent(); }catch(e){} });
   window.addEventListener("blur", ()=>{ try{ saveDraftSilent(); }catch(e){} });
 /* ---------- Simpan Hasil ke Dashboard - samain LL Bean ---------- */
-function syncToDashboard(){
+function closeAfterSave(){
+    // Browser cuma boleh window.close() kalau halaman dibuka pakai window.open / target _blank.
+    // Kalau dibuka dari Dashboard pakai klik biasa (1 tab), window.close() bakal ditolak, jadi fallback-nya balik ke Dashboard.
+    try{ $("msg").textContent += " | Menutup halaman, kembali ke Dashboard..."; }catch(e){}
+    setTimeout(()=>{ try{ window.close(); }catch(e){} 
+      setTimeout(()=>{ try{ if(!document.hidden) window.location.href="index.html"; }catch(e){} }, 600);
+    }, 1200);
+  }
+  function syncToDashboard(autoClose){
+    // autoClose = true cuma dari tombol hijau Simpan Hasil. Export TIDAK nutup, biar bisa cek file dulu.
   try{ saveLocal(); }catch(e){}
   try{ recalc(); }catch(e){}
   const rno=($("reportNo")?$("reportNo").value:"").trim();
@@ -305,7 +314,8 @@ function syncToDashboard(){
   r.history.push({s:target,t:now,w:""});
   try{ localStorage.setItem(KEY, JSON.stringify(R)); }catch(e){}
   $("msg").textContent="Tersimpan ke Dashboard: "+rno+" -> Selesai "+(rating==="PASS"?"Pass":"Fail")+" \u2713 Progress: "+(r.history.map(h=>h.s).join(" \u2192 "))+" | Buka Dashboard, KPI Masuk berkurang, Selesai nambah, grafik ke-update.";
-}
+
+    if(autoClose){ try{ saveDraftSilent(); }catch(e){} closeAfterSave(); } }
 function restore(){ try{ const d=JSON.parse(localStorage.getItem("pvh_draft")||"null"); if(!d) return; document.querySelectorAll("[data-k]").forEach(e=>{ if(d[e.dataset.k]!=null) e.value=d[e.dataset.k]; }); }catch(e){} }
 
 /* ---------- helper XML ---------- */
@@ -518,14 +528,14 @@ buildPicker(REC); setupTabs(); recalc();
 function wire(id,fn,busy){
   $(id).addEventListener("click",async()=>{
     const bs=[$("goxl"),$("gopdf"),$("syncResult")]; bs.forEach(b=>{ if(b) b.disabled=true; }); $("msg").textContent=busy;
-    try{ const n=await fn(); $("msg").textContent="Selesai: "+n; try{ syncToDashboard(); }catch(e){} }
+    try{ const n=await fn(); $("msg").textContent="Selesai: "+n; try{ syncToDashboard(false); }catch(e){} }
     catch(e){ $("msg").textContent="Gagal: "+e.message; console.error(e); alert("Gagal: "+e.message); }
     bs.forEach(b=>{ if(b) b.disabled=false; });
   });
 }
 wire("goxl",exportXlsx,"Membuat Excel…"); wire("gopdf",exportPdf,"Membuat PDF…");
 /* Tombol hijau + auto-sync kayak LL Bean: habis Export juga langsung sync */
-if($("syncResult")) $("syncResult").addEventListener("click", syncToDashboard);
+if($("syncResult")) $("syncResult").addEventListener("click", ()=>syncToDashboard(true));
 </script>
 <script>/*PDF*/
 const WRAPF = 0.95;
