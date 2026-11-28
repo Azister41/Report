@@ -22,7 +22,7 @@
   font-family: "Optimistic Mono", ui-monospace, monospace;
 }
 </style>
-<!-- PVH v15-fix-pdf-syntax - Summary hide fix: clear A-J + hideRow + refresh SUMMARY_SEL + PDF backup -->
+<!-- PVH v2-hide - Summary hide fix: clear A-J + hideRow + refresh SUMMARY_SEL + PDF backup -->
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PVH - Test Report</title>
 <style>
@@ -152,13 +152,7 @@ select.test-req:focus{border-color:#2563eb;outline:none}
 <div class="top"><div class="crumbs"><a href="index.html">Dashboard</a><span>/</span><b>PVH - Test Report</b></div></div>
 <div class="phead-wrap"><button type="button" class="back" onclick="goBack()">← Kembali ke Dashboard</button><h1 style="margin-top:14px">PVH - Test Report</h1><p class="sub">Isi data, lalu Export. Hasilnya memakai template asli PVH (11 halaman), hanya data yang diisi yang diganti.</p><span id="draftHint" style="font-size:11px;color:#64748b;display:block;margin-top:4px"></span><span id="msg"></span></div>
 <div class="tabs-wrap"><div class="tabs"><div class="seg" id="pvhTabs"><button type="button" class="on">Hal 1</button><button type="button">Hal 2</button><button type="button">Hal 3</button><button type="button">Hal 4</button><button type="button">Hal 5</button><button type="button">Hal 6</button><button type="button">Hal 7</button><button type="button">Hal 8</button><button type="button">Hal 9</button><button type="button">Foto</button></div></div></div>
-<div class="wrap"><div id="app"></div><div style="background:#fff8c5;border:1px dashed #b89b00;padding:10px 12px;border-radius:8px;font-size:13px;line-height:1.6;margin:10px 0">
-  <b>Cara paling gampang biar PDF-nya rapi (nggak pusing):</b><br>
-  1. Klik <b>Export ke Excel</b> dulu → buka file Excel-nya di HP/PC<br>
-  2. Di Excel, klik <b>Print → Save as PDF</b> → jadi. Udah, rapi kayak master, karena yang nge-render itu Excel-nya sendiri.<br>
-  <span style="font-size:12px;color:#666">Tombol <b>Export ke PDF</b> di bawah ini tetep bisa dipake buat preview cepet, tapi kalau mau yang 100% rapi buat dikirim ke boss, pake cara Excel di atas aja. Nggak perlu mapping-mapping lagi.</span>
-</div>
-<div class="actions"><button id="goxl" type="button">Export ke Excel</button><button id="gopdf" type="button">Export ke PDF (Preview)</button><button id="goboth" type="button" style="background:#ffd400;font-weight:800">Export Excel + PDF Sekalian 🔥</button><button id="syncResult" type="button">Simpan Hasil ke Dashboard</button></div><div id="syncNote">Tombol hijau ini nyambungin form ini ke Dashboard. Pilih Overall Rating PASS / FAIL di atas (atau biar Auto, nanti dihitung dari hasil uji), klik ini, status report di Test Reports langsung jalan: <b>Masuk &rarr; Proses &rarr; Selesai &middot; Pass / Fail</b>. Tombol <b>Mulai proses / Tahan</b> di Dashboard langsung hilang, ganti jadi <b>Selesai &middot; Pass / Fail + Buka lagi</b>. KPI Masuk berkurang, Selesai nambah, diagram QA + Lab Analysis langsung ke-update. Export Excel / PDF juga otomatis nyambung.</div></div>
+<div class="wrap"><div id="app"></div><div class="actions"><button id="goxl" type="button">Export ke Excel</button><button id="gopdf" type="button">Export ke PDF</button><button id="syncResult" type="button">Simpan Hasil ke Dashboard</button></div><div id="syncNote">Tombol hijau ini nyambungin form ini ke Dashboard. Pilih Overall Rating PASS / FAIL di atas (atau biar Auto, nanti dihitung dari hasil uji), klik ini, status report di Test Reports langsung jalan: <b>Masuk &rarr; Proses &rarr; Selesai &middot; Pass / Fail</b>. Tombol <b>Mulai proses / Tahan</b> di Dashboard langsung hilang, ganti jadi <b>Selesai &middot; Pass / Fail + Buka lagi</b>. KPI Masuk berkurang, Selesai nambah, diagram QA + Lab Analysis langsung ke-update. Export Excel / PDF juga otomatis nyambung.</div></div>
 <datalist id="yn"><option value="Yes"><option value="N/A"><option value="No"></datalist>
 <script>/*JSZIP*//*!
 
@@ -368,22 +362,6 @@ function putCell(xml,ref,make,skipIfMissing){
   return xml.replace(rr,'<row r="'+rn+'"'+attrs+'>'+inner.slice(0,pos)+make("")+inner.slice(pos)+'</row>');
 }
 const stripT=a=>a.replace(/\s+t="[^"]*"/,"");
-function removeMergeForRow(xml, rNum){
-  let out = xml.replace(/<mergeCell[^>]*ref="([A-Z]+)(\d+):([A-Z]+)(\d+)"[^>]*\/>/g, (m, c1, r1, c2, r2)=>{
-    const a=parseInt(r1,10), b=parseInt(r2,10);
-    if(rNum>=Math.min(a,b) && rNum<=Math.max(a,b)) return "";
-    return m;
-  }).replace(/<mergeCell[^>]*ref="([A-Z]+)(\d+)"[^>]*\/>/g, (m, c1, r1)=>{
-    if(parseInt(r1,10)===rNum) return "";
-    return m;
-  });
-  // Update count di <mergeCells count="N"> biar Excel nggak protes merge count mismatch (ini yang bikin geser di Excel!)
-  try{
-    const cnt = (out.match(/<mergeCell[^>]*\/>/g)||[]).length;
-    if(cnt===0){ out = out.replace(/<mergeCells[^>]*>\s*<\/mergeCells>/, ''); out = out.replace(/<mergeCells[^>]*\/>/, ''); } else { out = out.replace(/<mergeCells([^>]*?)count="\d+"/, '<mergeCells$1count="'+cnt+'"'); }
-  }catch(e){}
-  return out;
-}
 function hideRow(xml, rNum){
   // Sembunyikan baris di Excel: hidden="1" + tinggi 0, biar barisnya ilang total, bukan cuma kosong
   // Pakai \b biar r="8" tidak ke-match r="18", dan pastikan <row ... r="N" persis
@@ -482,25 +460,20 @@ async function buildXlsx(){   // Refresh SUMMARY_SEL dari localStorage saat Expo
      // Sheet 4 Summary: hide baris tes yang tidak dipilih + kosongin label B-nya biar kalau hidden ke-ignore tetap blank
      CFG.sections.find(s=>s.type==="summary").rows.forEach(r=>{
        if(!_sel2.includes(Number(r.r))){
-         // Seam (r=14) itu 2 baris: 14 & 15 (merge A14:D15). Harus hide dua-duanya, kalau cuma 14, merge kepotong & geser!
-         const _rowsToHide = (Number(r.r)===14) ? [14,15] : [Number(r.r)];
-         _rowsToHide.forEach(_rr=>{
-           X[4]=hideRow(X[4], _rr);
-           X[4]=removeMergeForRow(X[4], _rr);
-           try{ ["A","B","C","D","E","F","G","H","I","J"].forEach(c=>{ X[4]=setCell(X[4],c+_rr,""); }); }catch(e){}
-         });
+         X[4]=hideRow(X[4], r.r);
+         // Label di kolom B (B8, B9, dst) - kosongin biar tidak nongol kalau ada viewer yang ignore hidden
+         try{ ["A","B","C","D","E","F","G","H","I","J"].forEach(c=>{ X[4]=setCell(X[4],c+r.r,""); }); }catch(e){}
        }
      });
      // Sheet 8 - Weight (rows 8-12), Seam (14-28), Tearing (30-34), Tensile (36-40)
-     if(!_sel2.includes(11)){ [8,9,10,11,12].forEach(rn=>{ X[8]=hideRow(X[8], rn); X[8]=removeMergeForRow(X[8], rn); }); }
-     if(!_sel2.includes(14)){ for(let rn=14; rn<=28; rn++){ X[8]=hideRow(X[8], rn); X[8]=removeMergeForRow(X[8], rn); } }
-     if(!_sel2.includes(12)){ [30,31,32,33,34].forEach(rn=>{ X[8]=hideRow(X[8], rn); X[8]=removeMergeForRow(X[8], rn); }); }
-     if(!_sel2.includes(13)){ [36,37,38,39,40].forEach(rn=>{ X[8]=hideRow(X[8], rn); X[8]=removeMergeForRow(X[8], rn); }); }
+     if(!_sel2.includes(11)){ [8,9,10,11,12].forEach(rn=>{ X[8]=hideRow(X[8], rn); }); }
+     if(!_sel2.includes(14)){ for(let rn=14; rn<=28; rn++){ X[8]=hideRow(X[8], rn); } }
+     if(!_sel2.includes(12)){ [30,31,32,33,34].forEach(rn=>{ X[8]=hideRow(X[8], rn); }); }
+     if(!_sel2.includes(13)){ [36,37,38,39,40].forEach(rn=>{ X[8]=hideRow(X[8], rn); }); }
      // Sheet 9 - Light (8-12), Crocking (15-19)
-     if(!_sel2.includes(10)){ [8,9,10,11,12].forEach(rn=>{ X[9]=hideRow(X[9], rn); X[9]=removeMergeForRow(X[9], rn); }); }
-     if(!_sel2.includes(16)){ [15,16,17,18,19].forEach(rn=>{ X[9]=hideRow(X[9], rn); X[9]=removeMergeForRow(X[9], rn); }); }
+     if(!_sel2.includes(10)){ [8,9,10,11,12].forEach(rn=>{ X[9]=hideRow(X[9], rn); }); }
+     if(!_sel2.includes(16)){ [15,16,17,18,19].forEach(rn=>{ X[9]=hideRow(X[9], rn); }); }
    }catch(e){ console.warn("hide row gagal", e); }
-   // Excel dibalikin ke asli - Excel-nya udah rapi, jangan diubah. Yang dibenerin cuma PDF-nya.
    // Hapus baris asli yang disembunyikan: kosongin sel-nya di Excel
    try{
      CFG.sections.forEach(s=>{
@@ -573,63 +546,9 @@ async function exportXlsx(){
   save(await zip.generateAsync({type:"blob",compression:"DEFLATE",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),name); return name;
 }
 async function exportPdf(){
-    if(typeof renderPdf === 'undefined'){
-      alert('PDF renderer-nya lagi nggak ke-load (ke-cache lama di GitHub). Refresh (Ctrl+R) dulu, terus coba lagi. Atau Export ke Excel dulu, terus buka Excel -> Print -> Save as PDF.');
-      const {zip:zip2,name:name2}=await buildXlsx();
-      const b2=await zip2.generateAsync({type:"blob",compression:"DEFLATE",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
-      save(b2, name2); return name2;
-    }
-    const {zip,name}=await buildXlsx(), bytes=await renderPdf(zip), n=name.replace(/\.xlsx$/,".pdf");
+  const {zip,name}=await buildXlsx(), bytes=await renderPdf(zip), n=name.replace(/\.xlsx$/,".pdf");
   save(new Blob([bytes],{type:"application/pdf"}),n); return n;
 }
-  // ===== FITUR BARU: Export Excel + PDF Sekalian (1 klik, 2 file) =====
-  // Sesuai request kamu: habis Export Excel, langsung keluar pilihan Excel to PDF sekalian, nggak perlu buka Excel & Print manual.
-  async function exportBoth(){
-    const btn=document.getElementById('goboth');
-    const oldTxt=btn?btn.textContent:'';
-    try{
-      if(btn){ btn.disabled=true; btn.textContent='Lagi bikin Excel + PDF... ⏳'; }
-      // FIX CORRUPT: buildXlsx dipanggil 2x (sekali buat Excel, sekali buat PDF) biar zip-nya nggak kepake 2x & rusak. Lebih aman walau agak lambat dikit.
-      const {zip:zipX, name}=await buildXlsx();
-      const zip = zipX;
-      // 1. Download Excel-nya dulu
-      const xlsxBlob=await zip.generateAsync({type:"blob",compression:"DEFLATE",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
-      save(xlsxBlob, name);
-      // 2. Langsung bikin PDF-nya dari Excel yang sama (jadi datanya 100% sama, nggak ada data master)
-      if(typeof renderPdf === 'undefined'){ alert('Excel-nya udah ke-download. PDF-nya belum ke-download karena PDF renderer-nya lagi nggak ke-load (ke-cache lama di GitHub). Refresh halaman (Ctrl+R) terus coba lagi, atau buka Excel-nya -> Print -> Save as PDF.'); return name; }
-      const pdfBytes=await renderPdf(zip);
-      const pdfName=name.replace(/\.xlsx$/,".pdf");
-      // Kasih jeda dikit biar browser nggak nge-block download kedua
-      await new Promise(r=>setTimeout(r, 400));
-      save(new Blob([pdfBytes],{type:"application/pdf"}), pdfName);
-      // Kasih tau user
-      try{ const note=document.getElementById('syncNote'); if(note){ const old=note.innerHTML; note.innerHTML='✅ Keluar 2 file: <b>'+name+'</b> + <b>'+pdfName+'</b> — datanya sama, dari form yang kamu isi. Tinggal kirim 2-2nya ke boss. '+old; setTimeout(()=>note.innerHTML=old, 8000); } }catch(e){}
-      return name;
-    }catch(e){
-      alert('Gagal Export Excel + PDF: '+e.message);
-      throw e;
-    }finally{
-      if(btn){ btn.disabled=false; btn.textContent=oldTxt; }
-    }
-  }
-  // Pasang tombolnya
-  try{ document.getElementById('goboth')?.addEventListener('click', exportBoth); }catch(e){}
-  // Juga: habis Export Excel aja, tawarin "Mau sekalian PDF-nya juga?"
-  try{
-    const goxlBtn=document.getElementById('goxl');
-    if(goxlBtn){
-      const oldOnClick=goxlBtn.onclick;
-      // Kita nggak ubah onclick lama, tapi tambah: setelah 1 detik, muncul confirm simpel
-      // Biar nggak ganggu flow lama, kita pake confirm bawaan browser aja (paling gampang, nggak perlu modal ribet)
-      goxlBtn.addEventListener('click', ()=>{
-        setTimeout(()=>{
-          if(confirm('Excel-nya udah ke-download. Mau sekalian download PDF-nya juga? (datanya sama)')){
-            exportPdf();
-          }
-        }, 800);
-      });
-    }
-  }catch(e){}
 /* ---------- terhubung ke Dashboard (localStorage "trp_reports_v1") ---------- */
 function dashList(){ try{ const l=JSON.parse(localStorage.getItem("trp_reports_v1")||"[]"); return Array.isArray(l)?l:[]; }catch(e){ return []; } }
 function linkedRecord(){
@@ -1136,7 +1055,7 @@ async function renderPdf(zip) {
       }); });
          // Backup: kalau Sheet 4 (Summary) label-nya kosong, anggap baris tidak dipilih -> hide, biar tidak muncul blank di PDF
      if(sp.includes("sheet4.xml")){
-       [8,9,10,11,12,13,14,15,16].forEach(rn=>{
+       [8,9,10,11,12,13,14,16].forEach(rn=>{
          const aCell = cells["1,"+rn];
          const hasLabel = aCell && String(aCell.txt||"").trim()!=="";
          const hasX = [5,6,7].some(ci=>{ const c=cells[ci+","+rn]; return c && String(c.txt||"").trim()!==""; });
