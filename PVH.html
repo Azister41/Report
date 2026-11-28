@@ -262,7 +262,44 @@ async function exportPdf(){
   const {zip,name}=await buildXlsx(), bytes=await renderPdf(zip), n=name.replace(/\.xlsx$/,".pdf");
   save(new Blob([bytes],{type:"application/pdf"}),n); return n;
 }
-build(); restore(); recalc();
+/* ---------- terhubung ke Dashboard (localStorage "trp_reports_v1") ---------- */
+function dashList(){ try{ const l=JSON.parse(localStorage.getItem("trp_reports_v1")||"[]"); return Array.isArray(l)?l:[]; }catch(e){ return []; } }
+function linkedRecord(){
+  const q=new URLSearchParams(location.search), id=q.get("id"), no=q.get("no")||q.get("rno")||q.get("report")||q.get("sgr");
+  if(!id&&!no) return null;
+  const found=dashList().find(r=>(id&&r.id===id)||(no&&String(r.no).toLowerCase()===String(no).toLowerCase()));
+  const rec=Object.assign({},found||{});
+  if(!found&&!no) return null;
+  if(!rec.no) rec.no=no;
+  q.forEach((v,k)=>{                                      // nilai di alamat menang atas data tersimpan
+    const kl=k.toLowerCase(); if(!v) return;
+    if(kl.includes("style")||kl==="code") rec.style=v;
+    else if(kl.includes("applicant")||kl==="pemohon") rec.applicant=v;
+  });
+  return rec;
+}
+function applyRec(rec){
+  const set=(id,v)=>{ const e=$(id); if(e&&v!=null&&String(v)!=="") e.value=v; };
+  let draft=null; try{ draft=localStorage.getItem("pvh_"+rec.no); }catch(e){}
+  if(draft){ try{ const d=JSON.parse(draft); document.querySelectorAll("[data-k]").forEach(e=>{ if(d[e.dataset.k]!=null) e.value=d[e.dataset.k]; }); }catch(e){} }
+  else { const ap=rec.applicant||rec.app||""; set("f_2_D21",rec.style); set("f_1_A9",ap); set("f_2_D18",ap); }
+  set("reportNo",rec.no);
+  $("msg").textContent="Terisi dari Dashboard: "+rec.no+(draft?" (draf tersimpan dimuat)":"");
+  recalc();
+}
+function buildPicker(cur){
+  const list=dashList().filter(r=>String(r.buyer).toUpperCase()==="PVH"); if(!list.length) return;
+  const c=document.createElement("div"); c.className="card";
+  c.innerHTML='<h2>Ambil dari Dashboard</h2><p class="sub">Pilih report PVH yang sudah dicatat di Dashboard, data dasarnya (Report No., Style, Applicant) terisi otomatis.</p><div class="grid"><div><select id="pickRep">'+
+    list.map(r=>'<option value="'+ea(r.id)+'"'+(cur&&cur.id===r.id?" selected":"")+'>'+esc(r.no)+(r.style?" — "+esc(r.style):"")+'</option>').join("")+
+    '</select></div><div><button type="button" id="pickGo" style="border:0;border-radius:8px;padding:9px 14px;font-weight:700;color:#fff;background:#2563eb;cursor:pointer">Isi form dari report ini</button></div></div>';
+  $("app").prepend(c);
+  $("pickGo").onclick=()=>{ const r=list.find(x=>x.id===$("pickRep").value); if(r) applyRec(r); };
+}
+build();
+const REC=linkedRecord();
+if(REC) applyRec(REC); else restore();
+buildPicker(REC); recalc();
 function wire(id,fn,busy){
   $(id).addEventListener("click",async()=>{
     const bs=[$("goxl"),$("gopdf")]; bs.forEach(b=>b.disabled=true); $("msg").textContent=busy;
