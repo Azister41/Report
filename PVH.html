@@ -1,27 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
-<head><style>
-@font-face {
-  font-family: "Optimistic";
-  font-style: normal;
-  font-weight: 400 600;
-  font-display: swap;
-  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Optimistic Mono";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
-}
-:where(html) {
-  font-family: "Optimistic", system-ui, sans-serif;
-}
-:where(code, pre, kbd, samp) {
-  font-family: "Optimistic Mono", ui-monospace, monospace;
-}
-</style>
+<head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PVH - Test Report</title>
 <style>
@@ -113,11 +92,18 @@ td.lb{font-size:12px;min-width:200px;max-width:340px}
 .ph.has .x{display:block}
 .pc{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:700}
 .hint{font-size:12px;color:var(--mut);background:#f8fafc;border:1px solid var(--bd);border-radius:8px;padding:8px 10px;margin-top:10px}
-.summary-picker{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0;padding:10px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px}
+.summary-llbean-bar{display:flex;gap:8px;align-items:center;margin-top:10px}
+.summary-llbean-bar button{border:0;background:#2563eb;color:#fff;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer;font-size:13px}
+.summary-llbean-bar button.ghost{background:#fff;color:#991b1b;border:1px solid #fecaca}
+.summary-llbean-bar span{font-size:12px;color:var(--mut)}
+select.test-req{width:100%;padding:7px 8px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;background:#fff}
+select.test-req:focus{border-color:#2563eb;outline:none}
+.summary-picker{display:none}
 .summary-picker select{flex:1;min-width:220px;padding:8px 10px;border:1px solid #93c5fd;border-radius:8px;font-size:13px}
 .summary-picker button{border:0;background:#2563eb;color:#fff;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer;font-size:13px}
 .summary-picker button.ghost{background:#fff;color:#991b1b;border:1px solid #fecaca}
 .summary-hint{font-size:12px;color:var(--mut);margin:0 0 8px}
+#s_p4 .extra-box{display:none !important;}
 .extra-box{margin-top:16px;border:1px dashed #94a3b8;border-radius:12px;padding:12px;background:#f8fafc}
 .extra-box h3{margin:0 0 4px;font-size:14px}
 .extra-box p.sub2{margin:0 0 10px;color:var(--mut);font-size:12px}
@@ -613,39 +599,85 @@ function saveSummarySel(){ try{ const d=JSON.stringify(SUMMARY_SEL); localStorag
 function isTestSelected(r){ return SUMMARY_SEL.includes(Number(r)); }
 function renderSummaryDynamic(){
   const card=document.getElementById("s_p4"); if(!card) return;
-  // Cari tabel summary di card
   const tw=card.querySelector(".tw"); if(!tw) return;
-  // Simpan nilai sum_ & comment yang sudah diisi sebelum re-render, biar tidak hilang pas nambah/hapus tes
+  // Simpan nilai yang sudah diisi biar tidak hilang pas re-render
   const savedVals={}; card.querySelectorAll("[data-k]").forEach(el=>{ savedVals[el.dataset.k]=el.value; });
-  // Dropdown picker di atas tabel
+  // Hapus picker lama di atas (model lama) & hint lama
   let picker=card.querySelector(".summary-picker"); if(picker) picker.remove();
-  const pickerDiv=document.createElement("div"); pickerDiv.className="summary-picker";
-  const notSelected=SUMMARY_TESTS.filter(t=>!isTestSelected(t.r));
-  pickerDiv.innerHTML='<select id="summaryPick">'+(notSelected.length? notSelected.map(t=>'<option value="'+t.r+'">'+t.label+'</option>').join("") : '<option value="">Semua tes sudah dipilih</option>')+'</select><button type="button" id="summaryAddBtn">+ Tambah Tes</button><button type="button" class="ghost" id="summaryClearBtn">Hapus Semua</button><span style="font-size:12px;color:#475569">Dipilih: '+SUMMARY_SEL.length+' / 8 tes</span>';
-  card.insertBefore(pickerDiv, tw);
-  const hint=document.createElement("p"); hint.className="summary-hint"; hint.textContent="Pilih tes yang diminta buyer dari dropdown, klik + Tambah Tes. Tes yang tidak dipilih tidak muncul di bawah & tidak ikut Export ke Excel/PDF. Hapus tes pakai tombol × di baris-nya.";
+  card.querySelectorAll(".summary-hint").forEach(e=>e.remove());
+  card.querySelectorAll(".summary-llbean-bar").forEach(e=>e.remove());
+  // Hint kecil kayak LL Bean
+  const hint=document.createElement("p"); hint.className="summary-hint"; hint.textContent="Pilih tes-nya di dropdown Test Requested. Tes yang tidak dipilih tidak muncul & tidak ikut Export. Tambah baris pakai + Tambah Tes di bawah.";
   card.insertBefore(hint, tw);
-  // Rebuild tbody: hanya tes yang dipilih
   const table=tw.querySelector("table"); if(!table) return;
   const sec=CFG.sections.find(s=>s.type==="summary"); if(!sec) return;
-  let tbody=table.querySelector("tbody"); if(!tbody){ tbody=document.createElement("tbody"); table.appendChild(tbody); }
-  // Kalau thead tidak ada tbody, kita rebuild semua baris (kecuali header)
+  // Header: samain LL Bean -> Test Requested | Hasil | Comments | (x)
+  const thead=table.querySelector("thead"); if(thead){ thead.innerHTML='<tr><th style="width:42%">Test Requested</th><th style="width:16%">Hasil</th><th>Comments</th><th style="width:36px"></th></tr>'; }
+  else { const htr=table.querySelector("tr"); if(htr) htr.innerHTML='<th style="width:42%">Test Requested</th><th style="width:16%">Hasil</th><th>Comments</th><th style="width:36px"></th>'; }
+  // Hapus semua baris data lama
   const rows=table.querySelectorAll("tr"); rows.forEach((tr,idx)=>{ if(idx===0) return; tr.remove(); });
-  SUMMARY_SEL.forEach(r=>{
+  // Render tiap baris kayak LL Bean: Test Requested #N = dropdown pilih tes
+  SUMMARY_SEL.forEach((r, idx)=>{
     const rowDef=sec.rows.find(x=>Number(x.r)===Number(r)); if(!rowDef) return;
-    const tr=document.createElement("tr");
     const savedSum=savedVals["sum_"+r]||"Auto"; const savedComment=savedVals[rowDef.comment.k]||rowDef.comment.v||"";
-    tr.innerHTML='<td class="lb">'+rowDef.label+'</td><td><select id="sum_'+r+'" data-k="sum_'+r+'" style="width:110px"><option'+(savedSum==="Auto"?" selected":"")+'>Auto</option><option'+(savedSum==="Pass"?" selected":"")+'>Pass</option><option'+(savedSum==="Fail"?" selected":"")+'>Fail</option><option'+(savedSum==="Data"?" selected":"")+'>Data</option></select><span class="mk" id="mk_'+r+'"></span></td><td><input id="f_'+rowDef.comment.k+'" data-k="'+rowDef.comment.k+'" value="'+String(savedComment).replace(/"/g,"&quot;")+'"></td><td><button type="button" class="del-row" data-summary-del="'+r+'" title="Hapus tes ini dari Summary">×</button></td>';
+    const tr=document.createElement("tr");
+    // Dropdown Test Requested: semua 8 tes, yang sudah dipakai di baris lain di-disable (kecuali yang lagi dipilih di baris ini)
+    const opts=SUMMARY_TESTS.map(t=>{
+      const usedElsewhere = SUMMARY_SEL.some((x,xi)=> xi!==idx && Number(x)===Number(t.r));
+      const sel = Number(t.r)===Number(r) ? " selected" : "";
+      const dis = usedElsewhere ? " disabled" : "";
+      return '<option value="'+t.r+'"'+sel+dis+'>'+t.label+'</option>';
+    }).join("");
+    tr.innerHTML='<td><label style="font-size:11px;color:var(--mut);display:block;margin-bottom:2px">Test Requested #'+(idx+1)+'</label><select class="test-req" data-test-req="'+idx+'" data-k="testreq_'+idx+'">'+opts+'</select></td>'
+      +'<td><label style="font-size:11px;color:var(--mut);display:block;margin-bottom:2px">Hasil</label><select id="sum_'+r+'" data-k="sum_'+r+'" style="width:110px"><option'+(savedSum==="Auto"?" selected":"")+'>Auto</option><option'+(savedSum==="Pass"?" selected":"")+'>Pass</option><option'+(savedSum==="Fail"?" selected":"")+'>Fail</option><option'+(savedSum==="Data"?" selected":"")+'>Data</option></select><span class="mk" id="mk_'+r+'"></span></td>'
+      +'<td><label style="font-size:11px;color:var(--mut);display:block;margin-bottom:2px">Comments</label><input id="f_'+rowDef.comment.k+'" data-k="'+rowDef.comment.k+'" value="'+String(savedComment).replace(/"/g,"&quot;")+'"></td>'
+      +'<td><button type="button" class="del-row" data-summary-del-idx="'+idx+'" title="Hapus baris ini">×</button></td>';
     table.appendChild(tr);
   });
   if(!SUMMARY_SEL.length){
-    const tr=document.createElement("tr"); tr.innerHTML='<td colspan="4" style="color:var(--mut);font-size:12px">Belum ada tes yang dipilih. Pilih dari dropdown di atas, klik + Tambah Tes.</td>'; table.appendChild(tr);
+    const tr=document.createElement("tr"); tr.innerHTML='<td colspan="4" style="color:var(--mut);font-size:12px">Belum ada tes. Klik + Tambah Tes di bawah untuk nambah Test Requested #1.</td>'; table.appendChild(tr);
   }
-  // Wire picker
-  const addBtn=document.getElementById("summaryAddBtn"); if(addBtn) addBtn.onclick=()=>{ const sel=document.getElementById("summaryPick"); if(!sel || !sel.value) return; const r=Number(sel.value); if(!isTestSelected(r)){ SUMMARY_SEL.push(r); saveSummarySel(); renderSummaryDynamic(); applySummaryVisibility(); try{ recalc(); }catch(e){} } };
-  const clearBtn=document.getElementById("summaryClearBtn"); if(clearBtn) clearBtn.onclick=()=>{ if(!confirm("Hapus semua tes dari Summary? Nanti bisa ditambah lagi dari dropdown.")) return; SUMMARY_SEL=[]; saveSummarySel(); renderSummaryDynamic(); applySummaryVisibility(); };
-  card.querySelectorAll("[data-summary-del]").forEach(b=>{ b.onclick=()=>{ const r=Number(b.getAttribute("data-summary-del")); if(!confirm("Hapus tes ini dari Summary? Template Hal-nya ikut disembunyikan & tidak ikut Export.")) return; SUMMARY_SEL=SUMMARY_SEL.filter(x=>x!==r); saveSummarySel(); renderSummaryDynamic(); applySummaryVisibility(); }; });
-  // Re-apply saved values ke input yang baru (sudah di-set di innerHTML, tapi pastikan)
+  // Bar bawah kayak LL Bean: + Tambah Tes
+  const bar=document.createElement("div"); bar.className="summary-llbean-bar";
+  bar.innerHTML='<button type="button" id="summaryAddBtn">+ Tambah Tes</button><button type="button" class="ghost" id="summaryClearBtn">Hapus Semua</button><span>Dipilih: '+SUMMARY_SEL.length+' / 8 tes — yang tidak dipilih tidak ikut Export</span>';
+  card.insertBefore(bar, tw.nextSibling);
+  // Wire: ganti tes di dropdown baris
+  card.querySelectorAll("select.test-req").forEach(sel=>{
+    sel.onchange=()=>{
+      const idx2=Number(sel.getAttribute("data-test-req"));
+      const newR=Number(sel.value);
+      // Cek dobel
+      if(SUMMARY_SEL.some((x,xi)=> xi!==idx2 && Number(x)===newR)){ alert("Tes ini sudah dipilih di baris lain."); renderSummaryDynamic(); applySummaryVisibility(); return; }
+      // Pindahin nilai sum_ & comment lama ke tes baru biar tidak hilang (kalau user salah pilih lalu ganti)
+      const oldR=SUMMARY_SEL[idx2];
+      const oldSum=document.getElementById("sum_"+oldR);
+      const oldSumVal=oldSum? oldSum.value : "Auto";
+      const oldRowDef=sec.rows.find(x=>Number(x.r)===Number(oldR));
+      const oldCommentEl=oldRowDef? document.getElementById("f_"+oldRowDef.comment.k) : null;
+      const oldCommentVal=oldCommentEl? oldCommentEl.value : "";
+      SUMMARY_SEL[idx2]=newR;
+      saveSummarySel();
+      // Simpan nilai pindahan ke savedVals untuk re-render berikutnya (via DOM sementara)
+      // Kita set lewat localStorage sementara: simpan di savedVals dengan cara tulis ke input setelah render
+      renderSummaryDynamic(); applySummaryVisibility();
+      // Setelah re-render, balikin nilai sum & comment yang dipindah
+      try{
+        const newSum=document.getElementById("sum_"+newR); if(newSum) newSum.value=oldSumVal;
+        const newRowDef=sec.rows.find(x=>Number(x.r)===Number(newR));
+        const newComment=document.getElementById("f_"+newRowDef.comment.k); if(newComment) newComment.value=oldCommentVal;
+      }catch(e){}
+      try{ recalc(); }catch(e){}
+    };
+  });
+  // Wire: + Tambah Tes -> tambah baris baru dengan tes pertama yang belum dipakai
+  const addBtn=document.getElementById("summaryAddBtn"); if(addBtn) addBtn.onclick=()=>{
+    if(SUMMARY_SEL.length>=8){ alert("Semua 8 tes sudah dipilih."); return; }
+    const unused=SUMMARY_TESTS.find(t=>!SUMMARY_SEL.includes(Number(t.r)));
+    if(!unused) return;
+    SUMMARY_SEL.push(Number(unused.r)); saveSummarySel(); renderSummaryDynamic(); applySummaryVisibility(); try{ recalc(); }catch(e){}
+  };
+  const clearBtn=document.getElementById("summaryClearBtn"); if(clearBtn) clearBtn.onclick=()=>{ if(!confirm("Hapus semua tes dari Summary? Nanti bisa ditambah lagi pakai + Tambah Tes.")) return; SUMMARY_SEL=[]; saveSummarySel(); renderSummaryDynamic(); applySummaryVisibility(); };
+  card.querySelectorAll("[data-summary-del-idx]").forEach(b=>{ b.onclick=()=>{ const idx3=Number(b.getAttribute("data-summary-del-idx")); const label=SUMMARY_TESTS.find(t=>Number(t.r)===Number(SUMMARY_SEL[idx3]))?.label||""; if(!confirm("Hapus "+label+" dari Summary? Template Hal-nya ikut disembunyikan & tidak ikut Export.")) return; SUMMARY_SEL.splice(idx3,1); saveSummarySel(); renderSummaryDynamic(); applySummaryVisibility(); }; });
   try{ recalc(); }catch(e){}
 }
 function applySummaryVisibility(){
@@ -716,7 +748,9 @@ function renderExtraFor(secId){
 }
 function attachExtraControls(){
   loadExtra();
-  Object.keys(EXTRA_SECTIONS).forEach(secId=>{
+  Object.keys(EXTRA_SECTIONS).forEach(secId=>{     // Hal 4 tidak pakai box Tes Tambahan lagi - sudah ada + Tambah Tes di atas (model LL Bean)
+     if(secId==="p4"){ const _c=document.getElementById("s_"+secId); if(_c){ const _o=_c.querySelector(".extra-box"); if(_o) _o.remove(); } return; }
+
     const card=document.getElementById("s_"+secId); if(!card) return;
     const old=card.querySelector(".extra-box"); if(old) old.remove();
     const wrap=document.createElement("div"); wrap.innerHTML=renderExtraFor(secId); card.appendChild(wrap.firstChild);
@@ -998,5 +1032,5 @@ async function renderPdf(zip) {
 }
 
 </script>
-<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
+</body>
 </html>
