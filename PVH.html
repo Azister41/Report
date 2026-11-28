@@ -22,7 +22,7 @@
   font-family: "Optimistic Mono", ui-monospace, monospace;
 }
 </style>
-<!-- PVH v13-fix-corrupt - Summary hide fix: clear A-J + hideRow + refresh SUMMARY_SEL + PDF backup -->
+<!-- PVH v15-fix-pdf-syntax - Summary hide fix: clear A-J + hideRow + refresh SUMMARY_SEL + PDF backup -->
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PVH - Test Report</title>
 <style>
@@ -573,7 +573,13 @@ async function exportXlsx(){
   save(await zip.generateAsync({type:"blob",compression:"DEFLATE",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),name); return name;
 }
 async function exportPdf(){
-  const {zip,name}=await buildXlsx(), bytes=await renderPdf(zip), n=name.replace(/\.xlsx$/,".pdf");
+    if(typeof renderPdf === 'undefined'){
+      alert('PDF renderer-nya lagi nggak ke-load (ke-cache lama di GitHub). Refresh (Ctrl+R) dulu, terus coba lagi. Atau Export ke Excel dulu, terus buka Excel -> Print -> Save as PDF.');
+      const {zip:zip2,name:name2}=await buildXlsx();
+      const b2=await zip2.generateAsync({type:"blob",compression:"DEFLATE",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+      save(b2, name2); return name2;
+    }
+    const {zip,name}=await buildXlsx(), bytes=await renderPdf(zip), n=name.replace(/\.xlsx$/,".pdf");
   save(new Blob([bytes],{type:"application/pdf"}),n); return n;
 }
   // ===== FITUR BARU: Export Excel + PDF Sekalian (1 klik, 2 file) =====
@@ -590,6 +596,7 @@ async function exportPdf(){
       const xlsxBlob=await zip.generateAsync({type:"blob",compression:"DEFLATE",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
       save(xlsxBlob, name);
       // 2. Langsung bikin PDF-nya dari Excel yang sama (jadi datanya 100% sama, nggak ada data master)
+      if(typeof renderPdf === 'undefined'){ alert('Excel-nya udah ke-download. PDF-nya belum ke-download karena PDF renderer-nya lagi nggak ke-load (ke-cache lama di GitHub). Refresh halaman (Ctrl+R) terus coba lagi, atau buka Excel-nya -> Print -> Save as PDF.'); return name; }
       const pdfBytes=await renderPdf(zip);
       const pdfName=name.replace(/\.xlsx$/,".pdf");
       // Kasih jeda dikit biar browser nggak nge-block download kedua
@@ -1140,7 +1147,8 @@ const merges = {}, mm = []; Array.from(sx.getElementsByTagName("mergeCell")).for
     // format kondisional (cellIs / containsText)
     const cfs = Array.from(sx.getElementsByTagName("conditionalFormatting")).map(cf => ({ rg: cf.getAttribute("sqref").split(" "), rules: Array.from(cf.getElementsByTagName("cfRule")).map(r => ({ ty: r.getAttribute("type"), dx: dxfL[+r.getAttribute("dxfId")], f: (first(r, "formula") || { textContent: "" }).textContent.replace(/"/g, ""), tx: r.getAttribute("text") })) }));
     const inRg = (rg, c, r) => { const p = x => { const q = x.match(/([A-Z]+)(\d+)/); return [q[1].split("").reduce((s, ch) => s * 26 + ch.charCodeAt(0) - 64, 0), +q[2]]; }, [a, b] = rg.split(":"), [c1, r1] = p(a), [c2, r2] = p(b || a); return c >= c1 && c <= c2 && r >= r1 && r <= r2; };
-    // tinggi baris otomatis untuk teks yang membungkus     Object.values(cells).forEach(c => { if (!c.txt || !c.xf.w || rowCustom[c.r]) return; const m = merges[c.ci + "," + c.r]; if (m && (m.r2 > m.r1)) return;
+    // tinggi baris otomatis untuk teks yang membungkus
+    Object.values(cells).forEach(c => { if (!c.txt || !c.xf.w || rowCustom[c.r]) return; const m = merges[c.ci + "," + c.r]; if (m && (m.r2 > m.r1)) return;
       let w = 0; for (let i = m ? m.c1 : c.ci; i <= (m ? m.c2 : c.ci); i++) w += colW(i); w -= 3; const k = c.xf.f.b ? "b" : "r", sz = c.xf.f.sz; let n = 0;
       c.txt.split("\n").forEach(par => { let cur = ""; n++; par.split(" ").forEach(wd => { const t = cur ? cur + " " + wd : wd; if (tw(t, k, sz) * WRAPF > w && cur) { n++; cur = wd; } else cur = t; }); });
       rowH[c.r] = Math.max(rowH[c.r], n * sz * 1.22 + 2); });
