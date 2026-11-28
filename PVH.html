@@ -22,7 +22,7 @@
   font-family: "Optimistic Mono", ui-monospace, monospace;
 }
 </style>
-<!-- PVH v12-excel-pdf-sekalian - Summary hide fix: clear A-J + hideRow + refresh SUMMARY_SEL + PDF backup -->
+<!-- PVH v13-fix-corrupt - Summary hide fix: clear A-J + hideRow + refresh SUMMARY_SEL + PDF backup -->
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PVH - Test Report</title>
 <style>
@@ -380,7 +380,7 @@ function removeMergeForRow(xml, rNum){
   // Update count di <mergeCells count="N"> biar Excel nggak protes merge count mismatch (ini yang bikin geser di Excel!)
   try{
     const cnt = (out.match(/<mergeCell[^>]*\/>/g)||[]).length;
-    out = out.replace(/<mergeCells([^>]*?)count="\d+"/, '<mergeCells$1count="'+cnt+'"');
+    if(cnt===0){ out = out.replace(/<mergeCells[^>]*>\s*<\/mergeCells>/, ''); out = out.replace(/<mergeCells[^>]*\/>/, ''); } else { out = out.replace(/<mergeCells([^>]*?)count="\d+"/, '<mergeCells$1count="'+cnt+'"'); }
   }catch(e){}
   return out;
 }
@@ -583,7 +583,9 @@ async function exportPdf(){
     const oldTxt=btn?btn.textContent:'';
     try{
       if(btn){ btn.disabled=true; btn.textContent='Lagi bikin Excel + PDF... ⏳'; }
-      const {zip,name}=await buildXlsx();
+      // FIX CORRUPT: buildXlsx dipanggil 2x (sekali buat Excel, sekali buat PDF) biar zip-nya nggak kepake 2x & rusak. Lebih aman walau agak lambat dikit.
+      const {zip:zipX, name}=await buildXlsx();
+      const zip = zipX;
       // 1. Download Excel-nya dulu
       const xlsxBlob=await zip.generateAsync({type:"blob",compression:"DEFLATE",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
       save(xlsxBlob, name);
