@@ -1,6 +1,27 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
+<head><style>
+@font-face {
+  font-family: "Optimistic";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Optimistic Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
+}
+:where(html) {
+  font-family: "Optimistic", system-ui, sans-serif;
+}
+:where(code, pre, kbd, samp) {
+  font-family: "Optimistic Mono", ui-monospace, monospace;
+}
+</style>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PVH - Test Report</title>
 <style>
@@ -340,6 +361,20 @@ function putCell(xml,ref,make,skipIfMissing){
   return xml.replace(rr,'<row r="'+rn+'"'+attrs+'>'+inner.slice(0,pos)+make("")+inner.slice(pos)+'</row>');
 }
 const stripT=a=>a.replace(/\s+t="[^"]*"/,"");
+function hideRow(xml, rNum){
+  // Sembunyikan baris di Excel: hidden="1" + tinggi 0, biar barisnya ilang total, bukan cuma kosong
+  const re = new RegExp('(<row[^>]*r="'+rNum+'"[^>]*)(>)');
+  if(!re.test(xml)) return xml;
+  return xml.replace(re, (m,p1,p2)=>{
+    let attrs=p1;
+    if(/hidden=/.test(attrs)) attrs=attrs.replace(/hidden="[^"]*"/, 'hidden="1"');
+    else attrs+=' hidden="1"';
+    if(/ht="/.test(attrs)) attrs=attrs.replace(/ht="[^"]*"/, 'ht="0"');
+    else attrs+=' ht="0"';
+    if(!/customHeight/.test(attrs)) attrs+=' customHeight="1"';
+    return attrs+p2;
+  });
+}
 function setCell(xml,ref,text){
   text=String(text==null?"":text);
   return putCell(xml,ref,a=>{ a=stripT(a); return text===""?'<c r="'+ref+'"'+a+'/>':'<c r="'+ref+'"'+a+' t="inlineStr"><is><t xml:space="preserve">'+esc(text)+'</t></is></c>'; },text==="");
@@ -415,6 +450,26 @@ async function buildXlsx(){
      // Tensile (13) tidak dipilih
      if(!_sel.includes(13)){ ["D39","H39","J39","D40","H40","J40"].forEach(ref=>{ X[8]=setCell(X[8],ref,""); }); }
    }catch(e){}
+   // HIDE BARIS yang tidak dipilih - biar nama tes-nya ilang total di Excel, bukan cuma kosong
+   try{
+     const _sel2 = (typeof SUMMARY_SEL!=="undefined"? SUMMARY_SEL : [8,9,10,11,12,13,14,16]);
+     // Sheet 4 Summary: hide baris tes yang tidak dipilih + kosongin label B-nya biar kalau hidden ke-ignore tetap blank
+     CFG.sections.find(s=>s.type==="summary").rows.forEach(r=>{
+       if(!_sel2.includes(Number(r.r))){
+         X[4]=hideRow(X[4], r.r);
+         // Label di kolom B (B8, B9, dst) - kosongin biar tidak nongol kalau ada viewer yang ignore hidden
+         try{ X[4]=setCell(X[4],"B"+r.r,""); }catch(e){}
+       }
+     });
+     // Sheet 8 - Weight (rows 8-12), Seam (14-28), Tearing (30-34), Tensile (36-40)
+     if(!_sel2.includes(11)){ [8,9,10,11,12].forEach(rn=>{ X[8]=hideRow(X[8], rn); }); }
+     if(!_sel2.includes(14)){ for(let rn=14; rn<=28; rn++){ X[8]=hideRow(X[8], rn); } }
+     if(!_sel2.includes(12)){ [30,31,32,33,34].forEach(rn=>{ X[8]=hideRow(X[8], rn); }); }
+     if(!_sel2.includes(13)){ [36,37,38,39,40].forEach(rn=>{ X[8]=hideRow(X[8], rn); }); }
+     // Sheet 9 - Light (8-12), Crocking (15-19)
+     if(!_sel2.includes(10)){ [8,9,10,11,12].forEach(rn=>{ X[9]=hideRow(X[9], rn); }); }
+     if(!_sel2.includes(16)){ [15,16,17,18,19].forEach(rn=>{ X[9]=hideRow(X[9], rn); }); }
+   }catch(e){ console.warn("hide row gagal", e); }
    // Hapus baris asli yang disembunyikan: kosongin sel-nya di Excel
    try{
      CFG.sections.forEach(s=>{
@@ -441,8 +496,28 @@ async function buildXlsx(){
      if(!ct2.includes("sheet12.xml")){ ct2=ct2.replace("</Types>", '<Override PartName="/xl/worksheets/sheet12.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>'); zip.file("[Content_Types].xml", ct2); }
      } // end if _hasExtra
    }catch(e){ console.warn("extra sheet gagal", e); }
-   
-  { // tautan email halaman 4
+   // HIDE SHEET yang tes-nya tidak dipilih - biar di Excel tab-nya ilang & di PDF halamannya ilang
+   try{
+     const _sel3 = (typeof SUMMARY_SEL!=="undefined"? SUMMARY_SEL : [8,9,10,11,12,13,14,16]);
+     const _hideSheetNames = [];
+     if(!_sel3.includes(8)) _hideSheetNames.push("Page 5");
+     if(!_sel3.includes(9)) _hideSheetNames.push("Page 6 ", "Page 7");
+     if(!_sel3.includes(11) && !_sel3.includes(14) && !_sel3.includes(12) && !_sel3.includes(13)) _hideSheetNames.push("Page 8 (2)");
+     if(!_sel3.includes(10) && !_sel3.includes(16)) _hideSheetNames.push("Page 9");
+     if(_hideSheetNames.length){
+       let wb2 = await zip.file("xl/workbook.xml").async("string");
+       _hideSheetNames.forEach(nm=>{
+         const escNm = nm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+         const re = new RegExp('(<sheet[^>]*name="'+escNm+'"[^>]*)(/?>)');
+         wb2 = wb2.replace(re, (mm,p1,p2)=>{
+           if(/state=/.test(p1)) return mm.replace(/state="[^"]*"/, 'state="hidden"');
+           return p1 + ' state="hidden"' + p2;
+         });
+       });
+       zip.file("xl/workbook.xml", wb2);
+     }
+   }catch(e){ console.warn("hide sheet gagal", e); }
+   { // tautan email halaman 4
     const rp="xl/worksheets/_rels/sheet4.xml.rels"; let rl=await zip.file(rp).async("string");
     rl=rl.replace("mailto:aniza.imamy@texlab.id","mailto:"+val("4_G21").trim()).replace("mailto:rahmat.hidayat@texlab.id","mailto:"+val("4_G22").trim());
     zip.file(rp,rl);
@@ -929,7 +1004,7 @@ async function renderPdf(zip) {
   // daftar sheet
   const wbd = dom(await rd("xl/workbook.xml")), rels = dom(await rd("xl/_rels/workbook.xml.rels")), rmap = {};
   Array.from(rels.getElementsByTagName("Relationship")).forEach(r => { rmap[r.getAttribute("Id")] = r.getAttribute("Target"); });
-  const sheets = Array.from(wbd.getElementsByTagName("sheet")).map(s => "xl/" + rmap[s.getAttribute("r:id")]);
+  const sheets = Array.from(wbd.getElementsByTagName("sheet")).filter(s=>{ const st=s.getAttribute("state"); return st!=="hidden" && st!=="veryHidden"; }).map(s => "xl/" + rmap[s.getAttribute("r:id")]);
 
   const pdf = new PdfW(), enc = new TextEncoder();
   const fobj = {};
@@ -966,7 +1041,7 @@ async function renderPdf(zip) {
     const colW = i => dcol[i] || 64 * 0.75, NC = 10, NR = 51;
     const cells = {}, rowH = [], rowCustom = [];
     for (let r = 1; r <= NR; r++) rowH[r] = 15;
-    Array.from(sx.getElementsByTagName("row")).forEach(r => { const n = +r.getAttribute("r"); if (n > NR) return; if (r.getAttribute("ht")) { rowH[n] = +r.getAttribute("ht"); if (r.getAttribute("customHeight") === "1") rowCustom[n] = 1; }
+    Array.from(sx.getElementsByTagName("row")).forEach(r => { const n = +r.getAttribute("r"); if (n > NR) return; if (r.getAttribute("hidden")==="1") { rowH[n]=0; return; } if (r.getAttribute("ht")) { rowH[n] = +r.getAttribute("ht"); if (r.getAttribute("customHeight") === "1") rowCustom[n] = 1; }
       Array.from(r.children).filter(c => c.localName === "c").forEach(c => {
         const m = c.getAttribute("r").match(/([A-Z]+)(\d+)/), ci = m[1].split("").reduce((a, ch) => a * 26 + ch.charCodeAt(0) - 64, 0); if (ci > NC) return;
         const xf = xfL[+(c.getAttribute("s") || 0)] || xfL[0], t = c.getAttribute("t"), vE = first(c, "v"); let txt = "", num = false;
@@ -1032,5 +1107,5 @@ async function renderPdf(zip) {
 }
 
 </script>
-</body>
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
 </html>
