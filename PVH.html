@@ -22,6 +22,7 @@
   font-family: "Optimistic Mono", ui-monospace, monospace;
 }
 </style>
+<!-- PVH v3-merge - Summary hide fix: clear A-J + hideRow + refresh SUMMARY_SEL + PDF backup -->
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PVH - Test Report</title>
 <style>
@@ -361,9 +362,26 @@ function putCell(xml,ref,make,skipIfMissing){
   return xml.replace(rr,'<row r="'+rn+'"'+attrs+'>'+inner.slice(0,pos)+make("")+inner.slice(pos)+'</row>');
 }
 const stripT=a=>a.replace(/\s+t="[^"]*"/,"");
+function removeMergeForRow(xml, rNum){
+  let out = xml.replace(/<mergeCell[^>]*ref="([A-Z]+)(\d+):([A-Z]+)(\d+)"[^>]*\/>/g, (m, c1, r1, c2, r2)=>{
+    const a=parseInt(r1,10), b=parseInt(r2,10);
+    if(rNum>=Math.min(a,b) && rNum<=Math.max(a,b)) return "";
+    return m;
+  }).replace(/<mergeCell[^>]*ref="([A-Z]+)(\d+)"[^>]*\/>/g, (m, c1, r1)=>{
+    if(parseInt(r1,10)===rNum) return "";
+    return m;
+  });
+  // Update count di <mergeCells count="N"> biar Excel nggak protes merge count mismatch (ini yang bikin geser di Excel!)
+  try{
+    const cnt = (out.match(/<mergeCell[^>]*\/>/g)||[]).length;
+    out = out.replace(/<mergeCells([^>]*?)count="\d+"/, '<mergeCells$1count="'+cnt+'"');
+  }catch(e){}
+  return out;
+}
 function hideRow(xml, rNum){
   // Sembunyikan baris di Excel: hidden="1" + tinggi 0, biar barisnya ilang total, bukan cuma kosong
-  const re = new RegExp('(<row[^>]*r="'+rNum+'"[^>]*)(>)');
+  // Pakai \b biar r="8" tidak ke-match r="18", dan pastikan <row ... r="N" persis
+  const re = new RegExp('(<row[^>]*?\\br="'+rNum+'"[^>]*?)(>)');
   if(!re.test(xml)) return xml;
   return xml.replace(re, (m,p1,p2)=>{
     let attrs=p1;
@@ -385,7 +403,9 @@ function setCache(xml,ref,v){ const re=new RegExp('(<c r="'+ref+'"[^>]*>(?:<f[^>
 const allFields=s=>[].concat(s.type==="kv"||s.type==="dim"||s.type==="table"||s.type==="summary"?(s.fields||[]):[], (s.rows||[]).flatMap(r=>(r.cells||[]).concat(r.comment?[r.comment]:[])));
 
 /* ---------- export Excel dari template asli ---------- */
-async function buildXlsx(){
+async function buildXlsx(){   // Refresh SUMMARY_SEL dari localStorage saat Export, biar tidak stale
+   try{ const _k="pvh_summary_"+($("reportNo")?$("reportNo").value.trim():"draft"); const _raw=localStorage.getItem(_k)||localStorage.getItem("pvh_summary_draft"); if(_raw){ const _arr=JSON.parse(_raw); if(Array.isArray(_arr)&&_arr.length) SUMMARY_SEL=_arr.map(Number); } }catch(e){}
+
   const rno=$("reportNo").value.trim(); if(!rno) throw new Error("Report No. wajib diisi.");
   if(!$("reportDate").value) throw new Error("Tanggal laporan wajib diisi.");
   recalc();
@@ -456,19 +476,23 @@ async function buildXlsx(){
      // Sheet 4 Summary: hide baris tes yang tidak dipilih + kosongin label B-nya biar kalau hidden ke-ignore tetap blank
      CFG.sections.find(s=>s.type==="summary").rows.forEach(r=>{
        if(!_sel2.includes(Number(r.r))){
-         X[4]=hideRow(X[4], r.r);
-         // Label di kolom B (B8, B9, dst) - kosongin biar tidak nongol kalau ada viewer yang ignore hidden
-         try{ X[4]=setCell(X[4],"B"+r.r,""); }catch(e){}
+         // Seam (r=14) itu 2 baris: 14 & 15 (merge A14:D15). Harus hide dua-duanya, kalau cuma 14, merge kepotong & geser!
+         const _rowsToHide = (Number(r.r)===14) ? [14,15] : [Number(r.r)];
+         _rowsToHide.forEach(_rr=>{
+           X[4]=hideRow(X[4], _rr);
+           X[4]=removeMergeForRow(X[4], _rr);
+           try{ ["A","B","C","D","E","F","G","H","I","J"].forEach(c=>{ X[4]=setCell(X[4],c+_rr,""); }); }catch(e){}
+         });
        }
      });
      // Sheet 8 - Weight (rows 8-12), Seam (14-28), Tearing (30-34), Tensile (36-40)
-     if(!_sel2.includes(11)){ [8,9,10,11,12].forEach(rn=>{ X[8]=hideRow(X[8], rn); }); }
-     if(!_sel2.includes(14)){ for(let rn=14; rn<=28; rn++){ X[8]=hideRow(X[8], rn); } }
-     if(!_sel2.includes(12)){ [30,31,32,33,34].forEach(rn=>{ X[8]=hideRow(X[8], rn); }); }
-     if(!_sel2.includes(13)){ [36,37,38,39,40].forEach(rn=>{ X[8]=hideRow(X[8], rn); }); }
+     if(!_sel2.includes(11)){ [8,9,10,11,12].forEach(rn=>{ X[8]=hideRow(X[8], rn); X[8]=removeMergeForRow(X[8], rn); }); }
+     if(!_sel2.includes(14)){ for(let rn=14; rn<=28; rn++){ X[8]=hideRow(X[8], rn); X[8]=removeMergeForRow(X[8], rn); } }
+     if(!_sel2.includes(12)){ [30,31,32,33,34].forEach(rn=>{ X[8]=hideRow(X[8], rn); X[8]=removeMergeForRow(X[8], rn); }); }
+     if(!_sel2.includes(13)){ [36,37,38,39,40].forEach(rn=>{ X[8]=hideRow(X[8], rn); X[8]=removeMergeForRow(X[8], rn); }); }
      // Sheet 9 - Light (8-12), Crocking (15-19)
-     if(!_sel2.includes(10)){ [8,9,10,11,12].forEach(rn=>{ X[9]=hideRow(X[9], rn); }); }
-     if(!_sel2.includes(16)){ [15,16,17,18,19].forEach(rn=>{ X[9]=hideRow(X[9], rn); }); }
+     if(!_sel2.includes(10)){ [8,9,10,11,12].forEach(rn=>{ X[9]=hideRow(X[9], rn); X[9]=removeMergeForRow(X[9], rn); }); }
+     if(!_sel2.includes(16)){ [15,16,17,18,19].forEach(rn=>{ X[9]=hideRow(X[9], rn); X[9]=removeMergeForRow(X[9], rn); }); }
    }catch(e){ console.warn("hide row gagal", e); }
    // Hapus baris asli yang disembunyikan: kosongin sel-nya di Excel
    try{
@@ -714,7 +738,7 @@ function renderSummaryDynamic(){
   }
   // Bar bawah kayak LL Bean: + Tambah Tes
   const bar=document.createElement("div"); bar.className="summary-llbean-bar";
-  bar.innerHTML='<button type="button" id="summaryAddBtn">+ Tambah Tes</button><button type="button" class="ghost" id="summaryClearBtn">Hapus Semua</button><span>Dipilih: '+SUMMARY_SEL.length+' / 8 tes — yang tidak dipilih tidak ikut Export</span>';
+  bar.innerHTML='<button type="button" id="summaryAddBtn">+ Tambah Tes</button><button type="button" class="ghost" id="summaryClearBtn">Hapus Semua</button><span>Dipilih: '+SUMMARY_SEL.length+' / 8 tes — yang tidak dipilih tidak ikut Export • v2-hide</span>';
   card.insertBefore(bar, tw.nextSibling);
   // Wire: ganti tes di dropdown baris
   card.querySelectorAll("select.test-req").forEach(sel=>{
@@ -1041,7 +1065,7 @@ async function renderPdf(zip) {
     const colW = i => dcol[i] || 64 * 0.75, NC = 10, NR = 51;
     const cells = {}, rowH = [], rowCustom = [];
     for (let r = 1; r <= NR; r++) rowH[r] = 15;
-    Array.from(sx.getElementsByTagName("row")).forEach(r => { const n = +r.getAttribute("r"); if (n > NR) return; if (r.getAttribute("hidden")==="1") { rowH[n]=0; return; } if (r.getAttribute("ht")) { rowH[n] = +r.getAttribute("ht"); if (r.getAttribute("customHeight") === "1") rowCustom[n] = 1; }
+    Array.from(sx.getElementsByTagName("row")).forEach(r => { const n = +r.getAttribute("r"); if (n > NR) return; if (r.getAttribute("hidden")==="1" || r.getAttribute("hidden")==="true") { rowH[n]=0; return; } if (r.getAttribute("ht")) { rowH[n] = +r.getAttribute("ht"); if (r.getAttribute("customHeight") === "1") rowCustom[n] = 1; }
       Array.from(r.children).filter(c => c.localName === "c").forEach(c => {
         const m = c.getAttribute("r").match(/([A-Z]+)(\d+)/), ci = m[1].split("").reduce((a, ch) => a * 26 + ch.charCodeAt(0) - 64, 0); if (ci > NC) return;
         const xf = xfL[+(c.getAttribute("s") || 0)] || xfL[0], t = c.getAttribute("t"), vE = first(c, "v"); let txt = "", num = false;
@@ -1049,7 +1073,16 @@ async function renderPdf(zip) {
         else if (vE && t !== "e") { if (t === "str" || t === "b") txt = vE.textContent; else { num = true; txt = fmtVal(vE.textContent, nf[xf.nf] || BUILTIN[xf.nf]); } }
         cells[ci + "," + n] = { xf, txt, num, ci, r: n };
       }); });
-    const merges = {}, mm = []; Array.from(sx.getElementsByTagName("mergeCell")).forEach(e => { const [a, b] = e.getAttribute("ref").split(":"), p = x => { const q = x.match(/([A-Z]+)(\d+)/); return [q[1].split("").reduce((s, ch) => s * 26 + ch.charCodeAt(0) - 64, 0), +q[2]]; }, [c1, r1] = p(a), [c2, r2] = p(b), o = { c1, r1, c2: Math.min(c2, NC), r2: Math.min(r2, NR) }; mm.push(o); for (let c = c1; c <= o.c2; c++) for (let r = r1; r <= o.r2; r++) merges[c + "," + r] = o; });
+         // Backup: kalau Sheet 4 (Summary) label-nya kosong, anggap baris tidak dipilih -> hide, biar tidak muncul blank di PDF
+     if(sp.includes("sheet4.xml")){
+       [8,9,10,11,12,13,14,15,16].forEach(rn=>{
+         const aCell = cells["1,"+rn];
+         const hasLabel = aCell && String(aCell.txt||"").trim()!=="";
+         const hasX = [5,6,7].some(ci=>{ const c=cells[ci+","+rn]; return c && String(c.txt||"").trim()!==""; });
+         if(!hasLabel && !hasX){ rowH[rn]=0; }
+       });
+     }
+const merges = {}, mm = []; Array.from(sx.getElementsByTagName("mergeCell")).forEach(e => { const [a, b] = e.getAttribute("ref").split(":"), p = x => { const q = x.match(/([A-Z]+)(\d+)/); return [q[1].split("").reduce((s, ch) => s * 26 + ch.charCodeAt(0) - 64, 0), +q[2]]; }, [c1, r1] = p(a), [c2, r2] = p(b), o = { c1, r1, c2: Math.min(c2, NC), r2: Math.min(r2, NR) }; mm.push(o); for (let c = c1; c <= o.c2; c++) for (let r = r1; r <= o.r2; r++) merges[c + "," + r] = o; });
     // format kondisional (cellIs / containsText)
     const cfs = Array.from(sx.getElementsByTagName("conditionalFormatting")).map(cf => ({ rg: cf.getAttribute("sqref").split(" "), rules: Array.from(cf.getElementsByTagName("cfRule")).map(r => ({ ty: r.getAttribute("type"), dx: dxfL[+r.getAttribute("dxfId")], f: (first(r, "formula") || { textContent: "" }).textContent.replace(/"/g, ""), tx: r.getAttribute("text") })) }));
     const inRg = (rg, c, r) => { const p = x => { const q = x.match(/([A-Z]+)(\d+)/); return [q[1].split("").reduce((s, ch) => s * 26 + ch.charCodeAt(0) - 64, 0), +q[2]]; }, [a, b] = rg.split(":"), [c1, r1] = p(a), [c2, r2] = p(b || a); return c >= c1 && c <= c2 && r >= r1 && r <= r2; };
